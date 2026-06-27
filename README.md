@@ -4,6 +4,10 @@
 
 This project is developed with AI assistance. Code, UI behavior, documentation, and iteration notes have been created and refined through human direction with AI-generated implementation support.
 
+## Screenshot
+
+![pyside-fm screenshot](2026-06-27_20-52.png)
+
 ## Features
 
 - Dual-pane file browsing with independent paths and view modes.
@@ -395,4 +399,3 @@ Push:
 ```bash
 git push
 ```
-
