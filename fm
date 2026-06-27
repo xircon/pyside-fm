@@ -1,0 +1,4258 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import os
+import shutil
+import subprocess
+import sys
+import argparse
+import configparser
+import json
+import mimetypes
+import shlex
+import stat
+import tarfile
+import threading
+import time
+import zipfile
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Callable
+from urllib.parse import quote
+
+from PySide6.QtCore import QDir, QEvent, QFile, QFileInfo, QItemSelectionModel, QMimeData, QModelIndex, QObject, QPoint, QRect, QRunnable, QSettings, QSize, Qt, QThread, QThreadPool, QTimer, QUrl, Signal, Slot
+from PySide6.QtGui import QAction, QBrush, QColor, QDesktopServices, QDrag, QIcon, QImage, QImageReader, QKeySequence, QPainter, QPixmap, QShortcut
+from PySide6.QtPdf import QPdfDocument
+from PySide6.QtWidgets import (
+    QApplication,
+    QAbstractItemView,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QDockWidget,
+    QCheckBox,
+    QFileIconProvider,
+    QFileSystemModel,
+    QFormLayout,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QListView,
+    QMainWindow,
+    QMenu,
+    QMessageBox,
+    QProgressDialog,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QSplitter,
+    QStackedWidget,
+    QStyle,
+    QStyleOptionViewItem,
+    QStyledItemDelegate,
+    QTabWidget,
+    QTextEdit,
+    QToolBar,
+    QToolButton,
+    QTreeView,
+    QVBoxLayout,
+    QWidget,
+)
+
+
+APP_ID = "org.ai.fm"
+APP_ORG = "org.ai"
+APP_NAME = "fm"
+APP_VERSION = "0.72"
+VIEW_MODES = ("Icon", "List", "Details")
+VIEW_ALIASES = {mode.lower(): mode for mode in VIEW_MODES}
+ICON_LAYOUTS = ("Compact", "Normal", "Spacious")
+ICON_LAYOUT_METRICS = {
+    "Compact": (124, 168, 60, 104),
+    "Normal": (140, 184, 76, 120),
+    "Spacious": (174, 218, 110, 154),
+}
+DESKTOP_ENTRY_CACHE: list[dict[str, str]] | None = None
+DESKTOP_ICON_CACHE: dict[str, QIcon] = {}
+DETAIL_SIZE_WIDTH = 76
+DETAIL_TYPE_WIDTH = 86
+DETAIL_DATE_WIDTH = 168
+THEMES = ("Light", "Dark", "Very Dark")
+PROGRESS_DIALOG_WIDTH = 533
+DEFAULT_TERMINAL_COMMAND = "kitty"
+DEFAULT_TERMINAL_ARGS = "--app-id=org.ai.floater"
+USER_BUTTON_COUNT = 4
+IMAGE_EXTENSIONS = {".bmp", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"}
+PDF_EXTENSIONS = {".pdf"}
+TEXT_EXTENSIONS = {
+    ".bash",
+    ".c",
+    ".cfg",
+    ".conf",
+    ".cpp",
+    ".css",
+    ".csv",
+    ".h",
+    ".hpp",
+    ".html",
+    ".ini",
+    ".js",
+    ".json",
+    ".log",
+    ".md",
+    ".py",
+    ".rs",
+    ".sh",
+    ".toml",
+    ".txt",
+    ".xml",
+    ".yaml",
+    ".yml",
+}
+ARCHIVE_EXTENSIONS = {
+    ".zip",
+    ".tar",
+    ".tar.gz",
+    ".tgz",
+    ".tar.bz2",
+    ".tbz2",
+    ".tar.xz",
+    ".txz",
+}
+
+THEME_STYLES = {
+    "Light": """
+        QWidget { background: #f5f6f7; color: #202124; font-size: 12pt; }
+        FilePane[active="true"] { border: 2px solid #6600ff; }
+        FilePane[active="false"] { border: 2px solid transparent; }
+        QLineEdit, QComboBox, QListView, QTreeView {
+            background: #ffffff; color: #202124; border: 1px solid #c8ccd0;
+            selection-background-color: #2f6fbd; selection-color: #ffffff;
+        }
+        QToolBar { background: #eceff1; border-bottom: 1px solid #c8ccd0; }
+        QToolButton, QPushButton { background: #ffffff; border: 1px solid #c8ccd0; padding: 4px 8px; }
+        QToolButton:hover, QPushButton:hover { background: #e7edf7; }
+        QHeaderView::section { background: #eceff1; color: #202124; border: 1px solid #c8ccd0; padding: 4px; }
+        QMenu { background: #ffffff; border: 1px solid #c8ccd0; }
+        QMenu::item:selected { background: #2f6fbd; color: #ffffff; }
+        QScrollBar:vertical, QScrollBar:horizontal {
+            background: #eef1f4; border: 0; margin: 0; width: 12px; height: 12px;
+        }
+        QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+            background: #9aa4b2; border-radius: 6px; min-height: 28px; min-width: 28px;
+        }
+        QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover { background: #6f7c8c; }
+        QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; border: 0; }
+        QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
+    """,
+    "Dark": """
+        QWidget { background: #25282c; color: #e5e7eb; font-size: 12pt; }
+        FilePane[active="true"] { border: 2px solid #6600ff; }
+        FilePane[active="false"] { border: 2px solid transparent; }
+        QLineEdit, QComboBox, QListView, QTreeView {
+            background: #1f2226; color: #e5e7eb; border: 1px solid #3f454d;
+            selection-background-color: #3b78c2; selection-color: #ffffff;
+        }
+        QToolBar { background: #202328; border-bottom: 1px solid #3f454d; }
+        QToolButton, QPushButton { background: #30343a; border: 1px solid #4a515b; padding: 4px 8px; }
+        QToolButton:hover, QPushButton:hover { background: #39404a; }
+        QHeaderView::section { background: #30343a; color: #e5e7eb; border: 1px solid #4a515b; padding: 4px; }
+        QMenu { background: #25282c; border: 1px solid #4a515b; }
+        QMenu::item:selected { background: #3b78c2; color: #ffffff; }
+        QScrollBar:vertical, QScrollBar:horizontal {
+            background: #1b1e23; border: 0; margin: 0; width: 12px; height: 12px;
+        }
+        QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+            background: #59616d; border-radius: 6px; min-height: 28px; min-width: 28px;
+        }
+        QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover { background: #737d8c; }
+        QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; border: 0; }
+        QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
+    """,
+    "Very Dark": """
+        QWidget { background: #0f1115; color: #e6edf3; font-size: 12pt; }
+        FilePane[active="true"] { border: 2px solid #6600ff; }
+        FilePane[active="false"] { border: 2px solid transparent; }
+        QLineEdit, QComboBox, QListView, QTreeView {
+            background: #05070a; color: #e6edf3; border: 1px solid #2a3038;
+            selection-background-color: #1f6feb; selection-color: #ffffff;
+        }
+        QToolBar { background: #080b0f; border-bottom: 1px solid #2a3038; }
+        QToolButton, QPushButton { background: #151a21; border: 1px solid #303845; padding: 4px 8px; }
+        QToolButton:hover, QPushButton:hover { background: #1d2430; }
+        QHeaderView::section { background: #151a21; color: #e6edf3; border: 1px solid #303845; padding: 4px; }
+        QMenu { background: #0f1115; border: 1px solid #303845; }
+        QMenu::item:selected { background: #1f6feb; color: #ffffff; }
+        QScrollBar:vertical, QScrollBar:horizontal {
+            background: #07090d; border: 0; margin: 0; width: 12px; height: 12px;
+        }
+        QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+            background: #3a4350; border-radius: 6px; min-height: 28px; min-width: 28px;
+        }
+        QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover { background: #596579; }
+        QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; border: 0; }
+        QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
+    """,
+}
+
+
+def readable_size(size: int) -> str:
+    value = float(size)
+    for unit in ("B", "KB", "MB", "GB", "TB"):
+        if value < 1024 or unit == "TB":
+            return f"{value:.0f} {unit}" if unit == "B" else f"{value:.1f} {unit}"
+        value /= 1024
+    return f"{size} B"
+
+
+def display_path_label(path: Path) -> str:
+    text = str(path)
+    home = str(Path.home())
+    if text == home:
+        return "~"
+    if text.startswith(home + "/"):
+        return "~/" + text[len(home) + 1 :]
+    return text
+
+def compact_breadcrumb_label(label: str) -> str:
+    mapping = {
+        "home": "h",
+        "xircon": "x",
+        "dmnts": "d",
+        "Downloads": "D",
+        "Completed": "C",
+    }
+    return mapping.get(label, label)
+
+
+def menu_icon(widget: QWidget, names: tuple[str, ...] | str, fallback: QStyle.StandardPixmap) -> QIcon:
+    if isinstance(names, str):
+        names = (names,)
+    for name in names:
+        icon = QIcon.fromTheme(name)
+        if not icon.isNull():
+            return icon
+    return widget.style().standardIcon(fallback)
+
+
+def tinted_icon(icon: QIcon, color: str, size: int = 32) -> QIcon:
+    pixmap = icon.pixmap(size, size)
+    if pixmap.isNull():
+        return icon
+    tinted = QPixmap(pixmap.size())
+    tinted.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(tinted)
+    painter.drawPixmap(0, 0, pixmap)
+    painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
+    painter.fillRect(tinted.rect(), QColor(color))
+    painter.end()
+    return QIcon(tinted)
+
+
+def terminal_toolbar_icon(accent: str, size: int = 32) -> QIcon:
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setPen(QColor(accent))
+    painter.setBrush(QColor("#111820"))
+    painter.drawRoundedRect(4, 6, size - 8, size - 12, 4, 4)
+    painter.setBrush(QColor(accent))
+    painter.drawRoundedRect(4, 6, size - 8, 5, 3, 3)
+    painter.setPen(QColor("#e6edf3"))
+    y = size // 2 + 2
+    painter.drawLine(10, y - 5, 14, y - 1)
+    painter.drawLine(14, y - 1, 10, y + 3)
+    painter.drawLine(17, y + 3, 24, y + 3)
+    painter.end()
+    return QIcon(pixmap)
+
+
+def directory_size(path: Path) -> tuple[int, int, int]:
+    if not path.is_dir() or path.is_symlink():
+        try:
+            return path.stat().st_size, 1, 0
+        except OSError:
+            return 0, 0, 0
+    total = 0
+    files = 0
+    folders = 0
+    for root, dirs, filenames in os.walk(path):
+        folders += len(dirs)
+        files += len(filenames)
+        for filename in filenames:
+            try:
+                total += (Path(root) / filename).stat().st_size
+            except OSError:
+                pass
+    return total, files, folders
+
+
+def file_mime_type(path: Path) -> str:
+    info = QFileInfo(str(path))
+    if info.isDir():
+        return "inode/directory"
+    mime, _encoding = mimetypes.guess_type(path.name)
+    return mime or "application/octet-stream"
+
+
+def is_previewable_file(path: Path) -> bool:
+    suffix = path.suffix.lower()
+    if suffix in IMAGE_EXTENSIONS or suffix in PDF_EXTENSIONS or suffix in TEXT_EXTENSIONS:
+        return True
+    return file_mime_type(path).startswith("text/")
+
+
+def desktop_files() -> list[Path]:
+    roots = [
+        Path.home() / ".local" / "share" / "applications",
+        Path("/usr/local/share/applications"),
+        Path("/usr/share/applications"),
+    ]
+    files: list[Path] = []
+    for root in roots:
+        if root.exists():
+            files.extend(sorted(root.glob("*.desktop")))
+    return files
+
+
+def read_desktop_entry(path: Path) -> dict[str, str] | None:
+    parser = configparser.ConfigParser(interpolation=None)
+    parser.optionxform = str
+    try:
+        parser.read(path, encoding="utf-8")
+    except configparser.Error:
+        return None
+    if not parser.has_section("Desktop Entry"):
+        return None
+    entry = dict(parser.items("Desktop Entry"))
+    if entry.get("Type") != "Application" or entry.get("NoDisplay", "").lower() == "true":
+        return None
+    if entry.get("Hidden", "").lower() == "true" or entry.get("Terminal", "").lower() == "true":
+        return None
+    if not entry.get("Name") or not entry.get("Exec"):
+        return None
+    return entry
+
+
+def desktop_app_entries() -> list[dict[str, str]]:
+    global DESKTOP_ENTRY_CACHE
+    if DESKTOP_ENTRY_CACHE is not None:
+        return DESKTOP_ENTRY_CACHE
+    entries: list[dict[str, str]] = []
+    for desktop_path in desktop_files():
+        entry = read_desktop_entry(desktop_path)
+        if entry:
+            entries.append(entry)
+    DESKTOP_ENTRY_CACHE = entries
+    return entries
+
+
+def cached_desktop_icon(widget: QWidget, icon_name: str) -> QIcon:
+    key = icon_name.strip()
+    if not key:
+        return menu_icon(widget, "application-x-executable", QStyle.StandardPixmap.SP_FileIcon)
+    cached = DESKTOP_ICON_CACHE.get(key)
+    if cached is not None:
+        return cached
+    icon_path = Path(key).expanduser()
+    if icon_path.is_file():
+        icon = QIcon(str(icon_path))
+    else:
+        icon = QIcon.fromTheme(key)
+    if icon.isNull():
+        icon = menu_icon(widget, "application-x-executable", QStyle.StandardPixmap.SP_FileIcon)
+    DESKTOP_ICON_CACHE[key] = icon
+    return icon
+
+
+def mime_apps_for(path: Path, limit: int = 12) -> list[tuple[str, str, str]]:
+    mime = file_mime_type(path)
+    matches: list[tuple[str, str, str]] = []
+    seen: set[str] = set()
+    for entry in desktop_app_entries():
+        name = entry["Name"]
+        if name in seen:
+            continue
+        exec_line = entry["Exec"]
+        mimes = {value for value in entry.get("MimeType", "").split(";") if value}
+        if not mime or mime not in mimes:
+            continue
+        matches.append((name, exec_line, entry.get("Icon", "")))
+        seen.add(name)
+        if len(matches) >= limit:
+            break
+    return matches
+
+
+def desktop_exec_command(exec_line: str, paths: list[Path]) -> list[str]:
+    parts = shlex.split(exec_line)
+    path_args = [str(path) for path in paths]
+    url_args = [QUrl.fromLocalFile(str(path)).toString() for path in paths]
+    command: list[str] = []
+    used_placeholder = False
+    for part in parts:
+        if part in {"%f", "%u"}:
+            command.append(path_args[0] if part == "%f" else url_args[0])
+            used_placeholder = True
+        elif part in {"%F", "%U"}:
+            command.extend(path_args if part == "%F" else url_args)
+            used_placeholder = True
+        elif part in {"%i", "%c", "%k"}:
+            used_placeholder = True
+            continue
+        else:
+            command.append(part.replace("%f", path_args[0]).replace("%u", url_args[0]))
+    if not used_placeholder:
+        command.extend(path_args)
+    return command
+
+
+def unique_destination(directory: Path, name: str) -> Path:
+    candidate = directory / name
+    if not candidate.exists():
+        return candidate
+    stem = candidate.stem
+    suffix = candidate.suffix
+    for number in range(1, 10000):
+        next_candidate = directory / f"{stem} copy {number}{suffix}"
+        if not next_candidate.exists():
+            return next_candidate
+    raise FileExistsError(f"Could not create a unique name for {name}")
+
+
+def archive_suffix(path: Path) -> str:
+    name = path.name.lower()
+    for suffix in sorted(ARCHIVE_EXTENSIONS, key=len, reverse=True):
+        if name.endswith(suffix):
+            return suffix
+    return ""
+
+
+def archive_base_name(path: Path) -> str:
+    suffix = archive_suffix(path)
+    return path.name[: -len(suffix)] if suffix else path.stem
+
+
+def is_archive(path: Path) -> bool:
+    return bool(archive_suffix(path))
+
+
+def same_path(left: Path, right: Path) -> bool:
+    try:
+        return left.resolve() == right.resolve()
+    except OSError:
+        return left == right
+
+
+def remove_existing(path: Path) -> None:
+    if path.is_dir() and not path.is_symlink():
+        shutil.rmtree(path)
+    else:
+        path.unlink()
+
+
+def choose_existing_destination(parent: QWidget, source: Path, destination: Path) -> Path | None:
+    if not destination.exists():
+        return destination
+
+    box = QMessageBox(parent)
+    box.setIcon(QMessageBox.Icon.Warning)
+    box.setWindowTitle("File Already Exists")
+    box.setText(f'"{destination.name}" already exists.')
+    box.setInformativeText("Choose a new name, replace the existing item, or cancel.")
+    rename_button = box.addButton("Rename", QMessageBox.ButtonRole.AcceptRole)
+    replace_button = box.addButton("Replace", QMessageBox.ButtonRole.DestructiveRole)
+    cancel_button = box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+    if same_path(source, destination):
+        replace_button.setEnabled(False)
+    box.setDefaultButton(rename_button)
+    box.exec()
+
+    clicked = box.clickedButton()
+    if clicked == cancel_button:
+        return None
+    if clicked == replace_button:
+        if same_path(source, destination):
+            return None
+        remove_existing(destination)
+        return destination
+
+    suggested = unique_destination(destination.parent, source.name).name
+    while True:
+        name, ok = get_name(parent, "Rename Copy", "New name:", suggested)
+        if not ok:
+            return None
+        name = name.strip()
+        if not name:
+            QMessageBox.warning(parent, "Invalid Name", "Enter a file name.")
+            continue
+        renamed_destination = destination.parent / name
+        if same_path(source, renamed_destination):
+            QMessageBox.warning(parent, "Invalid Name", "Choose a different name.")
+            continue
+        if renamed_destination.exists():
+            destination = renamed_destination
+            suggested = unique_destination(destination.parent, destination.name).name
+            box = QMessageBox(parent)
+            box.setIcon(QMessageBox.Icon.Warning)
+            box.setWindowTitle("File Already Exists")
+            box.setText(f'"{destination.name}" already exists.')
+            box.setInformativeText("Choose another name, replace the existing item, or cancel.")
+            rename_button = box.addButton("Rename", QMessageBox.ButtonRole.AcceptRole)
+            replace_button = box.addButton("Replace", QMessageBox.ButtonRole.DestructiveRole)
+            cancel_button = box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+            if same_path(source, destination):
+                replace_button.setEnabled(False)
+            box.setDefaultButton(rename_button)
+            box.exec()
+            clicked = box.clickedButton()
+            if clicked == cancel_button:
+                return None
+            if clicked == replace_button:
+                if same_path(source, destination):
+                    return None
+                remove_existing(destination)
+                return destination
+            continue
+        return renamed_destination
+
+
+def copy_path(src: Path, dst: Path) -> None:
+    if src.is_dir() and not src.is_symlink():
+        shutil.copytree(src, dst)
+    else:
+        shutil.copy2(src, dst)
+
+
+def add_to_zip(zip_file: zipfile.ZipFile, path: Path, arcname: Path) -> None:
+    if path.is_dir() and not path.is_symlink():
+        for child in path.iterdir():
+            add_to_zip(zip_file, child, arcname / child.name)
+    else:
+        zip_file.write(path, arcname)
+
+
+def create_zip_archive(paths: list[Path], destination: Path) -> None:
+    with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as zip_file:
+        for path in paths:
+            add_to_zip(zip_file, path, Path(path.name))
+
+
+def extract_archive(path: Path, destination: Path) -> None:
+    destination.mkdir(parents=True, exist_ok=True)
+    root = destination.resolve()
+
+    def ensure_safe(member_name: str) -> None:
+        target = (destination / member_name).resolve()
+        if target != root and root not in target.parents:
+            raise ValueError(f"Archive member escapes destination: {member_name}")
+
+    suffix = archive_suffix(path)
+    if suffix == ".zip":
+        with zipfile.ZipFile(path) as archive:
+            for member in archive.namelist():
+                ensure_safe(member)
+            archive.extractall(destination)
+        return
+    if suffix:
+        with tarfile.open(path) as archive:
+            for member in archive.getmembers():
+                ensure_safe(member.name)
+            archive.extractall(destination)
+        return
+    raise ValueError(f"Unsupported archive: {path}")
+
+
+def copy_size(path: Path) -> int:
+    if path.is_dir() and not path.is_symlink():
+        total = 0
+        for root, _dirs, filenames in os.walk(path):
+            for filename in filenames:
+                try:
+                    total += (Path(root) / filename).stat().st_size
+                except OSError:
+                    pass
+        return total
+    try:
+        return path.stat().st_size
+    except OSError:
+        return 0
+
+
+def copy_file_with_progress(src: Path, dst: Path, progress: QProgressDialog, state: dict[str, int]) -> None:
+    progress.setLabelText(f"Copying {src.name}")
+    QApplication.processEvents()
+    if progress.wasCanceled():
+        raise InterruptedError
+
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if src.is_symlink():
+        shutil.copy2(src, dst, follow_symlinks=False)
+        state["done"] += 1
+        progress.setValue(min(progress.maximum(), state["done"]))
+        QApplication.processEvents()
+        return
+
+    with src.open("rb") as reader, dst.open("wb") as writer:
+        while True:
+            chunk = reader.read(1024 * 1024)
+            if not chunk:
+                break
+            writer.write(chunk)
+            state["done"] += max(1, len(chunk) // (64 * 1024))
+            progress.setValue(min(progress.maximum(), state["done"]))
+            QApplication.processEvents()
+            if progress.wasCanceled():
+                raise InterruptedError
+    shutil.copystat(src, dst, follow_symlinks=False)
+
+
+def copy_path_with_progress(src: Path, dst: Path, progress: QProgressDialog, state: dict[str, int]) -> None:
+    if src.is_dir() and not src.is_symlink():
+        dst.mkdir(parents=True)
+        for root, dirs, filenames in os.walk(src):
+            root_path = Path(root)
+            relative_root = root_path.relative_to(src)
+            target_root = dst / relative_root
+            target_root.mkdir(parents=True, exist_ok=True)
+            for dirname in dirs:
+                (target_root / dirname).mkdir()
+            for filename in filenames:
+                copy_file_with_progress(root_path / filename, target_root / filename, progress, state)
+        try:
+            shutil.copystat(src, dst, follow_symlinks=False)
+        except OSError:
+            pass
+    else:
+        copy_file_with_progress(src, dst, progress, state)
+
+
+class FileOperationWorker(QObject):
+    progress = Signal(int, int, str, object)
+    completed = Signal(str, object)
+    failed = Signal(str, object)
+    canceled = Signal(str, object)
+
+    def __init__(self, operation: str, targets: list[tuple[Path, Path]]) -> None:
+        super().__init__()
+        self.operation = operation
+        self.targets = targets
+        self.cancel_requested = False
+
+    @Slot()
+    def cancel(self) -> None:
+        self.cancel_requested = True
+
+    @Slot()
+    def run(self) -> None:
+        completed: list[tuple[Path, Path]] = []
+        try:
+            total_bytes = sum(copy_size(source) for source, _target in self.targets)
+            total_units = max(1, (total_bytes + (64 * 1024 - 1)) // (64 * 1024))
+            state = {"done": 0, "done_bytes": 0, "total": total_units, "total_bytes": total_bytes, "started_at": time.monotonic()}
+            self.progress.emit(0, total_units, self._preparing_label(), 0.0)
+            for source, target in self.targets:
+                self._check_cancel()
+                if self.operation == "copy":
+                    self._copy_path(source, target, state)
+                    completed.append((target, Path()))
+                elif self.operation == "move":
+                    self._move_path(source, target, state)
+                    completed.append((target, source))
+                else:
+                    raise ValueError(f"Unsupported operation: {self.operation}")
+            self.progress.emit(total_units, total_units, self._done_label(), self._speed_bytes_per_second(state))
+            self.completed.emit(self.operation, completed)
+        except InterruptedError:
+            self.canceled.emit(self.operation, completed)
+        except Exception as exc:
+            self.failed.emit(str(exc), completed)
+
+    def _preparing_label(self) -> str:
+        return "Preparing copy..." if self.operation == "copy" else "Preparing move..."
+
+    def _done_label(self) -> str:
+        return "Copy complete" if self.operation == "copy" else "Move complete"
+
+    def _check_cancel(self) -> None:
+        if self.cancel_requested:
+            raise InterruptedError
+
+    def _speed_bytes_per_second(self, state: dict[str, int | float]) -> float:
+        elapsed = max(0.001, time.monotonic() - float(state["started_at"]))
+        return float(state["done_bytes"]) / elapsed
+
+    def _emit_progress(self, state: dict[str, int | float], label: str) -> None:
+        self.progress.emit(
+            min(int(state["total"]), int(state["done"])),
+            int(state["total"]),
+            label,
+            self._speed_bytes_per_second(state),
+        )
+
+    def _copy_file(self, source: Path, target: Path, state: dict[str, int | float]) -> None:
+        self._check_cancel()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        self._emit_progress(state, f"Copying {source.name}")
+        if source.is_symlink():
+            shutil.copy2(source, target, follow_symlinks=False)
+            state["done"] += 1
+            try:
+                state["done_bytes"] += source.lstat().st_size
+            except OSError:
+                pass
+            self._emit_progress(state, f"Copied {source.name}")
+            return
+        with source.open("rb") as reader, target.open("wb") as writer:
+            while True:
+                self._check_cancel()
+                chunk = reader.read(1024 * 1024)
+                if not chunk:
+                    break
+                writer.write(chunk)
+                state["done"] += max(1, len(chunk) // (64 * 1024))
+                state["done_bytes"] += len(chunk)
+                self._emit_progress(state, f"Copying {source.name}")
+        shutil.copystat(source, target, follow_symlinks=False)
+
+    def _copy_path(self, source: Path, target: Path, state: dict[str, int | float]) -> None:
+        self._check_cancel()
+        if source.is_dir() and not source.is_symlink():
+            target.mkdir(parents=True, exist_ok=True)
+            for root, dirs, filenames in os.walk(source):
+                self._check_cancel()
+                root_path = Path(root)
+                relative_root = root_path.relative_to(source)
+                target_root = target / relative_root
+                target_root.mkdir(parents=True, exist_ok=True)
+                for dirname in dirs:
+                    self._check_cancel()
+                    (target_root / dirname).mkdir(exist_ok=True)
+                for filename in filenames:
+                    self._copy_file(root_path / filename, target_root / filename, state)
+            try:
+                shutil.copystat(source, target, follow_symlinks=False)
+            except OSError:
+                pass
+            return
+        self._copy_file(source, target, state)
+
+    def _move_path(self, source: Path, target: Path, state: dict[str, int | float]) -> None:
+        self._check_cancel()
+        self._emit_progress(state, f"Moving {source.name}")
+        try:
+            source_size = copy_size(source)
+            source.rename(target)
+            state["done"] = min(state["total"], state["done"] + max(1, copy_size(target) // (64 * 1024)))
+            state["done_bytes"] += source_size
+            self._emit_progress(state, f"Moved {source.name}")
+            return
+        except OSError:
+            pass
+        self._copy_path(source, target, state)
+        self._check_cancel()
+        remove_existing(source)
+        self._emit_progress(state, f"Moved {source.name}")
+
+
+class TerminalLaunchSignals(QObject):
+    failed = Signal(str)
+
+
+TERMINAL_SIGNALS = TerminalLaunchSignals()
+
+
+def wait_for_process(process: subprocess.Popen) -> None:
+    try:
+        process.wait()
+    except OSError:
+        pass
+
+
+def reap_when_finished(process: subprocess.Popen) -> None:
+    waiter = threading.Thread(target=wait_for_process, args=(process,), daemon=True)
+    waiter.start()
+
+
+class TerminalLaunchJob(QRunnable):
+    def __init__(self, command: list[str], cwd: Path, signals: TerminalLaunchSignals) -> None:
+        super().__init__()
+        self.command = command
+        self.cwd = cwd
+        self.signals = signals
+
+    def run(self) -> None:
+        try:
+            process = subprocess.Popen(
+                self.command,
+                cwd=str(self.cwd),
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+                close_fds=True,
+            )
+        except OSError as exc:
+            self.signals.failed.emit(f"{' '.join(self.command)}\n\n{exc}")
+            return
+        wait_for_process(process)
+
+
+def finish_visible_progress(progress: QProgressDialog, value: int, started_at: float, minimum_seconds: float = 0.65) -> None:
+    progress.setValue(value)
+    QApplication.processEvents()
+    deadline = started_at + minimum_seconds
+    while time.monotonic() < deadline:
+        QApplication.processEvents()
+        time.sleep(0.02)
+    progress.close()
+
+
+def widen_progress_dialog(progress: QProgressDialog) -> None:
+    progress.setMinimumWidth(PROGRESS_DIALOG_WIDTH)
+    progress.resize(PROGRESS_DIALOG_WIDTH, progress.sizeHint().height())
+
+
+def make_file_drag(source: QWidget, paths: list[Path]) -> QDrag:
+    mime = QMimeData()
+    mime.setUrls([QUrl.fromLocalFile(str(path)) for path in paths])
+
+    icon = QFileIconProvider().icon(QFileInfo(str(paths[0])))
+    pixmap = icon.pixmap(64, 64)
+    if pixmap.isNull():
+        pixmap = QPixmap(64, 64)
+        pixmap.fill(Qt.GlobalColor.transparent)
+
+    drag = QDrag(source)
+    drag.setMimeData(mime)
+    drag.setPixmap(pixmap)
+    drag.setHotSpot(QPoint(12, 12))
+    return drag
+
+
+def move_to_trash(path: Path) -> Path | None:
+    source = path.expanduser()
+    try:
+        source = source.resolve()
+    except OSError:
+        pass
+
+    trash_root = Path.home() / ".local" / "share" / "Trash"
+    files_dir = trash_root / "files"
+    info_dir = trash_root / "info"
+    try:
+        files_dir.mkdir(parents=True, exist_ok=True)
+        info_dir.mkdir(parents=True, exist_ok=True)
+        target = unique_destination(files_dir, source.name)
+        shutil.move(str(source), str(target))
+        escaped_path = quote(str(source), safe="/")
+        info_path = info_dir / f"{target.name}.trashinfo"
+        info_path.write_text(
+            "[Trash Info]\n"
+            f"Path={escaped_path}\n"
+            f"DeletionDate={datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}\n",
+            encoding="utf-8",
+        )
+        return target
+    except OSError:
+        return None
+
+
+@dataclass
+class PaneState:
+    path: Path
+    view_mode: str
+
+
+@dataclass
+class UndoAction:
+    kind: str
+    items: list[tuple[Path, Path]]
+
+
+@dataclass
+class LaunchArgs:
+    left_state: PaneState | None
+    right_state: PaneState | None
+    no_detach: bool
+
+
+def normalize_view_mode(value: str) -> str:
+    return VIEW_ALIASES.get(value.strip().lower(), "")
+
+
+def parse_args(argv: list[str]) -> LaunchArgs:
+    parser = argparse.ArgumentParser(
+        prog="fm",
+        description="Dual pane file manager.",
+        epilog="Example: fm ~/ icon ~/tmp list",
+    )
+    parser.add_argument(
+        "--no-detach",
+        action="store_true",
+        help="Keep fm attached to the launching terminal.",
+    )
+    parser.add_argument(
+        "pane_args",
+        nargs="*",
+        metavar="PATH VIEW",
+        help="Optional pane path/view pairs. Views: icon, list, details.",
+    )
+    args = parser.parse_args(argv)
+    values = args.pane_args
+    if len(values) not in {0, 2, 4}:
+        parser.error("use either no arguments, one PATH VIEW pair, or two PATH VIEW pairs")
+
+    states: list[PaneState] = []
+    for index in range(0, len(values), 2):
+        path_value = values[index]
+        mode = normalize_view_mode(values[index + 1])
+        if not mode:
+            parser.error(f"unknown view '{values[index + 1]}'; use icon, list, or details")
+        states.append(PaneState(Path(path_value).expanduser(), mode))
+
+    left_state = states[0] if len(states) >= 1 else None
+    right_state = states[1] if len(states) >= 2 else None
+    return LaunchArgs(left_state, right_state, args.no_detach)
+
+
+def detach_if_terminal(no_detach: bool) -> None:
+    if no_detach or os.environ.get("FM_NO_DETACH"):
+        return
+    if os.environ.get("QT_QPA_PLATFORM") == "offscreen":
+        return
+    if not hasattr(os, "fork") or not sys.stdin.isatty():
+        return
+
+    pid = os.fork()
+    if pid:
+        raise SystemExit(0)
+
+    os.setsid()
+    try:
+        devnull = os.open(os.devnull, os.O_RDWR)
+        for fd in (0, 1, 2):
+            try:
+                os.dup2(devnull, fd)
+            except OSError:
+                pass
+        if devnull > 2:
+            os.close(devnull)
+    except OSError:
+        pass
+
+
+class OpenWithDialog(QDialog):
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("Open With")
+        self.command_edit = QLineEdit()
+        self.command_edit.setPlaceholderText("command")
+
+        layout = QFormLayout(self)
+        layout.addRow("Command", self.command_edit)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Ok)
+        buttons.accepted.connect(lambda dialog=self: dialog.accept())
+        buttons.rejected.connect(lambda dialog=self: dialog.reject())
+        layout.addRow(buttons)
+
+    def command(self) -> str:
+        return self.command_edit.text().strip()
+
+
+class NameDialog(QDialog):
+    def __init__(self, title: str, label: str, text: str = "", parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.setModal(True)
+        self.setFixedWidth(420)
+
+        self.name_edit = QLineEdit(text)
+        self.name_edit.selectAll()
+        self.name_edit.setMinimumWidth(300)
+
+        layout = QFormLayout(self)
+        layout.addRow(label, self.name_edit)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Ok)
+        buttons.accepted.connect(lambda dialog=self: dialog.accept())
+        buttons.rejected.connect(lambda dialog=self: dialog.reject())
+        layout.addRow(buttons)
+
+    def name(self) -> str:
+        return self.name_edit.text()
+
+
+def get_name(parent: QWidget, title: str, label: str, text: str = "") -> tuple[str, bool]:
+    dialog = NameDialog(title, label, text, parent)
+    accepted = dialog.exec() == QDialog.DialogCode.Accepted
+    return dialog.name(), accepted
+
+
+class SettingsDialog(QDialog):
+    def __init__(
+        self,
+        current_theme: str,
+        icon_layout: str,
+        terminal_command: str,
+        terminal_args: str,
+        user_buttons: list[dict[str, str]],
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("Settings")
+        self.theme_combo = QComboBox()
+        self.theme_combo.addItems(THEMES)
+        self.theme_combo.setCurrentText(current_theme if current_theme in THEMES else "Dark")
+        self.icon_layout_combo = QComboBox()
+        self.icon_layout_combo.addItems(ICON_LAYOUTS)
+        self.icon_layout_combo.setCurrentText(icon_layout if icon_layout in ICON_LAYOUTS else "Normal")
+        self.terminal_command_edit = QLineEdit(terminal_command or DEFAULT_TERMINAL_COMMAND)
+        self.terminal_args_edit = QLineEdit(terminal_args)
+        self.button_edits: list[tuple[QLineEdit, QLineEdit, QLineEdit]] = []
+
+        layout = QFormLayout(self)
+        layout.addRow("Theme", self.theme_combo)
+        layout.addRow("Icon layout", self.icon_layout_combo)
+        layout.addRow("Terminal", self.terminal_command_edit)
+        layout.addRow("Terminal args", self.terminal_args_edit)
+
+        for index in range(USER_BUTTON_COUNT):
+            button = user_buttons[index] if index < len(user_buttons) else {}
+            row = QHBoxLayout()
+            label_edit = QLineEdit(button.get("label", ""))
+            label_edit.setPlaceholderText("Label")
+            symbol_edit = QLineEdit(button.get("symbol", ""))
+            symbol_edit.setPlaceholderText("icon:name, /path/icon.png, or glyph")
+            command_edit = QLineEdit(button.get("command", ""))
+            command_edit.setPlaceholderText("Command")
+            row.addWidget(label_edit)
+            row.addWidget(symbol_edit)
+            row.addWidget(command_edit, 1)
+            self.button_edits.append((label_edit, symbol_edit, command_edit))
+            layout.addRow(f"Button {index + 1}", row)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Ok)
+        buttons.accepted.connect(lambda dialog=self: dialog.accept())
+        buttons.rejected.connect(lambda dialog=self: dialog.reject())
+        layout.addRow(buttons)
+
+    def theme(self) -> str:
+        return self.theme_combo.currentText()
+
+    def icon_layout(self) -> str:
+        return self.icon_layout_combo.currentText()
+
+    def terminal_command(self) -> str:
+        return self.terminal_command_edit.text().strip() or DEFAULT_TERMINAL_COMMAND
+
+    def terminal_args(self) -> str:
+        return self.terminal_args_edit.text().strip()
+
+    def user_buttons(self) -> list[dict[str, str]]:
+        buttons = []
+        for label_edit, symbol_edit, command_edit in self.button_edits:
+            buttons.append(
+                {
+                    "label": label_edit.text().strip(),
+                    "symbol": symbol_edit.text().strip(),
+                    "command": command_edit.text().strip(),
+                }
+            )
+        return buttons
+
+
+class HelpDialog(QDialog):
+    GROUPS = [
+        (
+            "Navigation",
+            [
+                ("Open selected", "Enter / Ctrl+O"),
+                ("Go back", "Backspace / Alt+Left"),
+                ("Go forward", "Alt+Right"),
+                ("Go up", "Alt+Up"),
+                ("Focus path bar", "Ctrl+L"),
+                ("Focus pane search", "Ctrl+F"),
+                ("Refresh", "Ctrl+R"),
+            ],
+        ),
+        (
+            "File Operations",
+            [
+                ("Copy selected or tagged files", "Ctrl+C"),
+                ("Paste copied files into active pane", "Ctrl+V"),
+                ("Move selected or tagged to other pane", "Ctrl+M"),
+                ("Undo last operation", "Ctrl+Z"),
+                ("Move to trash", "Delete"),
+                ("Delete permanently", "Shift+Delete"),
+                ("Rename", "F2"),
+                ("New folder", "F7"),
+                ("New file", "Ctrl+N"),
+                ("Open terminal here", "F4"),
+                ("Properties", "Alt+Return"),
+            ],
+        ),
+        (
+            "Panes And Selection",
+            [
+                ("Copy to other pane", "F5"),
+                ("Move to other pane", "F6 / Ctrl+M"),
+                ("Tag or untag row in detailed view", "Space"),
+                ("Swap panes", "Toolbar button"),
+                ("Drag copy", "Drag and drop"),
+                ("Drag move", "Shift+drag and drop"),
+            ],
+        ),
+        (
+            "Display And App",
+            [
+                ("Toggle hidden files", "Ctrl+H"),
+                ("Zoom icons larger", "Ctrl++"),
+                ("Zoom icons smaller", "Ctrl+-"),
+                ("Toggle side panel", "Ctrl+B / F9"),
+                ("Settings", "Ctrl+,"),
+                ("Help", "F1"),
+                ("Quit", "Ctrl+Q"),
+                ("Close this help", "Escape"),
+            ],
+        ),
+    ]
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("Keyboard Shortcuts")
+        self.setModal(True)
+        self._parent_window = parent
+        self.setMinimumSize(520, 360)
+
+        root = QVBoxLayout(self)
+        root.setSpacing(12)
+        root.setContentsMargins(14, 14, 14, 14)
+
+        title = QLabel("Keyboard Shortcuts")
+        title.setStyleSheet("font-size: 18px; font-weight: 600;")
+        root.addWidget(title)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+        content = QWidget()
+        columns = QHBoxLayout(content)
+        columns.setContentsMargins(0, 0, 0, 0)
+        columns.setSpacing(28)
+
+        left_column = QVBoxLayout()
+        right_column = QVBoxLayout()
+        for column in (left_column, right_column):
+            column.setContentsMargins(0, 0, 0, 0)
+            column.setSpacing(16)
+        for group_title, rows in (self.GROUPS[0], self.GROUPS[2]):
+            left_column.addWidget(self._group_widget(group_title, rows))
+        for group_title, rows in (self.GROUPS[1], self.GROUPS[3]):
+            right_column.addWidget(self._group_widget(group_title, rows))
+        left_column.addStretch(1)
+        right_column.addStretch(1)
+        columns.addLayout(left_column, 1)
+        columns.addLayout(right_column, 1)
+        scroll.setWidget(content)
+        root.addWidget(scroll, 1)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        buttons.rejected.connect(lambda dialog=self: dialog.reject())
+        root.addWidget(buttons)
+        self._fit_to_parent()
+
+    def _group_widget(self, title: str, rows: list[tuple[str, str]]) -> QWidget:
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(6)
+
+        heading = QLabel(title)
+        heading.setStyleSheet("font-weight: 600;")
+        layout.addWidget(heading)
+
+        form = QFormLayout()
+        form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        form.setHorizontalSpacing(12)
+        form.setVerticalSpacing(8)
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
+        for action, keys in rows:
+            key_label = QLabel(keys)
+            key_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+            action_label = QLabel(action)
+            action_label.setWordWrap(True)
+            action_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+            form.addRow(key_label, action_label)
+        layout.addLayout(form)
+        return widget
+
+    def _fit_to_parent(self) -> None:
+        if not self._parent_window:
+            self.resize(760, 520)
+            return
+        parent_rect = self._parent_window.frameGeometry()
+        max_width = max(520, parent_rect.width() - 20)
+        max_height = max(360, parent_rect.height() - 20)
+        self.setMaximumSize(max_width, max_height)
+        self.resize(min(860, max_width), min(620, max_height))
+        self.move(
+            parent_rect.x() + 10 + max(0, (max_width - self.width()) // 2),
+            parent_rect.y() + 10 + max(0, (max_height - self.height()) // 2),
+        )
+
+    def showEvent(self, event) -> None:
+        self._fit_to_parent()
+        super().showEvent(event)
+
+    def keyPressEvent(self, event) -> None:
+        if event.key() == Qt.Key.Key_Escape:
+            self.reject()
+            return
+        super().keyPressEvent(event)
+
+
+class PropertiesDialog(QDialog):
+    def __init__(self, paths: list[Path], parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("Properties")
+        self.setMinimumWidth(520)
+        self.icon_provider = QFileIconProvider()
+
+        total_size, files, folders = self._measure(paths)
+        root = QVBoxLayout(self)
+        root.setSpacing(12)
+
+        header = QHBoxLayout()
+        icon_label = QLabel()
+        icon_label.setFixedSize(48, 48)
+        icon_label.setScaledContents(True)
+        if len(paths) == 1:
+            icon = self.icon_provider.icon(QFileInfo(str(paths[0])))
+            title = paths[0].name or str(paths[0])
+            subtitle = str(paths[0].parent if paths[0].parent != paths[0] else paths[0])
+        else:
+            icon = self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView)
+            title = f"{len(paths)} items"
+            subtitle = "Multiple selection"
+        icon_label.setPixmap(icon.pixmap(48, 48))
+
+        title_col = QVBoxLayout()
+        title_label = QLabel(title)
+        title_label.setStyleSheet("font-size: 18px; font-weight: 600;")
+        subtitle_label = QLabel(subtitle)
+        subtitle_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        title_col.addWidget(title_label)
+        title_col.addWidget(subtitle_label)
+        header.addWidget(icon_label)
+        header.addLayout(title_col, 1)
+        root.addLayout(header)
+
+        general = QFormLayout()
+        general.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        if len(paths) == 1:
+            path = paths[0]
+            info = QFileInfo(str(path))
+            general.addRow("Name:", self._value(path.name or str(path)))
+            general.addRow("Kind:", self._value("Folder" if path.is_dir() else "File"))
+            general.addRow("Location:", self._value(str(path.parent)))
+            if path.is_dir():
+                general.addRow("Contents:", self._value(f"{files} files, {folders} folders"))
+                general.addRow("Size:", self._value(f"{readable_size(total_size)} in direct contents"))
+            else:
+                general.addRow("Size:", self._value(readable_size(total_size)))
+            general.addRow("Modified:", self._value(info.lastModified().toString("yyyy-MM-dd HH:mm:ss")))
+            general.addRow("Accessed:", self._value(info.lastRead().toString("yyyy-MM-dd HH:mm:ss")))
+        else:
+            general.addRow("Items:", self._value(str(len(paths))))
+            general.addRow("Contents:", self._value(f"{files} files, {folders} folders"))
+            general.addRow("Size:", self._value(readable_size(total_size)))
+        root.addLayout(general)
+
+        if len(paths) == 1:
+            self.permission_path = paths[0]
+            self.permission_boxes: dict[int, QCheckBox] = {}
+            mode = self.permission_path.stat().st_mode
+            permissions = QFormLayout()
+            permissions.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+            for label, bits in (
+                ("Owner:", (stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR)),
+                ("Group:", (stat.S_IRGRP, stat.S_IWGRP, stat.S_IXGRP)),
+                ("Other:", (stat.S_IROTH, stat.S_IWOTH, stat.S_IXOTH)),
+            ):
+                row = QHBoxLayout()
+                for text, bit in zip(("Read", "Write", "Exec"), bits):
+                    box = QCheckBox(text)
+                    box.setChecked(bool(mode & bit))
+                    self.permission_boxes[bit] = box
+                    row.addWidget(box)
+                row.addStretch(1)
+                permissions.addRow(label, row)
+            apply_permissions = QPushButton("Apply Permissions")
+            apply_permissions.clicked.connect(lambda _checked=False, dialog=self: dialog.apply_permissions())
+            permissions.addRow("", apply_permissions)
+            root.addLayout(permissions)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        buttons.rejected.connect(lambda dialog=self: dialog.reject())
+        root.addWidget(buttons)
+
+    def _value(self, text: str) -> QLabel:
+        label = QLabel(text)
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        label.setWordWrap(True)
+        return label
+
+    def apply_permissions(self) -> None:
+        mode = 0
+        for bit, box in self.permission_boxes.items():
+            if box.isChecked():
+                mode |= bit
+        try:
+            self.permission_path.chmod(mode)
+        except OSError as exc:
+            QMessageBox.warning(self, "Permissions Failed", str(exc))
+
+    def _measure(self, paths: list[Path]) -> tuple[int, int, int]:
+        total_size = 0
+        files = 0
+        folders = 0
+        for path in paths:
+            if path.is_dir() and not path.is_symlink():
+                try:
+                    for child in path.iterdir():
+                        if child.is_dir():
+                            folders += 1
+                        else:
+                            files += 1
+                            try:
+                                total_size += child.stat().st_size
+                            except OSError:
+                                pass
+                except OSError:
+                    pass
+            else:
+                files += 1
+                try:
+                    total_size += path.stat().st_size
+                except OSError:
+                    pass
+        return total_size, files, folders
+
+
+class DropListView(QListView):
+    def __init__(self, pane: "FilePane", parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.pane = pane
+        self._drag_start_pos = None
+        self._drag_start_index = QModelIndex()
+        self.viewport().installEventFilter(self)
+
+    def event(self, event) -> bool:
+        if event.type() == QEvent.Type.ShortcutOverride and (self._is_plain_space(event) or self._is_plain_escape(event)):
+            event.accept()
+            return True
+        if event.type() == QEvent.Type.KeyPress and self._handle_key(event):
+            return True
+        return super().event(event)
+
+    def eventFilter(self, watched, event) -> bool:
+        if watched is self.viewport() and event.type() == QEvent.Type.ShortcutOverride:
+            if self._is_plain_space(event) or self._is_plain_escape(event):
+                event.accept()
+                return True
+        if watched is self.viewport() and event.type() == QEvent.Type.KeyPress:
+            if self._handle_key(event):
+                return True
+        if watched is self.viewport() and event.type() in {
+            QEvent.Type.MouseButtonRelease,
+            QEvent.Type.ContextMenu,
+        }:
+            if event.type() == QEvent.Type.ContextMenu:
+                position = event.pos()
+                self.pane._show_context_menu_for_view(self, position)
+                event.accept()
+                return True
+            if event.button() == Qt.MouseButton.RightButton:
+                position = event.position().toPoint()
+                index = self.indexAt(position)
+                if index.isValid():
+                    self.setCurrentIndex(index)
+                    self.selectionModel().select(
+                        index,
+                        QItemSelectionModel.SelectionFlag.ClearAndSelect | QItemSelectionModel.SelectionFlag.Rows,
+                    )
+                self.pane._show_context_menu_for_view(self, position)
+                event.accept()
+                return True
+        return super().eventFilter(watched, event)
+
+    def _is_plain_space(self, event) -> bool:
+        return event.key() == Qt.Key.Key_Space and event.modifiers() == Qt.KeyboardModifier.NoModifier
+
+    def _is_plain_escape(self, event) -> bool:
+        return event.key() == Qt.Key.Key_Escape and event.modifiers() == Qt.KeyboardModifier.NoModifier
+
+    def _handle_key(self, event) -> bool:
+        if self._is_plain_space(event):
+            self.pane.toggle_current_tag()
+            event.accept()
+            return True
+        if self._is_plain_escape(event):
+            self.pane.clear_selection()
+            event.accept()
+            return True
+        return False
+
+    def selectionCommand(self, index: QModelIndex, event=None):
+        if event is not None and event.type() in {QEvent.Type.ShortcutOverride, QEvent.Type.KeyPress}:
+            if self._is_plain_space(event) or self._is_plain_escape(event):
+                return QItemSelectionModel.SelectionFlag.NoUpdate
+        return super().selectionCommand(index, event)
+
+    def indexAt(self, point: QPoint) -> QModelIndex:
+        index = super().indexAt(point)
+        if not index.isValid() or self.viewMode() != QListView.ViewMode.IconMode:
+            return index
+        if self._icon_item_hit_rect(index).contains(point):
+            return index
+        return QModelIndex()
+
+    def _icon_item_hit_rect(self, index: QModelIndex) -> QRect:
+        margin = IconViewDelegate.ITEM_MARGIN
+        return super().visualRect(index).adjusted(margin, margin, -margin, -margin)
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._drag_start_pos = event.position().toPoint()
+            self._drag_start_index = self.indexAt(self._drag_start_pos)
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.RightButton:
+            index = self.indexAt(event.position().toPoint())
+            if index.isValid():
+                self.setCurrentIndex(index)
+                self.selectionModel().select(
+                    index,
+                    QItemSelectionModel.SelectionFlag.ClearAndSelect | QItemSelectionModel.SelectionFlag.Rows,
+                )
+            self.pane._show_context_menu(event.position().toPoint())
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
+    def mouseMoveEvent(self, event) -> None:
+        if not event.buttons() & Qt.MouseButton.LeftButton or self._drag_start_pos is None:
+            super().mouseMoveEvent(event)
+            return
+        if not self._drag_start_index.isValid():
+            super().mouseMoveEvent(event)
+            return
+        if (event.position().toPoint() - self._drag_start_pos).manhattanLength() < QApplication.startDragDistance():
+            super().mouseMoveEvent(event)
+            return
+        if self._start_file_drag():
+            self._drag_start_pos = None
+            return
+        super().mouseMoveEvent(event)
+
+    def contextMenuEvent(self, event) -> None:
+        self.pane._show_context_menu(event.pos())
+        event.accept()
+
+    def viewportEvent(self, event) -> bool:
+        if event.type() == QEvent.Type.MouseButtonRelease and event.button() == Qt.MouseButton.RightButton:
+            position = event.position().toPoint()
+            index = self.indexAt(position)
+            if index.isValid():
+                self.setCurrentIndex(index)
+                self.selectionModel().select(
+                    index,
+                    QItemSelectionModel.SelectionFlag.ClearAndSelect | QItemSelectionModel.SelectionFlag.Rows,
+                )
+            self.pane._show_context_menu(position)
+            event.accept()
+            return True
+        if event.type() == QEvent.Type.ContextMenu:
+            self.pane._show_context_menu(event.pos())
+            event.accept()
+            return True
+        return super().viewportEvent(event)
+
+    def dragEnterEvent(self, event) -> None:
+        self._accept_file_drag(event)
+
+    def dragMoveEvent(self, event) -> None:
+        self._accept_file_drag(event)
+
+    def dropEvent(self, event) -> None:
+        if not event.mimeData().hasUrls():
+            super().dropEvent(event)
+            return
+        action = self._drop_action(event)
+        if self.pane.handle_drop(event.mimeData().urls(), action, self.indexAt(event.position().toPoint())):
+            event.setDropAction(action)
+            event.accept()
+        else:
+            event.ignore()
+
+    def dragLeaveEvent(self, event) -> None:
+        super().dragLeaveEvent(event)
+
+    def startDrag(self, supported_actions) -> None:
+        self._start_file_drag()
+
+    def _start_file_drag(self) -> bool:
+        window = self.pane.window()
+        if hasattr(window, "set_active_pane"):
+            window.set_active_pane(self.pane)
+        paths = self.pane.operation_paths()
+        if not paths:
+            return False
+        drag = make_file_drag(self, paths)
+        drag.exec(Qt.DropAction.CopyAction | Qt.DropAction.MoveAction, Qt.DropAction.CopyAction)
+        return True
+
+    def _drop_action(self, event) -> Qt.DropAction:
+        return Qt.DropAction.MoveAction if event.modifiers() & Qt.KeyboardModifier.ShiftModifier else Qt.DropAction.CopyAction
+
+    def _accept_file_drag(self, event) -> None:
+        if event.mimeData().hasUrls():
+            event.setDropAction(self._drop_action(event))
+            event.accept()
+        else:
+            super().dragEnterEvent(event)
+
+
+class DropTreeView(QTreeView):
+    def __init__(self, pane: "FilePane", parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.pane = pane
+        self._drag_start_pos = None
+        self._drag_start_index = QModelIndex()
+        self.viewport().installEventFilter(self)
+
+    def event(self, event) -> bool:
+        if event.type() == QEvent.Type.ShortcutOverride and (self._is_plain_space(event) or self._is_plain_escape(event)):
+            event.accept()
+            return True
+        if event.type() == QEvent.Type.KeyPress and self._handle_key(event):
+            return True
+        return super().event(event)
+
+    def eventFilter(self, watched, event) -> bool:
+        if watched is self.viewport() and event.type() == QEvent.Type.ShortcutOverride:
+            if self._is_plain_space(event) or self._is_plain_escape(event):
+                event.accept()
+                return True
+        if watched is self.viewport() and event.type() == QEvent.Type.KeyPress:
+            if self._handle_key(event):
+                return True
+        if watched is self.viewport() and event.type() in {
+            QEvent.Type.MouseButtonRelease,
+            QEvent.Type.ContextMenu,
+        }:
+            if event.type() == QEvent.Type.ContextMenu:
+                position = event.pos()
+                self.pane._show_context_menu_for_view(self, position)
+                event.accept()
+                return True
+            if event.button() == Qt.MouseButton.RightButton:
+                position = event.position().toPoint()
+                index = self.indexAt(position)
+                if index.isValid():
+                    self.setCurrentIndex(index)
+                    self.selectionModel().select(
+                        index,
+                        QItemSelectionModel.SelectionFlag.ClearAndSelect | QItemSelectionModel.SelectionFlag.Rows,
+                    )
+                self.pane._show_context_menu_for_view(self, position)
+                event.accept()
+                return True
+        return super().eventFilter(watched, event)
+
+    def _is_plain_space(self, event) -> bool:
+        return event.key() == Qt.Key.Key_Space and event.modifiers() == Qt.KeyboardModifier.NoModifier
+
+    def _is_plain_escape(self, event) -> bool:
+        return event.key() == Qt.Key.Key_Escape and event.modifiers() == Qt.KeyboardModifier.NoModifier
+
+    def _handle_key(self, event) -> bool:
+        if self._is_plain_space(event):
+            self.pane.toggle_current_tag()
+            event.accept()
+            return True
+        if self._is_plain_escape(event):
+            self.pane.clear_selection()
+            event.accept()
+            return True
+        return False
+
+    def selectionCommand(self, index: QModelIndex, event=None):
+        if event is not None and event.type() in {QEvent.Type.ShortcutOverride, QEvent.Type.KeyPress}:
+            if self._is_plain_space(event) or self._is_plain_escape(event):
+                return QItemSelectionModel.SelectionFlag.NoUpdate
+        return super().selectionCommand(index, event)
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._drag_start_pos = event.position().toPoint()
+            self._drag_start_index = self.indexAt(self._drag_start_pos)
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.RightButton:
+            index = self.indexAt(event.position().toPoint())
+            if index.isValid():
+                self.setCurrentIndex(index)
+                self.selectionModel().select(
+                    index,
+                    QItemSelectionModel.SelectionFlag.ClearAndSelect | QItemSelectionModel.SelectionFlag.Rows,
+                )
+            self.pane._show_context_menu(event.position().toPoint())
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
+    def mouseMoveEvent(self, event) -> None:
+        if not event.buttons() & Qt.MouseButton.LeftButton or self._drag_start_pos is None:
+            super().mouseMoveEvent(event)
+            return
+        if not self._drag_start_index.isValid():
+            super().mouseMoveEvent(event)
+            return
+        if (event.position().toPoint() - self._drag_start_pos).manhattanLength() < QApplication.startDragDistance():
+            super().mouseMoveEvent(event)
+            return
+        if self._start_file_drag():
+            self._drag_start_pos = None
+            return
+        super().mouseMoveEvent(event)
+
+    def contextMenuEvent(self, event) -> None:
+        self.pane._show_context_menu(event.pos())
+        event.accept()
+
+    def viewportEvent(self, event) -> bool:
+        if event.type() == QEvent.Type.MouseButtonRelease and event.button() == Qt.MouseButton.RightButton:
+            position = event.position().toPoint()
+            index = self.indexAt(position)
+            if index.isValid():
+                self.setCurrentIndex(index)
+                self.selectionModel().select(
+                    index,
+                    QItemSelectionModel.SelectionFlag.ClearAndSelect | QItemSelectionModel.SelectionFlag.Rows,
+                )
+            self.pane._show_context_menu(position)
+            event.accept()
+            return True
+        if event.type() == QEvent.Type.ContextMenu:
+            self.pane._show_context_menu(event.pos())
+            event.accept()
+            return True
+        return super().viewportEvent(event)
+
+    def dragEnterEvent(self, event) -> None:
+        self._accept_file_drag(event)
+
+    def dragMoveEvent(self, event) -> None:
+        self._accept_file_drag(event)
+
+    def dropEvent(self, event) -> None:
+        if not event.mimeData().hasUrls():
+            super().dropEvent(event)
+            return
+        action = self._drop_action(event)
+        if self.pane.handle_drop(event.mimeData().urls(), action, self.indexAt(event.position().toPoint())):
+            event.setDropAction(action)
+            event.accept()
+        else:
+            event.ignore()
+
+    def dragLeaveEvent(self, event) -> None:
+        super().dragLeaveEvent(event)
+
+    def startDrag(self, supported_actions) -> None:
+        self._start_file_drag()
+
+    def _start_file_drag(self) -> bool:
+        window = self.pane.window()
+        if hasattr(window, "set_active_pane"):
+            window.set_active_pane(self.pane)
+        paths = self.pane.operation_paths()
+        if not paths:
+            return False
+        drag = make_file_drag(self, paths)
+        drag.exec(Qt.DropAction.CopyAction | Qt.DropAction.MoveAction, Qt.DropAction.CopyAction)
+        return True
+
+    def keyPressEvent(self, event) -> None:
+        if self._handle_space_key(event):
+            return
+        super().keyPressEvent(event)
+
+    def _accept_file_drag(self, event) -> None:
+        if event.mimeData().hasUrls():
+            event.setDropAction(self._drop_action(event))
+            event.accept()
+        else:
+            super().dragEnterEvent(event)
+
+    def _drop_action(self, event) -> Qt.DropAction:
+        return Qt.DropAction.MoveAction if event.modifiers() & Qt.KeyboardModifier.ShiftModifier else Qt.DropAction.CopyAction
+
+
+class ThumbnailSignals(QObject):
+    loaded = Signal(str, object, object, QImage)
+
+
+THUMBNAIL_SIGNALS = ThumbnailSignals()
+
+
+class ThumbnailJob(QRunnable):
+    def __init__(self, path: Path, mtime_ns: int, size: int, signals: ThumbnailSignals) -> None:
+        super().__init__()
+        self.path = path
+        self.mtime_ns = mtime_ns
+        self.size = size
+        self.signals = signals
+
+    def run(self) -> None:
+        reader = QImageReader(str(self.path))
+        reader.setAutoTransform(True)
+        reader.setScaledSize(QSize(128, 128))
+        image = reader.read()
+        if not image.isNull():
+            self.signals.loaded.emit(str(self.path), self.mtime_ns, self.size, image)
+
+
+class FileSystemNoDropModel(QFileSystemModel):
+    def __init__(self, parent: QObject | None = None) -> None:
+        super().__init__(parent)
+        self._tagged_paths: set[Path] = set()
+        self._tagged_background = QBrush(QColor("#2b1268"))
+        self._tagged_foreground = QBrush(QColor("#ffffff"))
+        self._thumbnail_cache: dict[tuple[str, int, int], QIcon] = {}
+        self._thumbnail_pending: set[tuple[str, int, int]] = set()
+        self._thumbnail_failed: set[tuple[str, int, int]] = set()
+        self._thumbnail_pool = QThreadPool(self)
+        self._thumbnail_pool.setMaxThreadCount(2)
+        self._thumbnail_signals = THUMBNAIL_SIGNALS
+        self._thumbnail_signals.loaded.connect(self._thumbnail_loaded)
+
+    def flags(self, index: QModelIndex) -> Qt.ItemFlag:
+        return super().flags(index) & ~Qt.ItemFlag.ItemIsDropEnabled
+
+    def supportedDropActions(self) -> Qt.DropAction:
+        return Qt.DropAction.IgnoreAction
+
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole):
+        if role == Qt.ItemDataRole.BackgroundRole and Path(self.filePath(index)) in self._tagged_paths:
+            return self._tagged_background
+        if role == Qt.ItemDataRole.ForegroundRole and Path(self.filePath(index)) in self._tagged_paths:
+            return self._tagged_foreground
+        if role == Qt.ItemDataRole.DecorationRole and index.column() == 0:
+            path = Path(self.filePath(index))
+            if path.suffix.lower() in IMAGE_EXTENSIONS and path.is_file():
+                icon = self._thumbnail_icon(path)
+                if icon:
+                    return icon
+        return super().data(index, role)
+
+    def set_tagged_paths(self, paths: set[Path]) -> None:
+        old_paths = set(self._tagged_paths)
+        self._tagged_paths = set(paths)
+        for path in old_paths | self._tagged_paths:
+            index = self.index(str(path))
+            if index.isValid():
+                last_column = max(0, self.columnCount(index.parent()) - 1)
+                last_index = index.siblingAtColumn(last_column)
+                self.dataChanged.emit(
+                    index.siblingAtColumn(0),
+                    last_index,
+                    [Qt.ItemDataRole.BackgroundRole, Qt.ItemDataRole.ForegroundRole],
+                )
+
+    def _thumbnail_icon(self, path: Path) -> QIcon | None:
+        try:
+            stat = path.stat()
+        except OSError:
+            return None
+        key = (str(path), stat.st_mtime_ns, stat.st_size)
+        cached = self._thumbnail_cache.get(key)
+        if cached:
+            return cached
+        if key not in self._thumbnail_pending and key not in self._thumbnail_failed:
+            self._thumbnail_pending.add(key)
+            self._thumbnail_pool.start(ThumbnailJob(path, stat.st_mtime_ns, stat.st_size, self._thumbnail_signals))
+        return None
+
+    @Slot(str, object, object, QImage)
+    def _thumbnail_loaded(self, path: str, mtime_ns: int, size: int, image: QImage) -> None:
+        key = (path, mtime_ns, size)
+        if key not in self._thumbnail_pending:
+            return
+        self._thumbnail_pending.discard(key)
+        if image.isNull():
+            self._thumbnail_failed.add(key)
+            return
+        pixmap = QPixmap.fromImage(image).scaled(
+            QSize(96, 96),
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        self._thumbnail_cache[key] = QIcon(pixmap)
+        if len(self._thumbnail_cache) > 512:
+            self._thumbnail_cache.clear()
+        index = self.index(path)
+        if index.isValid():
+            self.dataChanged.emit(index, index, [Qt.ItemDataRole.DecorationRole])
+
+
+class PreviewLabel(QLabel):
+    resized = Signal()
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self.resized.emit()
+
+
+class IconViewDelegate(QStyledItemDelegate):
+    ITEM_MARGIN = 8
+
+    @staticmethod
+    def item_size(icon_size: QSize, layout: str = "Normal") -> QSize:
+        min_width, min_height, width_extra, height_extra = ICON_LAYOUT_METRICS.get(layout, ICON_LAYOUT_METRICS["Normal"])
+        return QSize(max(min_width, icon_size.width() + width_extra), max(min_height, icon_size.height() + height_extra))
+
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+        opt = QStyleOptionViewItem(option)
+        self.initStyleOption(opt, index)
+        painter.save()
+        item_rect = opt.rect.adjusted(self.ITEM_MARGIN, self.ITEM_MARGIN, -self.ITEM_MARGIN, -self.ITEM_MARGIN)
+
+        if opt.state & QStyle.StateFlag.State_Selected:
+            painter.fillRect(item_rect, opt.palette.highlight())
+            text_color = opt.palette.highlightedText().color()
+        else:
+            if opt.backgroundBrush.style() != Qt.BrushStyle.NoBrush:
+                painter.fillRect(item_rect, opt.backgroundBrush)
+            text_color = opt.palette.text().color()
+
+        icon_size = opt.decorationSize if opt.decorationSize.isValid() else QSize(64, 64)
+        icon_rect = QRect(item_rect.x(), item_rect.y() + 8, item_rect.width(), icon_size.height())
+        pixmap = opt.icon.pixmap(icon_size)
+        if not pixmap.isNull():
+            x = icon_rect.x() + (icon_rect.width() - pixmap.width()) // 2
+            painter.drawPixmap(x, icon_rect.y(), pixmap)
+
+        text_top = icon_rect.bottom() + 8
+        line_height = opt.fontMetrics.lineSpacing()
+        text_rect = QRect(item_rect.x() + 6, text_top, max(20, item_rect.width() - 12), line_height * 3 + 2)
+        painter.setPen(text_color)
+        painter.setFont(opt.font)
+        painter.drawText(
+            text_rect,
+            Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop | Qt.TextFlag.TextWordWrap | Qt.TextFlag.TextWrapAnywhere,
+            opt.text,
+        )
+        painter.restore()
+
+    def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex) -> QSize:
+        hint = super().sizeHint(option, index)
+        icon_size = option.decorationSize if option.decorationSize.isValid() else QSize(64, 64)
+        view = self.parent()
+        layout = getattr(view, "icon_layout", "Normal")
+        item_size = self.item_size(icon_size, layout)
+        return QSize(max(hint.width(), item_size.width()), max(hint.height(), item_size.height()))
+
+
+class FilePane(QWidget):
+    def __init__(self, title: str, add_favorite_callback=None, trash_callback=None, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.title = title
+        self.add_favorite_callback = add_favorite_callback
+        self.trash_callback = trash_callback
+        self.peer: FilePane | None = None
+        self.path = Path.home()
+        self._history: list[Path] = []
+        self._history_index = -1
+        self._changing_history = False
+        self._tagged_paths: set[Path] = set()
+        self.show_hidden = False
+        self.icon_zoom = 64
+        self.icon_layout = "Normal"
+        self.search_text = ""
+        self.preview_enabled = True
+        self.last_preview_height = 140
+        self.preview_source_path: Path | None = None
+        self.preview_source_pixmap = QPixmap()
+        self.manual_preview_active = False
+        self.manual_preview_previous_enabled = True
+        self.manual_preview_previous_sizes: list[int] = []
+        self.preview_pdf_page = 0
+        self.preview_pdf_page_count = 0
+
+        self.model = FileSystemNoDropModel(self)
+        self.model.setNameFilterDisables(False)
+        self._apply_model_filter()
+        self.model.setRootPath(str(Path.home()))
+        self.model.directoryLoaded.connect(lambda path, pane=self: pane._on_directory_loaded(path))
+
+        self.path_edit = QLineEdit()
+        self.path_edit.returnPressed.connect(lambda pane=self: pane._path_entered())
+
+        self.search_edit = QLineEdit()
+        self.search_edit.setPlaceholderText("Search")
+        self.search_edit.setClearButtonEnabled(True)
+        self.search_edit.setMaximumWidth(180)
+        self.search_edit.textChanged.connect(lambda text, pane=self: pane.set_search(text))
+
+        self.view_combo = QComboBox()
+        self.view_combo.addItems(VIEW_MODES)
+        self.view_combo.currentTextChanged.connect(lambda mode, pane=self: pane.set_view_mode(mode))
+        self.zoom_out_button = self._tool_button("Smaller icons", self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowDown), self.zoom_out)
+        self.zoom_in_button = self._tool_button("Larger icons", self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowUp), self.zoom_in)
+
+        self.back_button = self._tool_button("Back", self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowBack), self.go_back)
+        self.forward_button = self._tool_button("Forward", self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowForward), self.go_forward)
+        self.up_button = self._tool_button("Up", self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowUp), self.go_up)
+        self.home_button = self._tool_button("Home", self.style().standardIcon(QStyle.StandardPixmap.SP_DirHomeIcon), lambda: self.set_path(Path.home()))
+        self.refresh_button = self._tool_button("Refresh", self.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload), self.refresh)
+
+        top = QHBoxLayout()
+        top.setContentsMargins(0, 0, 0, 0)
+        top.setSpacing(4)
+        top.addWidget(QLabel(title))
+        top.addWidget(self.back_button)
+        top.addWidget(self.forward_button)
+        top.addWidget(self.up_button)
+        top.addWidget(self.home_button)
+        top.addWidget(self.refresh_button)
+        top.addWidget(self.path_edit, 1)
+        top.addWidget(self.search_edit)
+        top.addWidget(self.zoom_out_button)
+        top.addWidget(self.zoom_in_button)
+        top.addWidget(self.view_combo)
+
+        self.breadcrumb_layout = QHBoxLayout()
+        self.breadcrumb_layout.setContentsMargins(0, 0, 0, 0)
+        self.breadcrumb_layout.setSpacing(2)
+
+        self.icon_view = DropListView(self)
+        self.icon_view.icon_layout = self.icon_layout
+        self.icon_view.setViewMode(QListView.ViewMode.IconMode)
+        self.icon_view.setResizeMode(QListView.ResizeMode.Adjust)
+        self.icon_view.setMovement(QListView.Movement.Static)
+        self.icon_view.setWordWrap(True)
+        self.icon_view.setTextElideMode(Qt.TextElideMode.ElideRight)
+        self.icon_view.setSpacing(0)
+        self.icon_view.setSelectionRectVisible(True)
+        self.icon_view.setItemDelegate(IconViewDelegate(self.icon_view))
+
+        self.list_view = DropListView(self)
+        self.list_view.setViewMode(QListView.ViewMode.ListMode)
+        self.list_view.setUniformItemSizes(True)
+
+        self.detail_view = DropTreeView(self)
+        self.detail_view.setSortingEnabled(True)
+        self.detail_view.sortByColumn(0, Qt.SortOrder.AscendingOrder)
+
+        self.views: list[QAbstractItemView] = [self.icon_view, self.list_view, self.detail_view]
+        for view in self.views:
+            view.setModel(self.model)
+            view.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+            view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+            view.setEditTriggers(QAbstractItemView.EditTrigger.EditKeyPressed)
+            view.setDragEnabled(True)
+            view.setAcceptDrops(True)
+            view.viewport().setAcceptDrops(True)
+            view.setDropIndicatorShown(True)
+            view.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
+            view.setDefaultDropAction(Qt.DropAction.CopyAction)
+            view.setContextMenuPolicy(Qt.ContextMenuPolicy.DefaultContextMenu)
+            view.viewport().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+            view.viewport().customContextMenuRequested.connect(
+                lambda position, pane=self: pane._show_context_menu(position)
+            )
+            view.doubleClicked.connect(lambda index, pane=self: pane.open_index(index))
+            view.selectionModel().selectionChanged.connect(lambda *_: self._update_status())
+        self._configure_detail_columns()
+
+        self.stack = QStackedWidget()
+        self.stack.addWidget(self.icon_view)
+        self.stack.addWidget(self.list_view)
+        self.stack.addWidget(self.detail_view)
+        self.view_stack_count = self.stack.count()
+
+        self.status_label = QLabel()
+        self.status_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.full_preview_label = PreviewLabel()
+        self.full_preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.full_preview_label.setScaledContents(False)
+        self.full_preview_label.setStyleSheet("background: #f8fafc; color: #111827;")
+        self.full_preview_label.resized.connect(lambda pane=self: pane._rescale_full_preview())
+        self.pdf_controls = QWidget()
+        self.pdf_controls.setStyleSheet("background: #f8fafc; color: #111827;")
+        pdf_controls_layout = QHBoxLayout(self.pdf_controls)
+        pdf_controls_layout.setContentsMargins(8, 6, 8, 6)
+        pdf_controls_layout.setSpacing(8)
+        self.pdf_prev_button = QPushButton("Previous")
+        self.pdf_prev_button.clicked.connect(lambda _checked=False, pane=self: pane.previous_pdf_page())
+        self.pdf_page_label = QLabel("Page 1 / 1")
+        self.pdf_page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.pdf_next_button = QPushButton("Next")
+        self.pdf_next_button.clicked.connect(lambda _checked=False, pane=self: pane.next_pdf_page())
+        pdf_controls_layout.addWidget(self.pdf_prev_button)
+        pdf_controls_layout.addWidget(self.pdf_page_label, 1)
+        pdf_controls_layout.addWidget(self.pdf_next_button)
+        self.pdf_controls.setVisible(False)
+        self.full_preview_image = QWidget()
+        self.full_preview_image.setStyleSheet("background: #f8fafc;")
+        full_preview_image_layout = QVBoxLayout(self.full_preview_image)
+        full_preview_image_layout.setContentsMargins(0, 0, 0, 0)
+        full_preview_image_layout.setSpacing(0)
+        full_preview_image_layout.addWidget(self.pdf_controls)
+        full_preview_image_layout.addWidget(self.full_preview_label, 1)
+        self.full_preview_text = QTextEdit()
+        self.full_preview_text.setReadOnly(True)
+        self.full_preview_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
+        self.full_preview_text.setStyleSheet("background: #f8fafc; color: #111827;")
+        self.full_preview_stack = QStackedWidget()
+        self.full_preview_stack.addWidget(self.full_preview_image)
+        self.full_preview_stack.addWidget(self.full_preview_text)
+        self.stack.addWidget(self.full_preview_stack)
+        self.preview_label = PreviewLabel()
+        self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.preview_label.setMinimumHeight(80)
+        self.preview_label.setVisible(False)
+        self.preview_label.setScaledContents(False)
+        self.preview_label.resized.connect(lambda pane=self: pane._rescale_preview())
+        self.preview_text = QTextEdit()
+        self.preview_text.setReadOnly(True)
+        self.preview_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
+        self.preview_text.setVisible(False)
+        self.preview_stack = QStackedWidget()
+        self.preview_stack.addWidget(self.preview_label)
+        self.preview_stack.addWidget(self.preview_text)
+        self.preview_stack.setMinimumHeight(80)
+        self.preview_splitter = QSplitter(Qt.Orientation.Vertical)
+        self.preview_splitter.addWidget(self.stack)
+        self.preview_splitter.addWidget(self.preview_stack)
+        self.preview_splitter.setStretchFactor(0, 1)
+        self.preview_splitter.setStretchFactor(1, 0)
+        self.preview_splitter.setSizes([420, 140])
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(6, 6, 6, 6)
+        layout.setSpacing(6)
+        layout.addLayout(top)
+        layout.addLayout(self.breadcrumb_layout)
+        layout.addWidget(self.preview_splitter, 1)
+        layout.addWidget(self.status_label)
+
+        self.set_path(Path.home())
+        self._operation_threads: list[QThread] = []
+        self._operation_workers: list[FileOperationWorker] = []
+        self._operation_contexts: dict[FileOperationWorker, dict[str, object]] = {}
+        self.apply_icon_zoom()
+        self.set_view_mode("Details")
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._update_breadcrumbs()
+
+    def _tool_button(self, tooltip: str, icon, callback) -> QToolButton:
+        button = QToolButton()
+        button.setIcon(icon)
+        button.setIconSize(QSize(24, 24))
+        button.setMinimumSize(34, 30)
+        button.setToolTip(tooltip)
+        button.clicked.connect(lambda _checked=False, cb=callback: cb())
+        return button
+
+    def _configure_detail_columns(self) -> None:
+        header = self.detail_view.header()
+        header.setStretchLastSection(False)
+        header.setMinimumSectionSize(70)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        for column in (1, 2, 3):
+            header.setSectionResizeMode(column, QHeaderView.ResizeMode.Fixed)
+        self.detail_view.setColumnWidth(1, DETAIL_SIZE_WIDTH)
+        self.detail_view.setColumnWidth(2, DETAIL_TYPE_WIDTH)
+        self.detail_view.setColumnWidth(3, DETAIL_DATE_WIDTH)
+
+    def _apply_model_filter(self) -> None:
+        flags = QDir.Filter.AllEntries | QDir.Filter.NoDotAndDotDot | QDir.Filter.AllDirs
+        if self.show_hidden:
+            flags |= QDir.Filter.Hidden
+        self.model.setFilter(flags)
+        self._apply_name_filter()
+
+    def _apply_name_filter(self) -> None:
+        text = self.search_text.strip()
+        self.model.setNameFilters([f"*{text}*"] if text else [])
+
+    def set_search(self, text: str) -> None:
+        self.search_text = text
+        self._tagged_paths.clear()
+        self._apply_name_filter()
+        self._update_status()
+
+    def set_preview_enabled(self, enabled: bool) -> None:
+        sizes = self.preview_splitter.sizes()
+        if not enabled and len(sizes) > 1 and sizes[1] > 0:
+            self.last_preview_height = sizes[1]
+        self.preview_enabled = enabled
+        self.preview_stack.setVisible(enabled)
+        if enabled:
+            total = max(sum(sizes), self.preview_splitter.height(), self.last_preview_height + 120)
+            preview_height = max(80, min(self.last_preview_height, total - 80))
+            self.preview_splitter.setSizes([max(80, total - preview_height), preview_height])
+            self._update_preview()
+        else:
+            self._clear_preview()
+            total = max(sum(sizes), self.preview_splitter.height(), 1)
+            self.preview_splitter.setSizes([total, 0])
+
+    def preview_state(self):
+        return self.preview_splitter.saveState()
+
+    def restore_preview_state(self, state) -> None:
+        if state:
+            self.preview_splitter.restoreState(state)
+            sizes = self.preview_splitter.sizes()
+            if len(sizes) > 1 and sizes[1] > 0:
+                self.last_preview_height = sizes[1]
+
+    def focus_search(self) -> None:
+        self.search_edit.setFocus()
+        self.search_edit.selectAll()
+
+    def apply_icon_zoom(self) -> None:
+        icon_size = QSize(self.icon_zoom, self.icon_zoom)
+        self.icon_view.setIconSize(icon_size)
+        self.icon_view.setGridSize(IconViewDelegate.item_size(icon_size, self.icon_layout))
+        self.icon_view.updateGeometries()
+        list_size = max(20, min(48, self.icon_zoom // 2))
+        self.list_view.setIconSize(QSize(list_size, list_size))
+
+    def set_icon_zoom(self, size: int) -> None:
+        self.icon_zoom = max(32, min(128, size))
+        self.apply_icon_zoom()
+
+    def set_icon_layout(self, layout: str) -> None:
+        self.icon_layout = layout if layout in ICON_LAYOUTS else "Normal"
+        self.icon_view.icon_layout = self.icon_layout
+        self.apply_icon_zoom()
+
+    def zoom_in(self) -> None:
+        self.set_icon_zoom(self.icon_zoom + 16)
+
+    def zoom_out(self) -> None:
+        self.set_icon_zoom(self.icon_zoom - 16)
+
+    def record_undo(self, action: UndoAction) -> None:
+        window = self.window()
+        if hasattr(window, "record_undo"):
+            window.record_undo(action)
+
+    def set_show_hidden(self, show_hidden: bool) -> None:
+        self.show_hidden = show_hidden
+        current = self.current_path()
+        self._apply_model_filter()
+        self.set_path(current, add_history=False)
+
+    def set_peer(self, peer: "FilePane") -> None:
+        self.peer = peer
+
+    def state(self) -> PaneState:
+        return PaneState(self.current_path(), self.view_combo.currentText())
+
+    def restore_state(self, state: PaneState) -> None:
+        self.set_path(state.path)
+        self.set_view_mode(state.view_mode)
+
+    def current_view(self) -> QAbstractItemView:
+        return self.stack.currentWidget()
+
+    def current_path(self) -> Path:
+        return self.path
+
+    def selected_paths(self) -> list[Path]:
+        view = self.current_view()
+        indexes = view.selectionModel().selectedRows(0)
+        return [Path(self.model.filePath(index)) for index in indexes if index.isValid()]
+
+    def tagged_paths(self) -> list[Path]:
+        live_tags = []
+        for path in self._tagged_paths:
+            if path.exists():
+                live_tags.append(path)
+        if len(live_tags) != len(self._tagged_paths):
+            self._tagged_paths = set(live_tags)
+            self.model.set_tagged_paths(self._tagged_paths)
+        return sorted(live_tags, key=lambda path: path.name.casefold())
+
+    def operation_paths(self) -> list[Path]:
+        tags = self.tagged_paths()
+        return tags if tags else self.selected_or_current_paths()
+
+    def selected_or_current_paths(self) -> list[Path]:
+        paths = self.selected_paths()
+        if paths:
+            return paths
+        index = self.current_view().currentIndex()
+        if index.isValid():
+            return [Path(self.model.filePath(index))]
+        return []
+
+    def current_item_path(self) -> Path | None:
+        paths = self.selected_or_current_paths()
+        return paths[0] if paths else None
+
+    def toggle_detail_tag(self) -> None:
+        self.toggle_current_tag()
+
+    def toggle_current_tag(self) -> None:
+        view = self.current_view()
+        index = view.currentIndex()
+        if not index.isValid():
+            first_index = self.model.index(0, 0, view.rootIndex())
+            if first_index.isValid():
+                view.setCurrentIndex(first_index)
+            return
+
+        row_index = index.siblingAtColumn(0)
+        if not row_index.isValid():
+            row_index = self.model.index(index.row(), 0, index.parent())
+        path = Path(self.model.filePath(row_index))
+        if path in self._tagged_paths:
+            self._tagged_paths.remove(path)
+        else:
+            self._tagged_paths.add(path)
+        self.model.set_tagged_paths(self._tagged_paths)
+
+        current_after_tag = self._next_tag_index(view, row_index)
+        if current_after_tag.isValid():
+            view.scrollTo(current_after_tag, QAbstractItemView.ScrollHint.EnsureVisible)
+        self._sync_tag_selection(view, current_after_tag)
+        self._update_status()
+
+    def _next_tag_index(self, view: QAbstractItemView, row_index: QModelIndex) -> QModelIndex:
+        if view is self.detail_view:
+            next_index = self.detail_view.indexBelow(row_index)
+            if next_index.isValid():
+                return next_index.siblingAtColumn(0)
+        next_index = self.model.index(row_index.row() + 1, 0, row_index.parent())
+        return next_index if next_index.isValid() else row_index
+
+    def _sync_detail_tag_selection(self, current_index: QModelIndex | None = None) -> None:
+        self._sync_tag_selection(self.detail_view, current_index)
+
+    def _sync_tag_selection(self, view: QAbstractItemView, current_index: QModelIndex | None = None) -> None:
+        selection_model = view.selectionModel()
+        selection_model.clearSelection()
+        for path in sorted(self._tagged_paths, key=lambda item: item.name.casefold()):
+            index = self.model.index(str(path)).siblingAtColumn(0)
+            if index.isValid():
+                selection_model.select(index, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
+        if current_index and current_index.isValid():
+            selection_model.setCurrentIndex(current_index, QItemSelectionModel.SelectionFlag.NoUpdate)
+
+    def clear_selection(self) -> None:
+        self._tagged_paths.clear()
+        self.model.set_tagged_paths(self._tagged_paths)
+        for view in self.views:
+            view.selectionModel().clearSelection()
+        self._update_status()
+
+    def set_path(self, path: Path, *, add_history: bool = True) -> None:
+        expanded = path.expanduser()
+        try:
+            resolved = expanded.resolve()
+        except OSError:
+            resolved = expanded
+        if not resolved.exists() or not resolved.is_dir():
+            QMessageBox.warning(self, "Folder Not Found", f"Cannot open:\n{resolved}")
+            return
+        self._tagged_paths.clear()
+        self.model.set_tagged_paths(self._tagged_paths)
+        self.path = resolved
+
+        index = self.model.setRootPath(str(resolved))
+        for view in self.views:
+            view.setRootIndex(index)
+        display_path = display_path_label(resolved)
+        self.path_edit.setText(display_path)
+        self.path_edit.setCursorPosition(len(display_path))
+        self.path_edit.setToolTip(str(resolved))
+
+        if add_history and not self._changing_history:
+            if self._history_index < len(self._history) - 1:
+                self._history = self._history[: self._history_index + 1]
+            if not self._history or self._history[-1] != resolved:
+                self._history.append(resolved)
+                self._history_index = len(self._history) - 1
+        self._update_navigation()
+        self._update_breadcrumbs()
+        self._update_status()
+        window = self.window()
+        if hasattr(window, "record_recent_path"):
+            window.record_recent_path(resolved)
+
+    def set_view_mode(self, mode: str) -> None:
+        if mode not in VIEW_MODES:
+            mode = "Details"
+        if self.manual_preview_active:
+            self.close_manual_preview()
+        self.view_combo.blockSignals(True)
+        self.view_combo.setCurrentText(mode)
+        self.view_combo.blockSignals(False)
+        self.stack.setCurrentIndex(VIEW_MODES.index(mode))
+        self.current_view().setFocus()
+        self._sync_current_selection()
+
+    def _sync_current_selection(self) -> None:
+        current = self.current_item_path()
+        if not current:
+            return
+        index = self.model.index(str(current))
+        if index.isValid():
+            self.current_view().selectionModel().select(
+                index,
+                QItemSelectionModel.SelectionFlag.ClearAndSelect | QItemSelectionModel.SelectionFlag.Rows,
+            )
+            self.current_view().setCurrentIndex(index)
+
+    def _path_entered(self) -> None:
+        text = self.path_edit.text().strip()
+        if text == "/h/x":
+            text = str(Path.home())
+        elif text.startswith("/h/x/"):
+            text = str(Path.home()) + "/" + text[5:]
+        elif text.startswith("/h/"):
+            text = str(Path.home()) + "/" + text[3:]
+        elif text == "~":
+            text = str(Path.home())
+        self.set_path(Path(text))
+
+    def _update_breadcrumbs(self) -> None:
+        while self.breadcrumb_layout.count():
+            item = self.breadcrumb_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+        parts = self._breadcrumb_parts()
+        labels = self._breadcrumb_labels(parts)
+        for index, ((_, target), label) in enumerate(zip(parts, labels)):
+            if index:
+                self.breadcrumb_layout.addWidget(QLabel("/"))
+            button = QToolButton()
+            button.setText(label)
+            button.setToolTip(str(target))
+            button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
+            button.clicked.connect(lambda _checked=False, p=target, pane=self: pane.set_path(p))
+            self.breadcrumb_layout.addWidget(button)
+        self.breadcrumb_layout.addStretch(1)
+
+    def _breadcrumb_parts(self) -> list[tuple[str, Path]]:
+        path = self.current_path()
+        home = Path.home()
+        try:
+            relative = path.relative_to(home)
+        except ValueError:
+            parts: list[tuple[str, Path]] = []
+            current = path.anchor
+            if current:
+                root_path = Path(current)
+                parts.append((current.rstrip("/") or "/", root_path))
+                relative = path.relative_to(root_path) if path != root_path else Path()
+            else:
+                relative = path
+            running = Path(path.anchor) if path.anchor else Path()
+            for part in relative.parts:
+                running = running / part
+                parts.append((part, running))
+            return parts
+
+        parts = [("~", home)]
+        running = home
+        for part in relative.parts:
+            running = running / part
+            parts.append((part, running))
+        return parts
+
+    def _breadcrumb_labels(self, parts: list[tuple[str, Path]]) -> list[str]:
+        labels = [label for label, _ in parts]
+        if self._breadcrumb_labels_fit(labels):
+            return labels
+        labels = [label for label, _ in parts]
+        for index in range(max(0, len(labels) - 1)):
+            labels[index] = compact_breadcrumb_label(labels[index])
+            if self._breadcrumb_labels_fit(labels):
+                return labels
+        return labels
+
+    def _breadcrumb_labels_fit(self, labels: list[str]) -> bool:
+        if not labels:
+            return True
+        available = max(80, self.width() - 24)
+        metrics = self.fontMetrics()
+        total = 24
+        for label in labels:
+            total += metrics.horizontalAdvance(label) + 34
+        total += max(0, len(labels) - 1) * (metrics.horizontalAdvance("/") + 10)
+        return total <= available
+
+    def go_back(self) -> None:
+        if self._history_index <= 0:
+            return
+        self._history_index -= 1
+        self._changing_history = True
+        self.set_path(self._history[self._history_index], add_history=False)
+        self._changing_history = False
+
+    def go_forward(self) -> None:
+        if self._history_index >= len(self._history) - 1:
+            return
+        self._history_index += 1
+        self._changing_history = True
+        self.set_path(self._history[self._history_index], add_history=False)
+        self._changing_history = False
+
+    def go_up(self) -> None:
+        parent = self.current_path().parent
+        if parent != self.current_path():
+            self.set_path(parent)
+
+    def refresh(self) -> None:
+        path = self.current_path()
+        self.model.setRootPath("")
+        self.set_path(path, add_history=False)
+
+    @Slot(QModelIndex)
+    def open_index(self, index: QModelIndex) -> None:
+        path = Path(self.model.filePath(index))
+        if path.is_dir():
+            self.set_path(path)
+        else:
+            self.open_paths([path])
+
+    def open_selected(self) -> None:
+        paths = self.selected_or_current_paths()
+        if not paths:
+            return
+        if len(paths) == 1 and paths[0].is_dir():
+            self.set_path(paths[0])
+        else:
+            self.open_paths(paths)
+
+    def open_paths(self, paths: list[Path]) -> None:
+        for path in paths:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
+
+    def open_terminal_here(self) -> None:
+        window = self.window()
+        if hasattr(window, "launch_terminal_at"):
+            window.launch_terminal_at(self.current_path())
+
+    def open_with(self) -> None:
+        paths = self.selected_or_current_paths()
+        if not paths:
+            return
+        dialog = OpenWithDialog(self)
+        if dialog.exec() != QDialog.DialogCode.Accepted or not dialog.command():
+            return
+        command = shutil.which(dialog.command()) or dialog.command()
+        try:
+            reap_when_finished(subprocess.Popen([command, *[str(path) for path in paths]], cwd=str(self.current_path())))
+        except OSError as exc:
+            QMessageBox.warning(self, "Open With Failed", str(exc))
+
+    def open_with_desktop(self, exec_line: str) -> None:
+        paths = self.selected_or_current_paths()
+        if not paths:
+            return
+        try:
+            command = desktop_exec_command(exec_line, paths)
+            if command:
+                reap_when_finished(subprocess.Popen(command, cwd=str(self.current_path())))
+        except OSError as exc:
+            QMessageBox.warning(self, "Open With Failed", str(exc))
+
+    def new_folder(self) -> None:
+        name, ok = get_name(self, "New Folder", "Name")
+        if not ok or not name.strip():
+            return
+        target = self.current_path() / name.strip()
+        try:
+            target.mkdir()
+            self.record_undo(UndoAction("created", [(target, Path())]))
+        except OSError as exc:
+            QMessageBox.warning(self, "New Folder Failed", str(exc))
+
+    def new_file(self) -> None:
+        name, ok = get_name(self, "New File", "Name")
+        if not ok or not name.strip():
+            return
+        target = self.current_path() / name.strip()
+        try:
+            target.touch(exist_ok=False)
+            self.record_undo(UndoAction("created", [(target, Path())]))
+        except OSError as exc:
+            QMessageBox.warning(self, "New File Failed", str(exc))
+
+    def rename_selected(self) -> None:
+        path = self.current_item_path()
+        if not path:
+            return
+        name, ok = get_name(self, "Rename", "Name", path.name)
+        if not ok or not name.strip() or name.strip() == path.name:
+            return
+        target = path.with_name(name.strip())
+        try:
+            path.rename(target)
+            self.record_undo(UndoAction("rename", [(target, path)]))
+        except OSError as exc:
+            QMessageBox.warning(self, "Rename Failed", str(exc))
+
+    def duplicate_selected(self) -> None:
+        created: list[tuple[Path, Path]] = []
+        for path in self.selected_or_current_paths():
+            try:
+                target = unique_destination(path.parent, f"{path.stem} copy{path.suffix}")
+                copy_path(path, target)
+                created.append((target, Path()))
+            except OSError as exc:
+                QMessageBox.warning(self, "Duplicate Failed", f"{path}\n\n{exc}")
+                return
+        if created:
+            self.record_undo(UndoAction("created", created))
+
+    def create_archive_selected(self) -> None:
+        paths = self.selected_or_current_paths()
+        if not paths:
+            return
+        default_name = f"{paths[0].stem if len(paths) == 1 else 'archive'}.zip"
+        name, ok = get_name(self, "Create Archive", "Name", default_name)
+        if not ok or not name.strip():
+            return
+        archive_path = self.current_path() / name.strip()
+        if archive_path.suffix.lower() != ".zip":
+            archive_path = archive_path.with_name(f"{archive_path.name}.zip")
+        try:
+            target = choose_existing_destination(self, paths[0], archive_path)
+            if target is None:
+                return
+            create_zip_archive(paths, target)
+            self.record_undo(UndoAction("created", [(target, Path())]))
+        except (OSError, ValueError, zipfile.BadZipFile) as exc:
+            QMessageBox.warning(self, "Archive Failed", str(exc))
+
+    def extract_archives_here(self) -> None:
+        archives = [path for path in self.selected_or_current_paths() if is_archive(path)]
+        if not archives:
+            QMessageBox.information(self, "Extract Archive", "Select one or more supported archives.")
+            return
+        created: list[tuple[Path, Path]] = []
+        try:
+            for archive in archives:
+                target = unique_destination(self.current_path(), archive_base_name(archive))
+                extract_archive(archive, target)
+                created.append((target, Path()))
+            if created:
+                self.record_undo(UndoAction("created", created))
+        except (OSError, ValueError, tarfile.TarError, zipfile.BadZipFile) as exc:
+            QMessageBox.warning(self, "Extract Failed", str(exc))
+
+    def extract_archive_to_folder(self) -> None:
+        archive = self.current_item_path()
+        if not archive or not is_archive(archive):
+            QMessageBox.information(self, "Extract Archive", "Select a supported archive.")
+            return
+        default_name = archive_base_name(archive)
+        name, ok = get_name(self, "Extract To", "Folder", default_name)
+        if not ok or not name.strip():
+            return
+        target = self.current_path() / name.strip()
+        try:
+            if target.exists():
+                target = choose_existing_destination(self, archive, target)
+                if target is None:
+                    return
+            extract_archive(archive, target)
+            self.record_undo(UndoAction("created", [(target, Path())]))
+        except (OSError, ValueError, tarfile.TarError, zipfile.BadZipFile) as exc:
+            QMessageBox.warning(self, "Extract Failed", str(exc))
+
+    def copy_selected_to_peer(self) -> None:
+        if self.peer:
+            self.copy_paths_to(self.operation_paths(), self.peer.current_path())
+
+    def move_selected_to_peer(self) -> None:
+        if self.peer:
+            self.move_paths_to(self.operation_paths(), self.peer.current_path())
+
+    def open_selected_in_peer(self) -> None:
+        path = self.current_item_path()
+        if self.peer and path and path.is_dir():
+            self.peer.set_path(path)
+
+    def preview_selected_in_peer(self) -> None:
+        path = self.current_item_path()
+        if self.peer and path and path.is_file():
+            self.peer.show_manual_preview(path)
+
+    def copy_paths_to(self, paths: list[Path], destination: Path) -> None:
+        if not paths:
+            return
+        window = self.window()
+        if hasattr(window, "queue_file_operation") and window.queue_file_operation(
+            "Copy files", lambda p=list(paths), d=destination, pane=self: pane.copy_paths_to(p, d)
+        ):
+            return
+        targets: list[tuple[Path, Path]] = []
+        for path in paths:
+            target = choose_existing_destination(self, path, destination / path.name)
+            if target is None:
+                return
+            targets.append((path, target))
+        self._start_file_operation("copy", targets, "Copying files...", "created")
+
+    def move_paths_to(self, paths: list[Path], destination: Path) -> None:
+        if not paths:
+            return
+        window = self.window()
+        if hasattr(window, "queue_file_operation") and window.queue_file_operation(
+            "Move files", lambda p=list(paths), d=destination, pane=self: pane.move_paths_to(p, d)
+        ):
+            return
+        targets: list[tuple[Path, Path]] = []
+        for path in paths:
+            target = choose_existing_destination(self, path, destination / path.name)
+            if target is None:
+                return
+            targets.append((path, target))
+        self._start_file_operation("move", targets, "Moving files...", "move")
+
+    def _start_file_operation(self, operation: str, targets: list[tuple[Path, Path]], title: str, undo_kind: str) -> None:
+        if not targets:
+            return
+        window = self.window()
+        if hasattr(window, "begin_file_operation"):
+            window.begin_file_operation()
+
+        progress = QProgressDialog("Preparing...", "Cancel", 0, 0, self)
+        widen_progress_dialog(progress)
+        progress.setWindowModality(Qt.WindowModality.NonModal)
+        progress.setMinimumDuration(0)
+        progress.setAutoClose(False)
+        progress.setAutoReset(False)
+        progress.setWindowTitle(title)
+        progress.show()
+
+        thread = QThread(self)
+        worker = FileOperationWorker(operation, targets)
+        worker.moveToThread(thread)
+        self._operation_threads.append(thread)
+        self._operation_workers.append(worker)
+        self._operation_contexts[worker] = {
+            "progress": progress,
+            "thread": thread,
+            "window": window,
+            "undo_kind": undo_kind,
+            "operation": operation,
+        }
+
+        worker.progress.connect(self._file_operation_progress)
+        worker.completed.connect(self._file_operation_completed)
+        worker.canceled.connect(self._file_operation_canceled)
+        worker.failed.connect(self._file_operation_failed)
+        progress.canceled.connect(worker.cancel)
+        thread.started.connect(worker.run)
+        thread.finished.connect(worker.deleteLater)
+        thread.finished.connect(thread.deleteLater)
+        thread.finished.connect(lambda t=thread: self._operation_threads.remove(t) if t in self._operation_threads else None)
+        thread.finished.connect(lambda w=worker: self._cleanup_file_worker(w))
+        thread.start()
+
+    @Slot(int, int, str, object)
+    def _file_operation_progress(self, value: int, maximum: int, label: str, speed: float) -> None:
+        worker = self.sender()
+        context = self._operation_contexts.get(worker)
+        if not context:
+            return
+        progress = context["progress"]
+        if not isinstance(progress, QProgressDialog):
+            return
+        if progress.maximum() != maximum:
+            progress.setRange(0, maximum)
+        speed_text = readable_size(int(speed)) + "/s" if speed and speed > 0 else "calculating speed..."
+        progress.setLabelText(f"{label}\n{speed_text}")
+        progress.setValue(min(value, maximum))
+
+    @Slot(str, object)
+    def _file_operation_completed(self, _operation: str, completed: list[tuple[Path, Path]]) -> None:
+        self._finish_file_operation(completed)
+
+    @Slot(str, object)
+    def _file_operation_canceled(self, _operation: str, completed: list[tuple[Path, Path]]) -> None:
+        self._finish_file_operation(completed)
+
+    @Slot(str, object)
+    def _file_operation_failed(self, message: str, completed: list[tuple[Path, Path]]) -> None:
+        self._finish_file_operation(completed, message)
+
+    def _finish_file_operation(self, completed: list[tuple[Path, Path]], warning: str | None = None) -> None:
+        worker = self.sender()
+        context = self._operation_contexts.get(worker)
+        if not context:
+            return
+        undo_kind = str(context["undo_kind"])
+        operation = str(context["operation"])
+        progress = context["progress"]
+        thread = context["thread"]
+        window = context["window"]
+        if completed:
+            self.record_undo(UndoAction(undo_kind, completed))
+        if warning:
+            QMessageBox.warning(self, f"{operation.title()} Failed", warning)
+        if isinstance(progress, QProgressDialog):
+            progress.close()
+        if hasattr(window, "end_file_operation"):
+            window.end_file_operation()
+        if isinstance(thread, QThread):
+            thread.quit()
+
+    def _cleanup_file_worker(self, worker: FileOperationWorker) -> None:
+        if worker in self._operation_workers:
+            self._operation_workers.remove(worker)
+        self._operation_contexts.pop(worker, None)
+
+    def handle_drop(self, urls: list[QUrl], action: Qt.DropAction, target_index: QModelIndex) -> bool:
+        paths = [Path(url.toLocalFile()) for url in urls if url.isLocalFile()]
+        if not paths:
+            return False
+
+        destination = self.current_path()
+        if target_index.isValid():
+            target_path = Path(self.model.filePath(target_index))
+            if target_path.is_dir():
+                destination = target_path
+
+        try:
+            destination = destination.resolve()
+        except OSError:
+            pass
+
+        filtered_paths = []
+        for path in paths:
+            try:
+                resolved = path.resolve()
+            except OSError:
+                resolved = path
+            if resolved == destination:
+                continue
+            if path.is_dir() and not path.is_symlink() and resolved in destination.parents:
+                continue
+            filtered_paths.append(path)
+        if not filtered_paths:
+            return False
+
+        if action == Qt.DropAction.MoveAction:
+            self.move_paths_to(filtered_paths, destination)
+        else:
+            self.copy_paths_to(filtered_paths, destination)
+        return True
+
+    def trash_selected(self) -> None:
+        paths = self.selected_or_current_paths()
+        if not paths:
+            return
+        window = self.window()
+        if hasattr(window, "queue_file_operation") and window.queue_file_operation(
+            "Move to trash", lambda pane=self: pane.trash_selected()
+        ):
+            return
+        if hasattr(window, "begin_file_operation"):
+            window.begin_file_operation()
+        failed: list[Path] = []
+        trashed: list[tuple[Path, Path]] = []
+        try:
+            progress = QProgressDialog("Moving items to trash...", "Cancel", 0, len(paths), self)
+            widen_progress_dialog(progress)
+            progress.setWindowModality(Qt.WindowModality.WindowModal)
+            progress.setMinimumDuration(0)
+            progress.setAutoClose(False)
+            progress.setAutoReset(False)
+            progress.show()
+            started_at = time.monotonic()
+            QApplication.processEvents()
+            for row, path in enumerate(paths):
+                progress.setValue(row)
+                progress.setLabelText(f"Moving to trash: {path.name}")
+                QApplication.processEvents()
+                if progress.wasCanceled():
+                    break
+                try:
+                    original = path.expanduser().resolve()
+                except OSError:
+                    original = path.expanduser()
+                trash_path = move_to_trash(path)
+                if trash_path:
+                    trashed.append((trash_path, original))
+                else:
+                    failed.append(path)
+            finish_visible_progress(progress, len(paths), started_at)
+            if trashed and self.trash_callback:
+                self.trash_callback(trashed)
+            if trashed:
+                self.record_undo(UndoAction("trash", trashed))
+            if failed:
+                QMessageBox.warning(self, "Trash Failed", "Could not trash:\n" + "\n".join(str(path) for path in failed))
+        finally:
+            if hasattr(window, "end_file_operation"):
+                window.end_file_operation()
+
+    def delete_permanently_selected(self) -> None:
+        paths = self.selected_or_current_paths()
+        if not paths:
+            return
+        window = self.window()
+        if hasattr(window, "queue_file_operation") and window.queue_file_operation(
+            "Delete permanently", lambda pane=self: pane.delete_permanently_selected()
+        ):
+            return
+        response = QMessageBox.question(
+            self,
+            "Delete Permanently",
+            f"Permanently delete {len(paths)} item(s)?",
+            QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Yes,
+            QMessageBox.StandardButton.Cancel,
+        )
+        if response != QMessageBox.StandardButton.Yes:
+            return
+        if hasattr(window, "begin_file_operation"):
+            window.begin_file_operation()
+        try:
+            progress = QProgressDialog("Deleting items...", "Cancel", 0, len(paths), self)
+            widen_progress_dialog(progress)
+            progress.setWindowModality(Qt.WindowModality.WindowModal)
+            progress.setMinimumDuration(0)
+            progress.setAutoClose(False)
+            progress.setAutoReset(False)
+            progress.show()
+            started_at = time.monotonic()
+            QApplication.processEvents()
+            for row, path in enumerate(paths):
+                progress.setValue(row)
+                progress.setLabelText(f"Deleting: {path.name}")
+                QApplication.processEvents()
+                if progress.wasCanceled():
+                    break
+                try:
+                    remove_existing(path)
+                except OSError as exc:
+                    finish_visible_progress(progress, row, started_at)
+                    QMessageBox.warning(self, "Delete Failed", f"{path}\n\n{exc}")
+                    return
+            finish_visible_progress(progress, len(paths), started_at)
+        finally:
+            if hasattr(window, "end_file_operation"):
+                window.end_file_operation()
+
+    def show_properties(self) -> None:
+        paths = self.selected_or_current_paths()
+        if not paths:
+            paths = [self.current_path()]
+        dialog = PropertiesDialog(paths, self)
+        dialog.exec()
+
+    def calculate_selected_size(self) -> None:
+        paths = self.selected_or_current_paths()
+        if not paths:
+            paths = [self.current_path()]
+        total = files = folders = 0
+        progress = QProgressDialog("Calculating size...", "Cancel", 0, len(paths), self)
+        widen_progress_dialog(progress)
+        progress.setWindowModality(Qt.WindowModality.WindowModal)
+        progress.setMinimumDuration(0)
+        progress.show()
+        for row, path in enumerate(paths):
+            progress.setValue(row)
+            progress.setLabelText(f"Calculating: {path.name or path}")
+            QApplication.processEvents()
+            if progress.wasCanceled():
+                return
+            size, file_count, folder_count = directory_size(path)
+            total += size
+            files += file_count
+            folders += folder_count
+        progress.setValue(len(paths))
+        QMessageBox.information(
+            self,
+            "Directory Size",
+            f"Size: {readable_size(total)}\nFiles: {files}\nFolders: {folders}",
+        )
+
+    def _show_context_menu(self, position) -> None:
+        self._show_context_menu_for_view(self.current_view(), position)
+
+    def _show_context_menu_for_view(self, view: QAbstractItemView, position) -> None:
+        menu = QMenu(self)
+        menu.addAction(menu_icon(self, ("document-open", "folder-open"), QStyle.StandardPixmap.SP_DialogOpenButton), "Open", self.open_selected)
+        open_with_menu = menu.addMenu(menu_icon(self, "system-run", QStyle.StandardPixmap.SP_ComputerIcon), "Open With")
+        paths = self.selected_or_current_paths()
+        open_with_populated = False
+
+        def populate_open_with_menu() -> None:
+            nonlocal open_with_populated
+            if open_with_populated:
+                return
+            open_with_populated = True
+            open_with_menu.clear()
+            if paths:
+                for name, exec_line, icon_name in mime_apps_for(paths[0]):
+                    open_with_menu.addAction(
+                        cached_desktop_icon(self, icon_name),
+                        name,
+                        lambda _checked=False, line=exec_line, pane=self: pane.open_with_desktop(line),
+                    )
+                if open_with_menu.actions():
+                    open_with_menu.addSeparator()
+            open_with_menu.addAction(menu_icon(self, "utilities-terminal", QStyle.StandardPixmap.SP_ComputerIcon), "Other Command...", self.open_with)
+
+        open_with_menu.aboutToShow.connect(populate_open_with_menu)
+        menu.addSeparator()
+        menu.addAction(menu_icon(self, "folder-new", QStyle.StandardPixmap.SP_DirIcon), "New Folder", self.new_folder)
+        menu.addAction(menu_icon(self, "document-new", QStyle.StandardPixmap.SP_FileIcon), "New File", self.new_file)
+        menu.addAction(menu_icon(self, "edit-rename", QStyle.StandardPixmap.SP_FileDialogDetailedView), "Rename", self.rename_selected)
+        menu.addAction(menu_icon(self, "edit-copy", QStyle.StandardPixmap.SP_FileIcon), "Duplicate", self.duplicate_selected)
+        menu.addSeparator()
+        menu.addAction(menu_icon(self, ("package-x-generic", "archive-insert"), QStyle.StandardPixmap.SP_DriveHDIcon), "Create Archive...", self.create_archive_selected)
+        archive_paths = [path for path in paths if is_archive(path)]
+        if archive_paths:
+            menu.addAction(menu_icon(self, "archive-extract", QStyle.StandardPixmap.SP_DirOpenIcon), "Extract Here", self.extract_archives_here)
+            menu.addAction(menu_icon(self, "archive-extract", QStyle.StandardPixmap.SP_DirOpenIcon), "Extract To...", self.extract_archive_to_folder)
+        if self.add_favorite_callback:
+            menu.addSeparator()
+            menu.addAction(menu_icon(self, "bookmark-new", QStyle.StandardPixmap.SP_DialogYesButton), "Add to Favorites", self.add_selected_to_favorites)
+        if self.peer:
+            menu.addSeparator()
+            current_path = self.current_item_path()
+            open_peer_action = menu.addAction(menu_icon(self, "folder-open", QStyle.StandardPixmap.SP_DirOpenIcon), "Open in Other Pane", self.open_selected_in_peer)
+            open_peer_action.setEnabled(bool(current_path and current_path.is_dir()))
+            preview_peer_action = menu.addAction(menu_icon(self, "view-preview", QStyle.StandardPixmap.SP_FileDialogInfoView), "Preview in Other Pane", self.preview_selected_in_peer)
+            preview_peer_action.setEnabled(bool(current_path and current_path.is_file() and is_previewable_file(current_path)))
+            menu.addAction(menu_icon(self, "edit-copy", QStyle.StandardPixmap.SP_ArrowRight), "Copy to Other Pane", self.copy_selected_to_peer)
+            menu.addAction(menu_icon(self, "go-jump", QStyle.StandardPixmap.SP_ArrowRight), "Move to Other Pane", self.move_selected_to_peer)
+        menu.addSeparator()
+        menu.addAction(menu_icon(self, "user-trash", QStyle.StandardPixmap.SP_TrashIcon), "Move to Trash", self.trash_selected)
+        delete_action = menu.addAction(menu_icon(self, "edit-delete", QStyle.StandardPixmap.SP_MessageBoxCritical), "Delete Permanently", self.delete_permanently_selected)
+        delete_action.setShortcut(QKeySequence.StandardKey.Delete)
+        menu.addSeparator()
+        menu.addAction(menu_icon(self, "utilities-terminal", QStyle.StandardPixmap.SP_ComputerIcon), "Terminal Here", self.open_terminal_here)
+        menu.addAction(menu_icon(self, "accessories-calculator", QStyle.StandardPixmap.SP_FileDialogInfoView), "Calculate Size", self.calculate_selected_size)
+        menu.addAction(menu_icon(self, "document-properties", QStyle.StandardPixmap.SP_FileDialogDetailedView), "Properties", self.show_properties)
+        menu.exec(view.viewport().mapToGlobal(position))
+
+    def add_selected_to_favorites(self) -> None:
+        path = self.current_item_path() or self.current_path()
+        if self.add_favorite_callback:
+            self.add_favorite_callback(path)
+
+    def _on_directory_loaded(self, path: str) -> None:
+        if Path(path) == self.current_path():
+            self._update_status()
+
+    def _update_navigation(self) -> None:
+        self.back_button.setEnabled(self._history_index > 0)
+        self.forward_button.setEnabled(self._history_index < len(self._history) - 1)
+
+    def _update_status(self) -> None:
+        self._update_preview()
+        selected = self.selected_paths()
+        if selected:
+            total = 0
+            for path in selected:
+                try:
+                    if path.is_file() or path.is_symlink():
+                        total += path.stat().st_size
+                except OSError:
+                    pass
+            self.status_label.setText(f"{len(selected)} selected, {readable_size(total)}")
+            return
+
+        directory = self.current_path()
+        try:
+            entries = [entry for entry in directory.iterdir() if entry.name not in {".", ".."}]
+        except OSError:
+            entries = []
+        dirs = sum(1 for entry in entries if entry.is_dir())
+        files = len(entries) - dirs
+        suffix = f" matching '{self.search_text}'" if self.search_text.strip() else ""
+        self.status_label.setText(f"{files} files, {dirs} folders{suffix}")
+
+    def _update_preview(self) -> None:
+        if not self.preview_enabled:
+            self._clear_preview()
+            self.preview_source_path = None
+            self.preview_source_pixmap = QPixmap()
+            return
+        path = self.current_item_path()
+        self._show_preview_path(path)
+
+    def _show_preview_path(self, path: Path | None) -> None:
+        if not path or not path.is_file():
+            self._clear_preview()
+            self.preview_source_path = None
+            self.preview_source_pixmap = QPixmap()
+            return
+        if path.suffix.lower() in TEXT_EXTENSIONS or file_mime_type(path).startswith("text/"):
+            self._show_text_preview(path)
+            return
+        if path.suffix.lower() in PDF_EXTENSIONS:
+            self._show_pdf_preview(path)
+            return
+        if path.suffix.lower() not in IMAGE_EXTENSIONS:
+            self._clear_preview()
+            self.preview_source_path = None
+            self.preview_source_pixmap = QPixmap()
+            return
+        if self.preview_source_path != path:
+            self.preview_source_path = path
+            self.preview_source_pixmap = QPixmap(str(path))
+        if self.preview_source_pixmap.isNull():
+            self._clear_preview()
+            return
+        if self.manual_preview_active:
+            self._set_pdf_controls_visible(False)
+            self.full_preview_text.setVisible(False)
+            self.full_preview_label.setVisible(True)
+            self.full_preview_stack.setCurrentWidget(self.full_preview_image)
+            self._rescale_full_preview()
+            return
+        self.preview_text.setVisible(False)
+        self.preview_label.setVisible(True)
+        self.preview_stack.setCurrentWidget(self.preview_label)
+        self._rescale_preview()
+
+    def show_manual_preview(self, path: Path) -> None:
+        self.manual_preview_active = True
+        self.preview_splitter.setSizes([max(1, sum(self.preview_splitter.sizes())), 0])
+        self.preview_stack.setVisible(False)
+        self.stack.setCurrentWidget(self.full_preview_stack)
+        self._show_preview_path(path)
+
+    def close_manual_preview(self) -> bool:
+        if not self.manual_preview_active:
+            return False
+        self.manual_preview_active = False
+        self.full_preview_label.clear()
+        self.full_preview_text.clear()
+        self._clear_preview()
+        self.preview_source_path = None
+        self.preview_source_pixmap = QPixmap()
+        self.preview_pdf_page = 0
+        self.preview_pdf_page_count = 0
+        self.stack.setCurrentIndex(VIEW_MODES.index(self.view_combo.currentText()))
+        self.set_preview_enabled(self.preview_enabled)
+        return True
+
+    def _rescale_preview(self) -> None:
+        if self.preview_source_pixmap.isNull() or not self.preview_label.isVisible():
+            return
+        self.preview_label.setPixmap(
+            self.preview_source_pixmap.scaled(
+                QSize(max(180, self.preview_label.width() - 12), max(80, self.preview_label.height() - 12)),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+
+    def _rescale_full_preview(self) -> None:
+        if self.preview_source_pixmap.isNull() or not self.full_preview_label.isVisible():
+            return
+        self.full_preview_label.setPixmap(
+            self.preview_source_pixmap.scaled(
+                QSize(max(240, self.full_preview_label.width() - 24), max(180, self.full_preview_label.height() - 24)),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+
+    def _show_text_preview(self, path: Path) -> None:
+        if self.preview_source_path != path or self.manual_preview_active:
+            self.preview_source_path = path
+            self.preview_source_pixmap = QPixmap()
+            try:
+                data = path.read_bytes()[:256 * 1024]
+                text = data.decode("utf-8", errors="replace")
+                if path.stat().st_size > len(data):
+                    text += "\n\n... preview truncated ..."
+            except OSError as exc:
+                text = str(exc)
+            target = self.full_preview_text if self.manual_preview_active else self.preview_text
+            target.setPlainText(text)
+            target.moveCursor(target.textCursor().MoveOperation.Start)
+        if self.manual_preview_active:
+            self._set_pdf_controls_visible(False)
+            self.full_preview_label.clear()
+            self.full_preview_label.setVisible(False)
+            self.full_preview_text.setVisible(True)
+            self.full_preview_stack.setCurrentWidget(self.full_preview_text)
+            return
+        self.preview_label.clear()
+        self.preview_label.setVisible(False)
+        self.preview_text.setVisible(True)
+        self.preview_stack.setCurrentWidget(self.preview_text)
+
+    def _show_pdf_preview(self, path: Path) -> None:
+        if self.preview_source_path != path:
+            self.preview_source_path = path
+            self.preview_pdf_page = 0
+        self._render_pdf_page(path)
+        if self.preview_source_pixmap.isNull():
+            self._clear_preview()
+            return
+        if self.manual_preview_active:
+            self._set_pdf_controls_visible(True)
+            self.full_preview_text.setVisible(False)
+            self.full_preview_label.setVisible(True)
+            self.full_preview_stack.setCurrentWidget(self.full_preview_image)
+            self._rescale_full_preview()
+            return
+        self.preview_text.setVisible(False)
+        self.preview_label.setVisible(True)
+        self.preview_stack.setCurrentWidget(self.preview_label)
+        self._rescale_preview()
+
+    def _render_pdf_page(self, path: Path) -> None:
+        self.preview_source_pixmap = QPixmap()
+        document = QPdfDocument(self)
+        if document.load(str(path)) != QPdfDocument.Error.None_ or document.pageCount() <= 0:
+            self.preview_pdf_page_count = 0
+            return
+        self.preview_pdf_page_count = document.pageCount()
+        self.preview_pdf_page = max(0, min(self.preview_pdf_page, self.preview_pdf_page_count - 1))
+        page_size = document.pagePointSize(self.preview_pdf_page).toSize()
+        if page_size.isEmpty():
+            page_size = QSize(900, 1200)
+        render_size = page_size.scaled(QSize(1600, 2200), Qt.AspectRatioMode.KeepAspectRatio)
+        image = document.render(self.preview_pdf_page, render_size)
+        if not image.isNull():
+            self.preview_source_pixmap = QPixmap.fromImage(image)
+
+    def _set_pdf_controls_visible(self, visible: bool) -> None:
+        self.pdf_controls.setVisible(visible and self.manual_preview_active)
+        self._update_pdf_controls()
+
+    def _update_pdf_controls(self) -> None:
+        total = max(0, self.preview_pdf_page_count)
+        current = self.preview_pdf_page + 1 if total else 0
+        self.pdf_page_label.setText(f"Page {current} / {total}")
+        self.pdf_prev_button.setEnabled(total > 1 and self.preview_pdf_page > 0)
+        self.pdf_next_button.setEnabled(total > 1 and self.preview_pdf_page < total - 1)
+
+    def previous_pdf_page(self) -> None:
+        if not self.preview_source_path or self.preview_pdf_page <= 0:
+            return
+        self.preview_pdf_page -= 1
+        self._show_pdf_preview(self.preview_source_path)
+
+    def next_pdf_page(self) -> None:
+        if not self.preview_source_path or self.preview_pdf_page >= self.preview_pdf_page_count - 1:
+            return
+        self.preview_pdf_page += 1
+        self._show_pdf_preview(self.preview_source_path)
+
+    def _clear_preview(self) -> None:
+        self.preview_label.clear()
+        self.preview_label.setVisible(False)
+        self.preview_text.clear()
+        self.preview_text.setVisible(False)
+        self.full_preview_label.clear()
+        self.full_preview_text.clear()
+
+
+class SidePanel(QWidget):
+    def __init__(self, open_path_callback, favorites_changed_callback=None, recent_changed_callback=None, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.open_path_callback = open_path_callback
+        self.favorites_changed_callback = favorites_changed_callback
+        self.recent_changed_callback = recent_changed_callback
+        self.icon_provider = QFileIconProvider()
+        self.favorites: list[Path] = []
+        self.favorite_names: dict[Path, str] = {}
+        self.recent_paths: list[Path] = []
+
+        self.tabs = QTabWidget()
+        self.shortcuts = QListWidget()
+        self.shortcuts.setIconSize(QSize(22, 22))
+        self.shortcuts.itemActivated.connect(lambda item, panel=self: panel._open_shortcut(item))
+        self.shortcuts.itemDoubleClicked.connect(lambda item, panel=self: panel._open_shortcut(item))
+        self.shortcuts.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.shortcuts.customContextMenuRequested.connect(lambda position, panel=self: panel._show_shortcut_menu(position))
+        self._populate_shortcuts()
+
+        self.tree_model = QFileSystemModel(self)
+        self.show_hidden = False
+        self._apply_tree_filter()
+        self.tree_model.setRootPath(QDir.rootPath())
+        self.tree_model.directoryLoaded.connect(lambda _path, panel=self: panel.select_home_in_tree())
+
+        self.tree = QTreeView()
+        self.tree.setModel(self.tree_model)
+        self.tree.setRootIndex(self.tree_model.index(QDir.rootPath()))
+        self.tree.setHeaderHidden(True)
+        self.tree.setAnimated(False)
+        for column in (1, 2, 3):
+            self.tree.hideColumn(column)
+        self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tree.customContextMenuRequested.connect(lambda position, panel=self: panel._show_tree_menu(position))
+        self.tree.doubleClicked.connect(lambda index, panel=self: panel._open_tree_index(index))
+        self.tree.activated.connect(lambda index, panel=self: panel._open_tree_index(index))
+
+        shortcuts_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_DirHomeIcon)
+        tree_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon)
+        self.tabs.addTab(self.shortcuts, shortcuts_icon, "Shortcuts")
+        self.tabs.addTab(self.tree, tree_icon, "Tree")
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.tabs)
+        self.version_label = QLabel(f"fm {APP_VERSION}")
+        self.version_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.version_label.setStyleSheet("padding: 4px 6px; color: #8f98a3; font-size: 11px;")
+        layout.addWidget(self.version_label)
+        QTimer.singleShot(0, self.select_home_in_tree)
+
+    def current_mode(self) -> str:
+        return self.tabs.tabText(self.tabs.currentIndex())
+
+    def set_mode(self, mode: str) -> None:
+        for index in range(self.tabs.count()):
+            if self.tabs.tabText(index) == mode:
+                self.tabs.setCurrentIndex(index)
+                return
+
+    def select_home_in_tree(self) -> None:
+        index = self.tree_model.index(str(Path.home()))
+        if not index.isValid():
+            return
+        parent = index.parent()
+        while parent.isValid():
+            self.tree.expand(parent)
+            parent = parent.parent()
+        self.tree.setCurrentIndex(index)
+        self.tree.selectionModel().select(
+            index,
+            QItemSelectionModel.SelectionFlag.ClearAndSelect | QItemSelectionModel.SelectionFlag.Rows,
+        )
+        self.tree.scrollTo(index, QAbstractItemView.ScrollHint.PositionAtCenter)
+
+    def _apply_tree_filter(self) -> None:
+        flags = QDir.Filter.AllDirs | QDir.Filter.NoDotAndDotDot
+        if self.show_hidden:
+            flags |= QDir.Filter.Hidden
+        self.tree_model.setFilter(flags)
+
+    def set_show_hidden(self, show_hidden: bool) -> None:
+        self.show_hidden = show_hidden
+        self._apply_tree_filter()
+
+    def set_favorites(self, favorites: list[Path], names: dict[str, str] | None = None) -> None:
+        seen: set[Path] = set()
+        self.favorites = []
+        self.favorite_names = {}
+        for path in favorites:
+            try:
+                resolved = path.expanduser().resolve()
+            except OSError:
+                resolved = path.expanduser()
+            if resolved.exists() and resolved not in seen:
+                seen.add(resolved)
+                self.favorites.append(resolved)
+                if names and str(resolved) in names:
+                    self.favorite_names[resolved] = names[str(resolved)]
+        self._populate_shortcuts()
+
+    def set_recent_paths(self, paths: list[Path]) -> None:
+        self.recent_paths = [path for path in paths if path.exists() and path.is_dir()]
+        self._populate_shortcuts()
+
+    def add_favorite(self, path: Path) -> None:
+        try:
+            favorite = path.expanduser().resolve()
+        except OSError:
+            favorite = path.expanduser()
+        if favorite not in self.favorites:
+            self.favorites.append(favorite)
+            self._populate_shortcuts()
+            self._favorites_changed()
+
+    def remove_favorite(self, path: Path) -> None:
+        self.favorites = [favorite for favorite in self.favorites if favorite != path]
+        self.favorite_names.pop(path, None)
+        self._populate_shortcuts()
+        self._favorites_changed()
+
+    def remove_recent(self, path: Path) -> None:
+        self.recent_paths = [recent for recent in self.recent_paths if recent != path]
+        self._populate_shortcuts()
+        self._recent_changed()
+
+    def clear_recent(self) -> None:
+        self.recent_paths = []
+        self._populate_shortcuts()
+        self._recent_changed()
+
+    def rename_favorite(self, path: Path) -> None:
+        current = self.favorite_names.get(path, path.name or str(path))
+        name, ok = get_name(self, "Rename Favorite", "Name", current)
+        if ok and name.strip():
+            self.favorite_names[path] = name.strip()
+            self._populate_shortcuts()
+            self._favorites_changed()
+
+    def move_favorite(self, path: Path, offset: int) -> None:
+        if path not in self.favorites:
+            return
+        index = self.favorites.index(path)
+        new_index = max(0, min(len(self.favorites) - 1, index + offset))
+        if index == new_index:
+            return
+        self.favorites.insert(new_index, self.favorites.pop(index))
+        self._populate_shortcuts()
+        self._favorites_changed()
+
+    def _favorites_changed(self) -> None:
+        if self.favorites_changed_callback:
+            self.favorites_changed_callback(self.favorites, self.favorite_names)
+
+    def _recent_changed(self) -> None:
+        if self.recent_changed_callback:
+            self.recent_changed_callback(self.recent_paths)
+
+    def _populate_shortcuts(self) -> None:
+        places = [
+            ("Home", Path.home(), QStyle.StandardPixmap.SP_DirHomeIcon),
+            ("Desktop", Path.home() / "Desktop", QStyle.StandardPixmap.SP_DesktopIcon),
+            ("Downloads", Path.home() / "Downloads", QStyle.StandardPixmap.SP_DirIcon),
+            ("Documents", Path.home() / "Documents", QStyle.StandardPixmap.SP_FileDialogDetailedView),
+            ("Pictures", Path.home() / "Pictures", QStyle.StandardPixmap.SP_FileDialogContentsView),
+            ("Music", Path.home() / "Music", QStyle.StandardPixmap.SP_MediaVolume),
+            ("Videos", Path.home() / "Videos", QStyle.StandardPixmap.SP_MediaPlay),
+            ("tmp", Path.home() / "tmp", QStyle.StandardPixmap.SP_DirIcon),
+            ("scripts", Path.home() / "scripts", QStyle.StandardPixmap.SP_FileIcon),
+            ("Trash", Path.home() / ".local" / "share" / "Trash" / "files", QStyle.StandardPixmap.SP_TrashIcon),
+            ("Root", Path("/"), QStyle.StandardPixmap.SP_DriveHDIcon),
+        ]
+        self.shortcuts.clear()
+        for path in self.favorites:
+            if path.exists():
+                item = QListWidgetItem(self.favorite_names.get(path, path.name or str(path)))
+                item.setIcon(self._shortcut_icon("Favorite", path, QStyle.StandardPixmap.SP_DirIcon))
+                item.setData(Qt.ItemDataRole.UserRole, str(path))
+                item.setData(Qt.ItemDataRole.UserRole + 1, True)
+                item.setData(Qt.ItemDataRole.UserRole + 2, "favorite")
+                item.setToolTip(str(path))
+                self.shortcuts.addItem(item)
+        if self.favorites:
+            separator = QListWidgetItem("Places")
+            separator.setFlags(Qt.ItemFlag.NoItemFlags)
+            self.shortcuts.addItem(separator)
+        for label, path, fallback_icon in places:
+            if path.exists() and path.is_dir():
+                item = QListWidgetItem(label)
+                item.setIcon(self._shortcut_icon(label, path, fallback_icon))
+                item.setData(Qt.ItemDataRole.UserRole, str(path))
+                item.setData(Qt.ItemDataRole.UserRole + 1, False)
+                item.setData(Qt.ItemDataRole.UserRole + 2, "place")
+                item.setToolTip(str(path))
+                self.shortcuts.addItem(item)
+        if self.recent_paths:
+            separator = QListWidgetItem("Recent")
+            separator.setFlags(Qt.ItemFlag.NoItemFlags)
+            self.shortcuts.addItem(separator)
+            for path in self.recent_paths:
+                item = QListWidgetItem(path.name or str(path))
+                item.setIcon(self._shortcut_icon("Recent", path, QStyle.StandardPixmap.SP_DirIcon))
+                item.setData(Qt.ItemDataRole.UserRole, str(path))
+                item.setData(Qt.ItemDataRole.UserRole + 1, False)
+                item.setData(Qt.ItemDataRole.UserRole + 2, "recent")
+                item.setToolTip(str(path))
+                self.shortcuts.addItem(item)
+
+    def _shortcut_icon(self, label: str, path: Path, fallback_icon: QStyle.StandardPixmap):
+        theme_names = {
+            "Home": "user-home",
+            "Desktop": "user-desktop",
+            "Downloads": "folder-download",
+            "Documents": "folder-documents",
+            "Pictures": "folder-pictures",
+            "Music": "folder-music",
+            "Videos": "folder-videos",
+            "Root": "drive-harddisk",
+        }
+        theme_icon = QIcon.fromTheme(theme_names.get(label, "folder"))
+        if not theme_icon.isNull():
+            return theme_icon
+        file_icon = self.icon_provider.icon(QFileInfo(str(path)))
+        if not file_icon.isNull():
+            return file_icon
+        return self.style().standardIcon(fallback_icon)
+
+    def _open_shortcut(self, item: QListWidgetItem) -> None:
+        if not item.flags() & Qt.ItemFlag.ItemIsEnabled:
+            return
+        path = Path(str(item.data(Qt.ItemDataRole.UserRole)))
+        self.open_path_callback(path)
+
+    def _show_shortcut_menu(self, position) -> None:
+        item = self.shortcuts.itemAt(position)
+        if not item:
+            return
+        item_type = str(item.data(Qt.ItemDataRole.UserRole + 2) or "")
+        if item_type not in {"favorite", "recent"}:
+            return
+        path = Path(str(item.data(Qt.ItemDataRole.UserRole)))
+        menu = QMenu(self)
+        if item_type == "favorite":
+            menu.addAction(menu_icon(self, "edit-rename", QStyle.StandardPixmap.SP_FileDialogDetailedView), "Rename Favorite", lambda: self.rename_favorite(path))
+            menu.addAction(menu_icon(self, "go-up", QStyle.StandardPixmap.SP_ArrowUp), "Move Up", lambda: self.move_favorite(path, -1))
+            menu.addAction(menu_icon(self, "go-down", QStyle.StandardPixmap.SP_ArrowDown), "Move Down", lambda: self.move_favorite(path, 1))
+            menu.addAction(menu_icon(self, "list-remove", QStyle.StandardPixmap.SP_DialogCancelButton), "Remove Favorite", lambda: self.remove_favorite(path))
+        else:
+            menu.addAction(menu_icon(self, "list-remove", QStyle.StandardPixmap.SP_DialogCancelButton), "Remove Recent", lambda: self.remove_recent(path))
+            menu.addAction(menu_icon(self, "edit-clear", QStyle.StandardPixmap.SP_DialogResetButton), "Clear Recent", self.clear_recent)
+        menu.exec(self.shortcuts.viewport().mapToGlobal(position))
+
+    def _show_tree_menu(self, position) -> None:
+        index = self.tree.indexAt(position)
+        if not index.isValid():
+            return
+        self.tree.setCurrentIndex(index)
+        path = Path(self.tree_model.filePath(index))
+        if not path.exists():
+            return
+        menu = QMenu(self)
+        menu.addAction(menu_icon(self, ("document-open", "folder-open"), QStyle.StandardPixmap.SP_DialogOpenButton), "Open", lambda p=path: self.open_path_callback(p))
+        if path.is_dir():
+            menu.addAction(menu_icon(self, "bookmark-new", QStyle.StandardPixmap.SP_DialogYesButton), "Add to Favorites", lambda p=path: self.add_favorite(p))
+            menu.addAction(menu_icon(self, "utilities-terminal", QStyle.StandardPixmap.SP_ComputerIcon), "Terminal Here", lambda p=path: self._open_terminal_at(p))
+        menu.addAction(menu_icon(self, "accessories-calculator", QStyle.StandardPixmap.SP_FileDialogInfoView), "Calculate Size", lambda p=path: self._show_tree_size(p))
+        menu.exec(self.tree.viewport().mapToGlobal(position))
+
+    def _open_terminal_at(self, path: Path) -> None:
+        window = self.window()
+        if hasattr(window, "launch_terminal_at"):
+            window.launch_terminal_at(path)
+
+    def _show_tree_size(self, path: Path) -> None:
+        size, files, folders = directory_size(path)
+        QMessageBox.information(self, "Directory Size", f"Size: {readable_size(size)}\nFiles: {files}\nFolders: {folders}")
+
+    @Slot(QModelIndex)
+    def _open_tree_index(self, index: QModelIndex) -> None:
+        if not index.isValid():
+            return
+        path = Path(self.tree_model.filePath(index))
+        if path.is_dir():
+            self.open_path_callback(path)
+
+
+class FileManager(QMainWindow):
+    def __init__(self, left_state: PaneState | None = None, right_state: PaneState | None = None) -> None:
+        super().__init__()
+        self.cli_left_state = left_state
+        self.cli_right_state = right_state
+        self.copy_buffer: list[Path] = []
+        self.undo_stack: list[UndoAction] = []
+        self.active_file_operations = 0
+        self.operation_queue: list[tuple[str, Callable[[], None]]] = []
+        self.running_queued_operation = False
+        self.setWindowTitle("fm")
+        self.setMinimumSize(900, 560)
+        self.settings = QSettings(APP_ORG, APP_NAME)
+        self.show_hidden = str(self.settings.value("showHidden", "false")).lower() == "true"
+        self.preview_enabled = str(self.settings.value("previewEnabled", "true")).lower() != "false"
+        self.side_panel_width = int(self.settings.value("sidePanel/width", 180))
+        self._restoring_side_panel_width = False
+        self.icon_layout = str(self.settings.value("iconLayout", "Normal"))
+        if self.icon_layout not in ICON_LAYOUTS:
+            self.icon_layout = "Normal"
+        self.terminal_command = str(self.settings.value("terminal/command", DEFAULT_TERMINAL_COMMAND))
+        self.terminal_args = str(self.settings.value("terminal/args", DEFAULT_TERMINAL_ARGS))
+        self.user_buttons = self._load_user_buttons()
+        TERMINAL_SIGNALS.failed.connect(self._terminal_launch_failed)
+        self.current_theme = str(self.settings.value("theme", "Dark"))
+        if self.current_theme not in THEMES:
+            self.current_theme = "Dark"
+        self.apply_theme(self.current_theme)
+
+        self.left = FilePane("Left", self.add_favorite, self.record_trashed)
+        self.right = FilePane("Right", self.add_favorite, self.record_trashed)
+        self.left.set_peer(self.right)
+        self.right.set_peer(self.left)
+        self.left.set_icon_layout(self.icon_layout)
+        self.right.set_icon_layout(self.icon_layout)
+        self.active_pane = self.left
+        self._update_active_pane_style()
+
+        self.splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.splitter.addWidget(self.left)
+        self.splitter.addWidget(self.right)
+        self.setCentralWidget(self.splitter)
+
+        self._build_side_panel()
+        self._build_toolbar()
+        self._install_shortcuts()
+        self._wire_focus(self.left)
+        self._wire_focus(self.right)
+        app = QApplication.instance()
+        if app:
+            app.installEventFilter(self)
+        self.restore_settings()
+
+    def _build_side_panel(self) -> None:
+        self.side_panel = SidePanel(self.open_side_path, self.save_favorites, self.save_recent_paths, self)
+        self.side_dock = QDockWidget("Side Panel", self)
+        self.side_dock.setObjectName("side_panel")
+        self.side_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
+        self.side_dock.setWidget(self.side_panel)
+        self.side_dock.installEventFilter(self)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.side_dock)
+
+    def _build_toolbar(self) -> None:
+        toolbar = QToolBar("Main")
+        toolbar.setMovable(False)
+        toolbar.setIconSize(QSize(27, 27))
+        self.main_toolbar = toolbar
+        self.user_button_actions: list[QAction] = []
+        self.addToolBar(toolbar)
+
+        actions = [
+            ("New Folder", self.new_folder, ("folder-new",), QStyle.StandardPixmap.SP_DirIcon),
+            ("New File", self.new_file, ("document-new",), QStyle.StandardPixmap.SP_FileIcon),
+            ("Rename", self.rename, ("edit-rename",), QStyle.StandardPixmap.SP_FileDialogDetailedView),
+            ("Copy Across", self.copy_across, ("edit-copy",), QStyle.StandardPixmap.SP_ArrowRight),
+            ("Move Across", self.move_across, ("go-jump",), QStyle.StandardPixmap.SP_ArrowRight),
+            ("Trash", self.trash, ("user-trash",), QStyle.StandardPixmap.SP_TrashIcon),
+        ]
+        for text, callback, icon_names, fallback in actions:
+            action = QAction(menu_icon(self, icon_names, fallback), text, self)
+            action.triggered.connect(lambda _checked=False, cb=callback: cb())
+            toolbar.addAction(action)
+
+        empty_trash_icon = tinted_icon(
+            menu_icon(self, ("user-trash-full", "user-trash", "edit-clear"), QStyle.StandardPixmap.SP_TrashIcon),
+            "#ef4444",
+        )
+        empty_trash_action = QAction(empty_trash_icon, "Empty Trash", self)
+        empty_trash_action.triggered.connect(lambda _checked=False, window=self: window.empty_trash())
+        toolbar.addAction(empty_trash_action)
+
+        terminal_here_action = QAction(terminal_toolbar_icon("#38bdf8"), "Terminal Here", self)
+        terminal_here_action.triggered.connect(lambda _checked=False, window=self: window.terminal())
+        toolbar.addAction(terminal_here_action)
+
+        terminal_home_action = QAction(terminal_toolbar_icon("#a78bfa"), "Terminal Home", self)
+        terminal_home_action.triggered.connect(lambda _checked=False, window=self: window.terminal_home())
+        toolbar.addAction(terminal_home_action)
+
+        properties_action = QAction(menu_icon(self, "document-properties", QStyle.StandardPixmap.SP_FileDialogDetailedView), "Properties", self)
+        properties_action.triggered.connect(lambda _checked=False, window=self: window.properties())
+        toolbar.addAction(properties_action)
+
+        self.hidden_action = QAction(menu_icon(self, "view-hidden", QStyle.StandardPixmap.SP_FileDialogContentsView), "Hidden", self)
+        self.hidden_action.setCheckable(True)
+        self.hidden_action.setChecked(self.show_hidden)
+        self.hidden_action.setToolTip("Show hidden files")
+        self.hidden_action.toggled.connect(lambda checked, window=self: window.set_show_hidden(checked))
+        toolbar.addAction(self.hidden_action)
+
+        self.preview_action = QAction(menu_icon(self, "view-preview", QStyle.StandardPixmap.SP_FileDialogInfoView), "Preview", self)
+        self.preview_action.setCheckable(True)
+        self.preview_action.setChecked(self.preview_enabled)
+        self.preview_action.toggled.connect(lambda checked, window=self: window.set_preview_enabled(checked))
+        toolbar.addAction(self.preview_action)
+
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        toolbar.addWidget(spacer)
+
+        swap_action = QAction(menu_icon(self, "view-refresh", QStyle.StandardPixmap.SP_BrowserReload), "Swap Panes", self)
+        swap_action.triggered.connect(lambda _checked=False, window=self: window.swap_panes())
+        toolbar.addAction(swap_action)
+        self.user_button_anchor = swap_action
+        self._populate_user_toolbar_buttons()
+
+        side_action = self.side_dock.toggleViewAction()
+        side_action.setText("Side Panel")
+        side_action.setIcon(menu_icon(self, "sidebar-show", QStyle.StandardPixmap.SP_FileDialogListView))
+        toolbar.addAction(side_action)
+
+        settings_action = QAction(menu_icon(self, "preferences-system", QStyle.StandardPixmap.SP_FileDialogDetailedView), "Settings", self)
+        settings_action.triggered.connect(lambda _checked=False, window=self: window.open_settings())
+        toolbar.addAction(settings_action)
+
+    def _load_user_buttons(self) -> list[dict[str, str]]:
+        try:
+            raw_buttons = json.loads(str(self.settings.value("userButtonsJson", "[]")))
+        except json.JSONDecodeError:
+            raw_buttons = []
+        buttons: list[dict[str, str]] = []
+        if isinstance(raw_buttons, list):
+            for item in raw_buttons[:USER_BUTTON_COUNT]:
+                if isinstance(item, dict):
+                    buttons.append(
+                        {
+                            "label": str(item.get("label", "")),
+                            "symbol": str(item.get("symbol", "")),
+                            "command": str(item.get("command", "")),
+                        }
+                    )
+        while len(buttons) < USER_BUTTON_COUNT:
+            buttons.append({"label": "", "symbol": "", "command": ""})
+        return buttons
+
+    def _populate_user_toolbar_buttons(self) -> None:
+        if not hasattr(self, "main_toolbar"):
+            return
+        for action in self.user_button_actions:
+            self.main_toolbar.removeAction(action)
+        self.user_button_actions.clear()
+        for index, button in enumerate(self.user_buttons):
+            command = button.get("command", "").strip()
+            if not command:
+                continue
+            label = button.get("label", "").strip() or f"Button {index + 1}"
+            symbol = button.get("symbol", "").strip()
+            action = QAction(label, self)
+            if symbol.startswith("icon:"):
+                icon_name = symbol.partition(":")[2].strip()
+                icon = QIcon.fromTheme(icon_name)
+                if not icon.isNull():
+                    action.setIcon(icon)
+            elif symbol:
+                icon_path = Path(symbol).expanduser()
+                if icon_path.exists() and icon_path.is_file():
+                    icon = QIcon(str(icon_path))
+                    if not icon.isNull():
+                        action.setIcon(icon)
+                    action.setToolTip(label)
+                else:
+                    action.setText(symbol)
+                    action.setToolTip(label)
+            action.triggered.connect(lambda _checked=False, row=index, window=self: window.run_user_button(row))
+            anchor = getattr(self, "user_button_anchor", None)
+            if isinstance(anchor, QAction):
+                self.main_toolbar.insertAction(anchor, action)
+            else:
+                self.main_toolbar.addAction(action)
+            self.user_button_actions.append(action)
+
+    def terminal_command_line(self) -> list[str]:
+        command = self.terminal_command.strip() or DEFAULT_TERMINAL_COMMAND
+        args = shlex.split(self.terminal_args) if self.terminal_args.strip() else []
+        executable = shutil.which(command) or command
+        return [executable, *args]
+
+    def launch_terminal_at(self, path: Path) -> None:
+        try:
+            command = self.terminal_command_line()
+        except ValueError as exc:
+            QMessageBox.warning(self, "Terminal Failed", str(exc))
+            return
+        QThreadPool.globalInstance().start(TerminalLaunchJob(command, path, TERMINAL_SIGNALS))
+
+    @Slot(str)
+    def _terminal_launch_failed(self, message: str) -> None:
+        QMessageBox.warning(self, "Terminal Failed", message)
+
+    def run_user_button(self, index: int) -> None:
+        if index < 0 or index >= len(self.user_buttons):
+            return
+        command_text = self.user_buttons[index].get("command", "").strip()
+        if not command_text:
+            return
+        try:
+            parts = shlex.split(command_text)
+        except ValueError as exc:
+            QMessageBox.warning(self, "Command Failed", str(exc))
+            return
+        if not parts:
+            return
+        pane = self.active_pane
+        selected = " ".join(str(path) for path in pane.operation_paths())
+        replacements = {
+            "path": str(pane.current_path()),
+            "left": str(self.left.current_path()),
+            "right": str(self.right.current_path()),
+            "selected": selected,
+        }
+        try:
+            command = [part.format(**replacements) for part in parts]
+        except KeyError as exc:
+            QMessageBox.warning(self, "Command Failed", f"Unknown placeholder: {exc}")
+            return
+        command[0] = shutil.which(command[0]) or command[0]
+        try:
+            reap_when_finished(subprocess.Popen(command, cwd=str(pane.current_path())))
+        except OSError as exc:
+            QMessageBox.warning(self, "Command Failed", f"{command_text}\n\n{exc}")
+
+    def _install_shortcuts(self) -> None:
+        shortcuts = [
+            (QKeySequence.StandardKey.Open, self.open_selected),
+            (QKeySequence(Qt.Key.Key_Return), self.open_selected),
+            (QKeySequence(Qt.Key.Key_Enter), self.open_selected),
+            (QKeySequence("Ctrl+R"), self.refresh),
+            (QKeySequence.StandardKey.Copy, self.copy_highlighted),
+            (QKeySequence.StandardKey.Paste, self.paste_copied),
+            (QKeySequence.StandardKey.Undo, self.undo_last_action),
+            (QKeySequence.StandardKey.Delete, self.trash),
+            (QKeySequence("Shift+Delete"), self.delete_permanently),
+            (QKeySequence("F2"), self.rename),
+            (QKeySequence("F5"), self.copy_across),
+            (QKeySequence("F6"), self.move_across),
+            (QKeySequence("Ctrl+M"), self.move_across),
+            (QKeySequence("F7"), self.new_folder),
+            (QKeySequence("Ctrl+N"), self.new_file),
+            (QKeySequence(Qt.Key.Key_Backspace), self.go_back),
+            (QKeySequence("Alt+Left"), self.go_back),
+            (QKeySequence("Alt+Right"), self.go_forward),
+            (QKeySequence("Alt+Up"), self.go_up),
+            (QKeySequence("Ctrl+L"), self.focus_path),
+            (QKeySequence("Ctrl+F"), self.focus_search),
+            (QKeySequence("Ctrl+H"), self.toggle_hidden),
+            (QKeySequence("Ctrl++"), self.zoom_in),
+            (QKeySequence("Ctrl+="), self.zoom_in),
+            (QKeySequence("Ctrl+-"), self.zoom_out),
+            (QKeySequence("F4"), self.terminal),
+            (QKeySequence("Ctrl+B"), self.side_dock.toggleViewAction().trigger),
+            (QKeySequence("F9"), self.side_dock.toggleViewAction().trigger),
+            (QKeySequence("Alt+Return"), self.properties),
+            (QKeySequence("Ctrl+,"), self.open_settings),
+            (QKeySequence("F1"), self.open_help),
+            (QKeySequence("Ctrl+Q"), self.close),
+        ]
+        for sequence, callback in shortcuts:
+            shortcut = QShortcut(sequence, self)
+            shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
+            shortcut.activated.connect(lambda cb=callback: cb())
+
+    def _wire_focus(self, pane: FilePane) -> None:
+        for widget in [pane.path_edit, pane.search_edit, pane.icon_view, pane.list_view, pane.detail_view]:
+            widget.installEventFilter(self)
+        for view in [pane.icon_view, pane.list_view, pane.detail_view]:
+            view.viewport().installEventFilter(self)
+
+    def eventFilter(self, watched, event) -> bool:
+        if watched is getattr(self, "side_dock", None) and event.type() == QEvent.Type.Resize:
+            if self.side_dock.isVisible() and not self._restoring_side_panel_width:
+                self.side_panel_width = max(80, self.side_dock.width())
+        if event.type() == QEvent.Type.KeyPress and self.handle_manual_preview_key(event):
+            event.accept()
+            return True
+        if event.type() == QEvent.Type.KeyPress and self._is_plain_escape(event) and self.close_manual_previews():
+            event.accept()
+            return True
+        if event.type() in {QEvent.Type.ShortcutOverride, QEvent.Type.KeyPress}:
+            if self._is_plain_space(event) and self._space_targets_tag(watched):
+                if event.type() == QEvent.Type.KeyPress:
+                    self.active_pane.toggle_current_tag()
+                event.accept()
+                return True
+            if self._is_plain_escape(event) and self._space_targets_tag(watched):
+                if event.type() == QEvent.Type.KeyPress:
+                    if self.close_manual_previews():
+                        event.accept()
+                        return True
+                    self.active_pane.clear_selection()
+                event.accept()
+                return True
+        if event.type() == QEvent.Type.FocusIn:
+            if watched in {
+                self.left.path_edit,
+                self.left.search_edit,
+                self.left.icon_view,
+                self.left.icon_view.viewport(),
+                self.left.list_view,
+                self.left.list_view.viewport(),
+                self.left.detail_view,
+                self.left.detail_view.viewport(),
+            }:
+                self.set_active_pane(self.left)
+            elif watched in {
+                self.right.path_edit,
+                self.right.search_edit,
+                self.right.icon_view,
+                self.right.icon_view.viewport(),
+                self.right.list_view,
+                self.right.list_view.viewport(),
+                self.right.detail_view,
+                self.right.detail_view.viewport(),
+            }:
+                self.set_active_pane(self.right)
+        return super().eventFilter(watched, event)
+
+    def _is_plain_space(self, event) -> bool:
+        return event.key() == Qt.Key.Key_Space and event.modifiers() == Qt.KeyboardModifier.NoModifier
+
+    def _is_plain_escape(self, event) -> bool:
+        return event.key() == Qt.Key.Key_Escape and event.modifiers() == Qt.KeyboardModifier.NoModifier
+
+    def _space_targets_tag(self, watched) -> bool:
+        pane = self.active_pane
+        view = pane.current_view()
+        if view not in pane.views:
+            return False
+        viewport = view.viewport()
+        focus = QApplication.focusWidget()
+        if watched in {view, viewport}:
+            return True
+        if focus in {view, viewport}:
+            return True
+        return bool(focus and view.isAncestorOf(focus))
+
+    def set_active_pane(self, pane: FilePane) -> None:
+        if self.active_pane is pane:
+            return
+        self.active_pane = pane
+        self._update_active_pane_style()
+
+    def _update_active_pane_style(self) -> None:
+        for pane in (self.left, self.right):
+            pane.setProperty("active", pane is self.active_pane)
+            pane.style().unpolish(pane)
+            pane.style().polish(pane)
+            pane.update()
+
+    def restore_settings(self) -> None:
+        geometry = self.settings.value("geometry")
+        if geometry:
+            self.restoreGeometry(geometry)
+        window_state = self.settings.value("windowState")
+        if window_state:
+            self.restoreState(window_state)
+        splitter_state = self.settings.value("splitter")
+        if splitter_state:
+            self.splitter.restoreState(splitter_state)
+
+        left_state = self.cli_left_state or PaneState(
+            Path(str(self.settings.value("left/path", str(Path.home())))),
+            str(self.settings.value("left/view", "Details")),
+        )
+        right_state = self.cli_right_state or PaneState(
+            Path(str(self.settings.value("right/path", str(Path.home())))),
+            str(self.settings.value("right/view", "Details")),
+        )
+        self.left.restore_state(left_state)
+        self.right.restore_state(right_state)
+        self.left.set_icon_zoom(int(self.settings.value("left/iconZoom", self.left.icon_zoom)))
+        self.right.set_icon_zoom(int(self.settings.value("right/iconZoom", self.right.icon_zoom)))
+        try:
+            favorite_names = json.loads(str(self.settings.value("favoriteNamesJson", "{}")))
+        except json.JSONDecodeError:
+            favorite_names = {}
+        self.side_panel.set_favorites(
+            [Path(value) for value in self.settings.value("favorites", [], type=list)],
+            {str(key): str(value) for key, value in favorite_names.items()},
+        )
+        self.side_panel.set_recent_paths([Path(value) for value in self.settings.value("recentPaths", [], type=list)])
+        self.set_show_hidden(self.show_hidden)
+        self.set_preview_enabled(self.preview_enabled)
+        self.left.restore_preview_state(self.settings.value("left/previewSplitter"))
+        self.right.restore_preview_state(self.settings.value("right/previewSplitter"))
+        self.side_dock.setVisible(str(self.settings.value("sidePanel/visible", "true")).lower() != "false")
+        self.side_panel.set_mode(str(self.settings.value("sidePanel/mode", "Shortcuts")))
+        self.side_panel_width = int(self.settings.value("sidePanel/width", self.side_panel_width or 180))
+        self.schedule_side_panel_width_restore(self.side_panel_width)
+        self.apply_theme(self.current_theme)
+
+    def save_settings(self) -> None:
+        self.settings.setValue("geometry", self.saveGeometry())
+        self.settings.setValue("windowState", self.saveState())
+        self.settings.setValue("splitter", self.splitter.saveState())
+        self.settings.setValue("theme", self.current_theme)
+        self.settings.setValue("showHidden", self.show_hidden)
+        self.settings.setValue("iconLayout", self.icon_layout)
+        self.settings.setValue("favorites", [str(path) for path in self.side_panel.favorites])
+        self.settings.setValue("favoriteNamesJson", json.dumps({str(path): name for path, name in self.side_panel.favorite_names.items()}))
+        self.settings.setValue("recentPaths", [str(path) for path in self.side_panel.recent_paths])
+        self.settings.setValue("previewEnabled", self.preview_enabled)
+        self.settings.setValue("terminal/command", self.terminal_command)
+        self.settings.setValue("terminal/args", self.terminal_args)
+        self.settings.setValue("userButtonsJson", json.dumps(self.user_buttons))
+        self.settings.setValue("sidePanel/visible", self.side_dock.isVisible())
+        self.settings.setValue("sidePanel/mode", self.side_panel.current_mode())
+        if self.side_dock.isVisible():
+            self.side_panel_width = max(80, self.side_dock.width())
+        self.settings.setValue("sidePanel/width", self.side_panel_width)
+        for prefix, pane in (("left", self.left), ("right", self.right)):
+            state = pane.state()
+            self.settings.setValue(f"{prefix}/path", str(state.path))
+            self.settings.setValue(f"{prefix}/view", state.view_mode)
+            self.settings.setValue(f"{prefix}/iconZoom", pane.icon_zoom)
+            self.settings.setValue(f"{prefix}/previewSplitter", pane.preview_state())
+        self.settings.sync()
+
+    def schedule_side_panel_width_restore(self, width: int) -> None:
+        target_width = max(80, width)
+        QTimer.singleShot(0, lambda window=self, saved_width=target_width: window.restore_side_panel_width(saved_width))
+        QTimer.singleShot(100, lambda window=self, saved_width=target_width: window.restore_side_panel_width(saved_width))
+
+    def restore_side_panel_width(self, width: int) -> None:
+        self.side_panel_width = max(80, width)
+        if self.side_dock.isVisible():
+            self._restoring_side_panel_width = True
+            try:
+                self.resizeDocks([self.side_dock], [self.side_panel_width], Qt.Orientation.Horizontal)
+            finally:
+                QTimer.singleShot(0, lambda window=self: setattr(window, "_restoring_side_panel_width", False))
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        self.schedule_side_panel_width_restore(self.side_panel_width)
+
+    def closeEvent(self, event) -> None:
+        if self.active_file_operations > 0:
+            response = QMessageBox.question(
+                self,
+                "File Operation in Progress",
+                "A copy or move operation is still running. Quit anyway?",
+                QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                QMessageBox.StandardButton.No,
+            )
+            if response != QMessageBox.StandardButton.Yes:
+                event.ignore()
+                return
+        self.save_settings()
+        super().closeEvent(event)
+
+    def begin_file_operation(self) -> None:
+        self.active_file_operations += 1
+
+    def end_file_operation(self) -> None:
+        self.active_file_operations = max(0, self.active_file_operations - 1)
+        if self.active_file_operations == 0 and self.operation_queue:
+            _name, callback = self.operation_queue.pop(0)
+            self.running_queued_operation = True
+            QTimer.singleShot(0, lambda cb=callback: self._run_queued_operation(cb))
+
+    def queue_file_operation(self, name: str, callback) -> bool:
+        if self.active_file_operations > 0 and not self.running_queued_operation:
+            self.operation_queue.append((name, callback))
+            QMessageBox.information(self, "Operation Queued", f"Queued: {name}")
+            return True
+        return False
+
+    def _run_queued_operation(self, callback) -> None:
+        try:
+            callback()
+        finally:
+            self.running_queued_operation = False
+
+    def apply_theme(self, theme: str) -> None:
+        self.current_theme = theme if theme in THEMES else "Dark"
+        app = QApplication.instance()
+        if app:
+            app.setStyleSheet(THEME_STYLES[self.current_theme])
+
+    def set_icon_layout(self, layout: str) -> None:
+        self.icon_layout = layout if layout in ICON_LAYOUTS else "Normal"
+        self.left.set_icon_layout(self.icon_layout)
+        self.right.set_icon_layout(self.icon_layout)
+
+    def open_settings(self) -> None:
+        dialog = SettingsDialog(self.current_theme, self.icon_layout, self.terminal_command, self.terminal_args, self.user_buttons, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self.apply_theme(dialog.theme())
+        self.set_icon_layout(dialog.icon_layout())
+        self.terminal_command = dialog.terminal_command()
+        self.terminal_args = dialog.terminal_args()
+        self.user_buttons = dialog.user_buttons()
+        self._populate_user_toolbar_buttons()
+        self.settings.setValue("theme", self.current_theme)
+        self.settings.setValue("iconLayout", self.icon_layout)
+        self.settings.setValue("terminal/command", self.terminal_command)
+        self.settings.setValue("terminal/args", self.terminal_args)
+        self.settings.setValue("userButtonsJson", json.dumps(self.user_buttons))
+        self.settings.sync()
+
+    def open_help(self) -> None:
+        dialog = HelpDialog(self)
+        dialog.exec()
+
+    def open_side_path(self, path: Path) -> None:
+        self.active_pane.set_path(path)
+        self.record_recent_path(path)
+
+    def add_favorite(self, path: Path) -> None:
+        self.side_panel.add_favorite(path)
+
+    def save_favorites(self, favorites: list[Path], names: dict[Path, str] | None = None) -> None:
+        self.settings.setValue("favorites", [str(favorite) for favorite in favorites])
+        if names is not None:
+            self.settings.setValue("favoriteNamesJson", json.dumps({str(path): name for path, name in names.items()}))
+        self.settings.sync()
+
+    def save_recent_paths(self, paths: list[Path]) -> None:
+        self.settings.setValue("recentPaths", [str(path) for path in paths])
+        self.settings.sync()
+
+    def record_recent_path(self, path: Path) -> None:
+        try:
+            recent = path.expanduser().resolve()
+        except OSError:
+            recent = path.expanduser()
+        if not recent.exists() or not recent.is_dir():
+            return
+        paths = [item for item in self.side_panel.recent_paths if item != recent]
+        paths.insert(0, recent)
+        self.side_panel.set_recent_paths(paths[:10])
+        self.save_recent_paths(self.side_panel.recent_paths)
+
+    def set_show_hidden(self, show_hidden: bool) -> None:
+        self.show_hidden = show_hidden
+        if hasattr(self, "hidden_action"):
+            self.hidden_action.blockSignals(True)
+            self.hidden_action.setChecked(show_hidden)
+            self.hidden_action.blockSignals(False)
+        self.left.set_show_hidden(show_hidden)
+        self.right.set_show_hidden(show_hidden)
+        self.side_panel.set_show_hidden(show_hidden)
+
+    def toggle_hidden(self) -> None:
+        self.set_show_hidden(not self.show_hidden)
+
+    def set_preview_enabled(self, enabled: bool) -> None:
+        self.preview_enabled = enabled
+        if hasattr(self, "preview_action"):
+            self.preview_action.blockSignals(True)
+            self.preview_action.setChecked(enabled)
+            self.preview_action.blockSignals(False)
+        self.left.set_preview_enabled(enabled)
+        self.right.set_preview_enabled(enabled)
+        self.settings.setValue("previewEnabled", enabled)
+
+    def close_manual_previews(self) -> bool:
+        closed = False
+        for pane in (self.left, self.right):
+            closed = pane.close_manual_preview() or closed
+        return closed
+
+    def handle_manual_preview_key(self, event) -> bool:
+        if event.modifiers() != Qt.KeyboardModifier.NoModifier:
+            return False
+        next_keys = {Qt.Key.Key_PageDown, Qt.Key.Key_Right, Qt.Key.Key_Down}
+        previous_keys = {Qt.Key.Key_PageUp, Qt.Key.Key_Left, Qt.Key.Key_Up}
+        if event.key() not in next_keys | previous_keys:
+            return False
+        pane = self.left if self.left.manual_preview_active else self.right if self.right.manual_preview_active else None
+        if not pane or pane.preview_pdf_page_count <= 1:
+            return False
+        if event.key() in next_keys:
+            pane.next_pdf_page()
+        else:
+            pane.previous_pdf_page()
+        return True
+
+    def open_selected(self) -> None:
+        self.active_pane.open_selected()
+
+    def refresh(self) -> None:
+        self.active_pane.refresh()
+
+    def trash(self) -> None:
+        self.active_pane.trash_selected()
+
+    def empty_trash(self) -> None:
+        trash_root = Path.home() / ".local" / "share" / "Trash"
+        files_dir = trash_root / "files"
+        info_dir = trash_root / "info"
+        trash_items = list(files_dir.iterdir()) if files_dir.exists() else []
+        info_items = list(info_dir.iterdir()) if info_dir.exists() else []
+        if not trash_items and not info_items:
+            QMessageBox.information(self, "Empty Trash", "Trash is already empty.")
+            return
+        response = QMessageBox.question(
+            self,
+            "Empty Trash",
+            f"Permanently delete {len(trash_items)} trashed item(s)?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if response != QMessageBox.StandardButton.Yes:
+            return
+        failed: list[str] = []
+        for path in trash_items:
+            try:
+                remove_existing(path)
+            except OSError as exc:
+                failed.append(f"{path}: {exc}")
+        for path in info_items:
+            try:
+                path.unlink()
+            except OSError as exc:
+                failed.append(f"{path}: {exc}")
+        self.left.refresh()
+        self.right.refresh()
+        if failed:
+            QMessageBox.warning(self, "Empty Trash Failed", "\n".join(failed))
+
+    def record_trashed(self, items: list[tuple[Path, Path]]) -> None:
+        # Trash actions are recorded by FilePane so all undoable operations use one stack.
+        pass
+
+    def record_undo(self, action: UndoAction) -> None:
+        self.undo_stack.append(action)
+        if len(self.undo_stack) > 50:
+            self.undo_stack = self.undo_stack[-50:]
+
+    def undo_last_action(self) -> None:
+        if not self.undo_stack:
+            return
+        action = self.undo_stack.pop()
+        failed: list[str] = []
+        if action.kind == "created":
+            for created_path, _unused in reversed(action.items):
+                try:
+                    if created_path.exists() or created_path.is_symlink():
+                        remove_existing(created_path)
+                except OSError as exc:
+                    failed.append(f"{created_path}: {exc}")
+        elif action.kind in {"move", "rename"}:
+            for current_path, original_path in reversed(action.items):
+                try:
+                    original_path.parent.mkdir(parents=True, exist_ok=True)
+                    restore_path = original_path
+                    if restore_path.exists():
+                        restore_path = unique_destination(original_path.parent, original_path.name)
+                    if current_path.exists() or current_path.is_symlink():
+                        shutil.move(str(current_path), str(restore_path))
+                except OSError as exc:
+                    failed.append(f"{current_path} -> {original_path}: {exc}")
+        elif action.kind == "trash":
+            self._undo_trash(action.items, failed)
+        if failed:
+            QMessageBox.warning(self, "Undo Failed", "\n".join(failed))
+
+    def _undo_trash(self, batch: list[tuple[Path, Path]], failed: list[str]) -> None:
+        for trash_path, original_path in reversed(batch):
+            try:
+                original_path.parent.mkdir(parents=True, exist_ok=True)
+                restore_path = original_path
+                if restore_path.exists():
+                    restore_path = unique_destination(original_path.parent, original_path.name)
+                shutil.move(str(trash_path), str(restore_path))
+                info_path = Path.home() / ".local" / "share" / "Trash" / "info" / f"{trash_path.name}.trashinfo"
+                try:
+                    info_path.unlink()
+                except OSError:
+                    pass
+            except OSError as exc:
+                failed.append(f"{trash_path} -> {original_path}: {exc}")
+
+    def delete_permanently(self) -> None:
+        self.active_pane.delete_permanently_selected()
+
+    def rename(self) -> None:
+        self.active_pane.rename_selected()
+
+    def copy_highlighted(self) -> None:
+        paths = self.active_pane.operation_paths()
+        if not paths:
+            return
+        self.copy_buffer = paths
+        mime = QMimeData()
+        mime.setUrls([QUrl.fromLocalFile(str(path)) for path in paths])
+        QApplication.clipboard().setMimeData(mime)
+
+    def paste_copied(self) -> None:
+        paths = [path for path in self.copy_buffer if path.exists()]
+        if not paths:
+            mime = QApplication.clipboard().mimeData()
+            paths = [Path(url.toLocalFile()) for url in mime.urls() if url.isLocalFile()]
+        if paths:
+            self.active_pane.copy_paths_to(paths, self.active_pane.current_path())
+
+    def copy_across(self) -> None:
+        self.active_pane.copy_selected_to_peer()
+
+    def move_across(self) -> None:
+        self.active_pane.move_selected_to_peer()
+
+    def new_folder(self) -> None:
+        self.active_pane.new_folder()
+
+    def new_file(self) -> None:
+        self.active_pane.new_file()
+
+    def terminal(self) -> None:
+        self.active_pane.open_terminal_here()
+
+    def terminal_home(self) -> None:
+        self.launch_terminal_at(Path.home())
+
+    def properties(self) -> None:
+        self.active_pane.show_properties()
+
+    def go_back(self) -> None:
+        self.active_pane.go_back()
+
+    def go_forward(self) -> None:
+        self.active_pane.go_forward()
+
+    def go_up(self) -> None:
+        self.active_pane.go_up()
+
+    def focus_path(self) -> None:
+        self.active_pane.path_edit.setFocus()
+        self.active_pane.path_edit.selectAll()
+
+    def focus_search(self) -> None:
+        self.active_pane.focus_search()
+
+    def zoom_in(self) -> None:
+        self.active_pane.zoom_in()
+
+    def zoom_out(self) -> None:
+        self.active_pane.zoom_out()
+
+    def home(self) -> None:
+        self.active_pane.set_path(Path.home())
+
+    def swap_panes(self) -> None:
+        left_state = self.left.state()
+        right_state = self.right.state()
+        self.left.restore_state(right_state)
+        self.right.restore_state(left_state)
+
+
+def main() -> int:
+    launch_args = parse_args(sys.argv[1:])
+    detach_if_terminal(launch_args.no_detach)
+    app = QApplication(sys.argv)
+    app.setOrganizationName(APP_ORG)
+    app.setApplicationName(APP_NAME)
+    app.setDesktopFileName(APP_ID)
+    window = FileManager(launch_args.left_state, launch_args.right_state)
+    window.show()
+    return app.exec()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

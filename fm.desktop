@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=fm
+Comment=Dual pane file manager
+Exec=fm
+Icon=pcmanfm-qt
+Terminal=false
+Categories=System;FileManager;Utility;
+StartupNotify=true
+StartupWMClass=org.ai.fm
