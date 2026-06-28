@@ -19,13 +19,15 @@ This project is developed with AI assistance. Code, UI behavior, documentation, 
 - Active pane zoom with `Z` while a file pane or full preview is focused.
 - Text, image, and PDF previews.
 - Full-pane preview in the opposite pane, with Escape to close.
-- PDF preview page navigation.
+- Full-pane preview zoom with Ctrl++ / Ctrl+= and Ctrl+-.
+- PDF preview page navigation with buttons and keyboard controls.
 - Comprehensive tabbed Help system.
 - Configurable icon layout density: Compact, Normal, Spacious.
 - Per-pane icon zoom persistence.
 - Theme support: Light, Dark, Very Dark.
 - Custom user toolbar buttons.
 - Open With menu using cached desktop entries and cached application icons.
+- Default application editing from file Properties using desktop MIME associations.
 
 ## Requirements
 
@@ -90,7 +92,7 @@ The top toolbar contains:
 - Copy Across: copy selected or tagged items to the other pane.
 - Move Across: move selected or tagged items to the other pane.
 - Trash: move selected or tagged items to Trash.
-- Empty Trash: permanently remove contents of `~/.local/share/Trash/files` and clear matching trash info.
+- Empty Trash: permanently remove contents of `~/.local/share/Trash/files` and clear matching trash info. The toolbar icon is red to distinguish it from normal Trash.
 - Terminal Here: open the configured terminal in the active pane folder.
 - Terminal Home: open the configured terminal in `~`.
 - Properties: show properties for the selected item or current folder.
@@ -98,7 +100,7 @@ The top toolbar contains:
 - Preview: toggle automatic preview panes.
 - Swap Panes: swap left and right pane paths and view modes.
 - Side Panel: show or hide the side panel.
-- Help: open the tabbed help system.
+- Help: open the tabbed help system. This button is immediately left of Settings.
 - Settings: open app settings.
 
 Custom user buttons can be added in Settings. Each user button can have:
@@ -171,6 +173,13 @@ Tree context menu actions:
 
 Normal selection uses the current file view selection.
 
+File pane single-key actions:
+
+- `O`: open the selected/current item. Files open with the desktop default app; folders open in the pane.
+- `P`: preview the selected supported file in the other pane.
+- `R`: open Properties for the selected/current item.
+- `Z`: zoom or restore the active pane.
+
 Details view also supports tagging:
 
 - Press Space to tag or untag the current row.
@@ -225,6 +234,14 @@ Manual peer preview:
 
 You can also press `P` in a file pane to preview the selected supported file in the other pane.
 
+Full-pane preview:
+
+- Uses the whole opposite pane, not a small embedded preview area.
+- Text previews are readable and scrollable.
+- Image previews scale to fit and can be zoomed.
+- PDF previews use a light background for readability.
+- Press Escape to close and return that pane to its normal file view.
+
 PDF preview:
 
 - Shows rendered PDF pages.
@@ -239,6 +256,45 @@ PDF keyboard controls while preview is open:
 - Next page: PageDown, Right, Down
 - Previous page: PageUp, Left, Up
 - Close preview: Escape
+
+Pane zoom:
+
+- Press `Z` while a file pane or full preview is focused.
+- The active pane expands to take the available pane area.
+- The zoomed pane border is `#00ff00`.
+- Press `Z` again to restore the previous split.
+
+## Properties And Default Applications
+
+Properties shows metadata for the selected/current item.
+
+For a single file, Properties also shows:
+
+- File MIME type
+- Current matching desktop applications
+- An `Open with` selector
+- A `Set Default` button
+
+Changing the default application uses:
+
+```bash
+xdg-mime default <desktop-file> <mime-type>
+```
+
+This is the same desktop association system used by most Linux file managers. After changing a default, `O`, Enter, Ctrl+O, and the context menu Open action use the new default handler.
+
+## Help System
+
+Open Help with the toolbar Help button or `F1`.
+
+Help is tabbed:
+
+- Overview: basic workflow and selection behavior.
+- Keyboard: shortcut reference using full-width rows to avoid clipped descriptions.
+- Toolbar: toolbar button descriptions.
+- Context Menus: file pane, sidebar, and tree menu actions.
+- Preview: automatic preview, peer preview, PDF pages, preview zoom, and pane zoom.
+- Settings: app settings, user buttons, and default application notes.
 
 ## Keyboard Shortcuts
 
