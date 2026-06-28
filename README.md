@@ -16,9 +16,11 @@ This project is developed with AI assistance. Code, UI behavior, documentation, 
 - Sidebar with favorites, places, recent folders, tree view, and Trash shortcut.
 - Copy, move, duplicate, rename, archive, extract, trash, delete, and undo support.
 - Drag and drop copy/move between panes.
+- Active pane zoom with `Z` while a file pane or full preview is focused.
 - Text, image, and PDF previews.
 - Full-pane preview in the opposite pane, with Escape to close.
 - PDF preview page navigation.
+- Comprehensive tabbed Help system.
 - Configurable icon layout density: Compact, Normal, Spacious.
 - Per-pane icon zoom persistence.
 - Theme support: Light, Dark, Very Dark.
@@ -96,6 +98,7 @@ The top toolbar contains:
 - Preview: toggle automatic preview panes.
 - Swap Panes: swap left and right pane paths and view modes.
 - Side Panel: show or hide the side panel.
+- Help: open the tabbed help system.
 - Settings: open app settings.
 
 Custom user buttons can be added in Settings. Each user button can have:
@@ -201,7 +204,7 @@ Actions:
 - Delete Permanently: permanently delete selected/tagged items.
 - Terminal Here: open a terminal in the current folder.
 - Calculate Size: recursively calculate size, file count, and folder count.
-- Properties: show item properties.
+- Properties: show item properties and change the desktop default application for a single file type.
 
 ## Preview
 
@@ -220,6 +223,8 @@ Manual peer preview:
 3. The opposite pane becomes a full-pane preview.
 4. Press Escape to close and return to the normal file view.
 
+You can also press `P` in a file pane to preview the selected supported file in the other pane.
+
 PDF preview:
 
 - Shows rendered PDF pages.
@@ -229,6 +234,8 @@ PDF preview:
 
 PDF keyboard controls while preview is open:
 
+- Zoom in: Ctrl++ / Ctrl+=
+- Zoom out: Ctrl+-
 - Next page: PageDown, Right, Down
 - Previous page: PageUp, Left, Up
 - Close preview: Escape
@@ -239,7 +246,7 @@ Navigation:
 
 | Action | Shortcut |
 | --- | --- |
-| Open selected | Enter / Ctrl+O |
+| Open selected | O / Enter / Ctrl+O |
 | Go back | Backspace / Alt+Left |
 | Go forward | Alt+Right |
 | Go up | Alt+Up |
@@ -261,7 +268,7 @@ File operations:
 | New folder | F7 |
 | New file | Ctrl+N |
 | Open terminal here | F4 |
-| Properties | Alt+Return |
+| Properties | R / Alt+Return |
 
 Panes and selection:
 
@@ -269,8 +276,10 @@ Panes and selection:
 | --- | --- |
 | Copy to other pane | F5 |
 | Move to other pane | F6 / Ctrl+M |
+| Preview file in other pane | P |
 | Tag or untag row in detailed view | Space |
 | Swap panes | Toolbar button |
+| Zoom active pane | Z while a file pane or full preview is focused |
 | Drag copy | Drag and drop |
 | Drag move | Shift+drag and drop |
 
@@ -279,8 +288,8 @@ Display and app:
 | Action | Shortcut |
 | --- | --- |
 | Toggle hidden files | Ctrl+H |
-| Zoom icons larger | Ctrl++ / Ctrl+= |
-| Zoom icons smaller | Ctrl+- |
+| Zoom icons or full preview larger | Ctrl++ / Ctrl+= |
+| Zoom icons or full preview smaller | Ctrl+- |
 | Toggle side panel | Ctrl+B / F9 |
 | Settings | Ctrl+, |
 | Help | F1 |

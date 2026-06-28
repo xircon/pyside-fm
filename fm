@@ -35,6 +35,7 @@ from PySide6.QtWidgets import (
     QFileIconProvider,
     QFileSystemModel,
     QFormLayout,
+    QGridLayout,
     QHBoxLayout,
     QHeaderView,
     QLabel,
@@ -67,7 +68,7 @@ from PySide6.QtWidgets import (
 APP_ID = "org.ai.fm"
 APP_ORG = "org.ai"
 APP_NAME = "fm"
-APP_VERSION = "0.72"
+APP_VERSION = "0.81"
 VIEW_MODES = ("Icon", "List", "Details")
 VIEW_ALIASES = {mode.lower(): mode for mode in VIEW_MODES}
 ICON_LAYOUTS = ("Compact", "Normal", "Spacious")
@@ -127,8 +128,9 @@ ARCHIVE_EXTENSIONS = {
 THEME_STYLES = {
     "Light": """
         QWidget { background: #f5f6f7; color: #202124; font-size: 12pt; }
-        FilePane[active="true"] { border: 2px solid #6600ff; }
-        FilePane[active="false"] { border: 2px solid transparent; }
+        FilePane[zoomed="true"] { border: 2px solid #00ff00; }
+        FilePane[zoomed="false"][active="true"] { border: 2px solid #6600ff; }
+        FilePane[zoomed="false"][active="false"] { border: 2px solid transparent; }
         QLineEdit, QComboBox, QListView, QTreeView {
             background: #ffffff; color: #202124; border: 1px solid #c8ccd0;
             selection-background-color: #2f6fbd; selection-color: #ffffff;
@@ -151,8 +153,9 @@ THEME_STYLES = {
     """,
     "Dark": """
         QWidget { background: #25282c; color: #e5e7eb; font-size: 12pt; }
-        FilePane[active="true"] { border: 2px solid #6600ff; }
-        FilePane[active="false"] { border: 2px solid transparent; }
+        FilePane[zoomed="true"] { border: 2px solid #00ff00; }
+        FilePane[zoomed="false"][active="true"] { border: 2px solid #6600ff; }
+        FilePane[zoomed="false"][active="false"] { border: 2px solid transparent; }
         QLineEdit, QComboBox, QListView, QTreeView {
             background: #1f2226; color: #e5e7eb; border: 1px solid #3f454d;
             selection-background-color: #3b78c2; selection-color: #ffffff;
@@ -175,8 +178,9 @@ THEME_STYLES = {
     """,
     "Very Dark": """
         QWidget { background: #0f1115; color: #e6edf3; font-size: 12pt; }
-        FilePane[active="true"] { border: 2px solid #6600ff; }
-        FilePane[active="false"] { border: 2px solid transparent; }
+        FilePane[zoomed="true"] { border: 2px solid #00ff00; }
+        FilePane[zoomed="false"][active="true"] { border: 2px solid #6600ff; }
+        FilePane[zoomed="false"][active="false"] { border: 2px solid transparent; }
         QLineEdit, QComboBox, QListView, QTreeView {
             background: #05070a; color: #e6edf3; border: 1px solid #2a3038;
             selection-background-color: #1f6feb; selection-color: #ffffff;
@@ -336,6 +340,7 @@ def read_desktop_entry(path: Path) -> dict[str, str] | None:
         return None
     if not entry.get("Name") or not entry.get("Exec"):
         return None
+    entry["_DesktopId"] = path.name
     return entry
 
 
@@ -370,9 +375,9 @@ def cached_desktop_icon(widget: QWidget, icon_name: str) -> QIcon:
     return icon
 
 
-def mime_apps_for(path: Path, limit: int = 12) -> list[tuple[str, str, str]]:
+def mime_apps_for(path: Path, limit: int = 12) -> list[tuple[str, str, str, str]]:
     mime = file_mime_type(path)
-    matches: list[tuple[str, str, str]] = []
+    matches: list[tuple[str, str, str, str]] = []
     seen: set[str] = set()
     for entry in desktop_app_entries():
         name = entry["Name"]
@@ -382,11 +387,45 @@ def mime_apps_for(path: Path, limit: int = 12) -> list[tuple[str, str, str]]:
         mimes = {value for value in entry.get("MimeType", "").split(";") if value}
         if not mime or mime not in mimes:
             continue
-        matches.append((name, exec_line, entry.get("Icon", "")))
+        matches.append((name, exec_line, entry.get("Icon", ""), entry.get("_DesktopId", "")))
         seen.add(name)
         if len(matches) >= limit:
             break
     return matches
+
+
+def default_app_for_mime(mime: str) -> str:
+    if not mime or not shutil.which("xdg-mime"):
+        return ""
+    try:
+        result = subprocess.run(
+            ["xdg-mime", "query", "default", mime],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    return result.stdout.strip() if result.returncode == 0 else ""
+
+
+def set_default_app_for_mime(mime: str, desktop_id: str) -> tuple[bool, str]:
+    if not shutil.which("xdg-mime"):
+        return False, "xdg-mime was not found."
+    try:
+        result = subprocess.run(
+            ["xdg-mime", "default", desktop_id, mime],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=4,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        return False, str(exc)
+    if result.returncode != 0:
+        return False, (result.stderr or result.stdout or "xdg-mime failed.").strip()
+    return True, ""
 
 
 def desktop_exec_command(exec_line: str, paths: list[Path]) -> list[str]:
@@ -1073,7 +1112,7 @@ class HelpDialog(QDialog):
         (
             "Navigation",
             [
-                ("Open selected", "Enter / Ctrl+O"),
+                ("Open selected", "O / Enter / Ctrl+O"),
                 ("Go back", "Backspace / Alt+Left"),
                 ("Go forward", "Alt+Right"),
                 ("Go up", "Alt+Up"),
@@ -1095,7 +1134,7 @@ class HelpDialog(QDialog):
                 ("New folder", "F7"),
                 ("New file", "Ctrl+N"),
                 ("Open terminal here", "F4"),
-                ("Properties", "Alt+Return"),
+                ("Properties", "R / Alt+Return"),
             ],
         ),
         (
@@ -1103,6 +1142,7 @@ class HelpDialog(QDialog):
             [
                 ("Copy to other pane", "F5"),
                 ("Move to other pane", "F6 / Ctrl+M"),
+                ("Preview file in other pane", "P"),
                 ("Tag or untag row in detailed view", "Space"),
                 ("Swap panes", "Toolbar button"),
                 ("Drag copy", "Drag and drop"),
@@ -1113,8 +1153,8 @@ class HelpDialog(QDialog):
             "Display And App",
             [
                 ("Toggle hidden files", "Ctrl+H"),
-                ("Zoom icons larger", "Ctrl++"),
-                ("Zoom icons smaller", "Ctrl+-"),
+                ("Zoom icons or preview larger", "Ctrl++"),
+                ("Zoom icons or preview smaller", "Ctrl+-"),
                 ("Toggle side panel", "Ctrl+B / F9"),
                 ("Settings", "Ctrl+,"),
                 ("Help", "F1"),
@@ -1123,50 +1163,177 @@ class HelpDialog(QDialog):
             ],
         ),
     ]
+    HELP_TABS = [
+        (
+            "Overview",
+            """
+            <h2>fm Help</h2>
+            <p><b>fm</b> is a dual-pane file manager. Most actions use the active pane, shown with the active border. Click a pane, path field, search field, or file view to make it active.</p>
+            <h3>Basic workflow</h3>
+            <ul>
+              <li>Use the left and right panes to copy, move, compare, preview, and open files.</li>
+              <li>Use the sidebar for shortcuts, favorites, recent folders, and the folder tree.</li>
+              <li>Use toolbar buttons for common file operations, pane display, user commands, settings, and help.</li>
+              <li>Right-click files, folders, sidebar entries, or tree rows for context actions.</li>
+            </ul>
+            <h3>Selection</h3>
+            <ul>
+              <li>Normal selection comes from the current file view.</li>
+              <li>In Details view, Space tags or untags the current row. Tagged files take priority for copy, move, trash, and delete.</li>
+              <li>In Icon view, drag in the empty gap between icon hit areas to rubber-band select.</li>
+              <li>Escape clears selection when no manual preview is open.</li>
+            </ul>
+            """,
+        ),
+        (
+            "Toolbar",
+            """
+            <h2>Toolbar</h2>
+            <ul>
+              <li><b>New Folder</b>: create a folder in the active pane.</li>
+              <li><b>New File</b>: create an empty file in the active pane.</li>
+              <li><b>Rename</b>: rename the selected/current item.</li>
+              <li><b>Copy Across</b>: copy selected or tagged items to the other pane.</li>
+              <li><b>Move Across</b>: move selected or tagged items to the other pane.</li>
+              <li><b>Trash</b>: move selected or tagged items to Trash.</li>
+              <li><b>Empty Trash</b>: permanently clear the desktop Trash.</li>
+              <li><b>Terminal Here</b>: open the configured terminal at the active pane path.</li>
+              <li><b>Terminal Home</b>: open the configured terminal at your home folder.</li>
+              <li><b>Properties</b>: open Properties for the selected/current item.</li>
+              <li><b>Hidden</b>: show or hide dotfiles.</li>
+              <li><b>Preview</b>: enable or disable automatic preview.</li>
+              <li><b>Swap Panes</b>: swap the left and right pane paths and view modes.</li>
+              <li><b>User buttons</b>: optional custom command buttons configured in Settings.</li>
+              <li><b>Side Panel</b>: show or hide the sidebar.</li>
+              <li><b>Help</b>: open this help system.</li>
+              <li><b>Settings</b>: configure theme, icon layout, terminal command, and user buttons.</li>
+            </ul>
+            """,
+        ),
+        (
+            "Context Menus",
+            """
+            <h2>File Pane Menu</h2>
+            <ul>
+              <li><b>Open</b>: open a folder in the pane or a file with the desktop default application.</li>
+              <li><b>Open With</b>: choose a matching desktop application, with icons cached after first load.</li>
+              <li><b>Other Command</b>: run a manually entered command with selected paths.</li>
+              <li><b>New Folder / New File / Rename / Duplicate</b>: common item management actions.</li>
+              <li><b>Create Archive</b>: create a zip archive from selected items.</li>
+              <li><b>Extract Here / Extract To</b>: extract supported archives.</li>
+              <li><b>Add to Favorites</b>: add the selected path to the sidebar.</li>
+              <li><b>Open in Other Pane</b>: open the selected folder in the opposite pane.</li>
+              <li><b>Preview in Other Pane</b>: show supported text, image, or PDF files in the opposite pane.</li>
+              <li><b>Copy / Move to Other Pane</b>: transfer selected or tagged items.</li>
+              <li><b>Move to Trash / Delete Permanently</b>: remove selected or tagged items.</li>
+              <li><b>Terminal Here</b>: open a terminal in the current folder.</li>
+              <li><b>Calculate Size</b>: calculate recursive size, file count, and folder count.</li>
+              <li><b>Properties</b>: inspect metadata, permissions, and default application.</li>
+            </ul>
+            <h2>Sidebar And Tree Menus</h2>
+            <ul>
+              <li>Favorites can be renamed, reordered, removed, and opened.</li>
+              <li>Recent entries can be opened, removed, or cleared.</li>
+              <li>Tree entries can be opened, added to favorites, sized, or opened in a terminal.</li>
+            </ul>
+            """,
+        ),
+        (
+            "Preview",
+            """
+            <h2>Preview</h2>
+            <ul>
+              <li>Automatic preview can be toggled from the toolbar.</li>
+              <li>Manual peer preview opens a full-pane preview in the opposite pane.</li>
+              <li>Supported manual preview types: text files, images, and PDFs.</li>
+              <li>Press <b>P</b> in a file pane to preview the selected supported file in the other pane.</li>
+              <li>Press <b>Escape</b> to close a manual preview.</li>
+            </ul>
+            <h2>PDF Preview</h2>
+            <ul>
+              <li>PDF pages use a light background for readability.</li>
+              <li>Use Previous and Next buttons to move between pages.</li>
+              <li>Use PageDown, Right, or Down for next page.</li>
+              <li>Use PageUp, Left, or Up for previous page.</li>
+              <li>Use Ctrl++ / Ctrl+= and Ctrl+- to zoom the preview.</li>
+            </ul>
+            <h2>Pane Zoom</h2>
+            <ul>
+              <li>Press <b>Z</b> while a file pane or full preview is focused to zoom that pane.</li>
+              <li>The zoomed pane uses a <b>#00ff00</b> border.</li>
+              <li>Press <b>Z</b> again to restore the normal split.</li>
+            </ul>
+            """,
+        ),
+        (
+            "Settings",
+            """
+            <h2>Settings</h2>
+            <ul>
+              <li><b>Theme</b>: Light, Dark, or Very Dark.</li>
+              <li><b>Icon layout</b>: Compact, Normal, or Spacious icon-grid spacing.</li>
+              <li><b>Terminal command</b>: terminal executable used by terminal actions.</li>
+              <li><b>Terminal args</b>: arguments passed to the terminal command.</li>
+              <li><b>User buttons</b>: up to four toolbar buttons. Symbols can be theme icon names, image paths, or short glyphs.</li>
+            </ul>
+            <h2>Default Applications</h2>
+            <ul>
+              <li>Open Properties on a single file to see its MIME type.</li>
+              <li>Use <b>Open with</b> and <b>Set Default</b> to change the desktop default application for that MIME type.</li>
+              <li>This uses <code>xdg-mime default</code>, so it follows the same desktop associations used by most Linux file managers.</li>
+              <li>Press <b>O</b>, Enter, or Ctrl+O to open a file with the current desktop default application.</li>
+            </ul>
+            """,
+        ),
+    ]
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Keyboard Shortcuts")
+        self.setWindowTitle("Help")
         self.setModal(True)
         self._parent_window = parent
-        self.setMinimumSize(520, 360)
+        self.setMinimumSize(620, 440)
 
         root = QVBoxLayout(self)
         root.setSpacing(12)
         root.setContentsMargins(14, 14, 14, 14)
 
-        title = QLabel("Keyboard Shortcuts")
+        title = QLabel("fm Help")
         title.setStyleSheet("font-size: 18px; font-weight: 600;")
         root.addWidget(title)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
-        content = QWidget()
-        columns = QHBoxLayout(content)
-        columns.setContentsMargins(0, 0, 0, 0)
-        columns.setSpacing(28)
-
-        left_column = QVBoxLayout()
-        right_column = QVBoxLayout()
-        for column in (left_column, right_column):
-            column.setContentsMargins(0, 0, 0, 0)
-            column.setSpacing(16)
-        for group_title, rows in (self.GROUPS[0], self.GROUPS[2]):
-            left_column.addWidget(self._group_widget(group_title, rows))
-        for group_title, rows in (self.GROUPS[1], self.GROUPS[3]):
-            right_column.addWidget(self._group_widget(group_title, rows))
-        left_column.addStretch(1)
-        right_column.addStretch(1)
-        columns.addLayout(left_column, 1)
-        columns.addLayout(right_column, 1)
-        scroll.setWidget(content)
-        root.addWidget(scroll, 1)
+        tabs = QTabWidget()
+        for label, html in self.HELP_TABS[:1]:
+            tabs.addTab(self._text_tab(html), label)
+        tabs.addTab(self._keyboard_tab(), "Keyboard")
+        for label, html in self.HELP_TABS[1:]:
+            tabs.addTab(self._text_tab(html), label)
+        root.addWidget(tabs, 1)
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(lambda dialog=self: dialog.reject())
         root.addWidget(buttons)
         self._fit_to_parent()
+
+    def _keyboard_tab(self) -> QWidget:
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+        content = QWidget()
+        layout = QVBoxLayout(content)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(18)
+        for group_title, rows in self.GROUPS:
+            layout.addWidget(self._group_widget(group_title, rows))
+        layout.addStretch(1)
+        scroll.setWidget(content)
+        return scroll
+
+    def _text_tab(self, html: str) -> QTextEdit:
+        text = QTextEdit()
+        text.setReadOnly(True)
+        text.setHtml(html)
+        return text
 
     def _group_widget(self, title: str, rows: list[tuple[str, str]]) -> QWidget:
         widget = QWidget()
@@ -1178,19 +1345,25 @@ class HelpDialog(QDialog):
         heading.setStyleSheet("font-weight: 600;")
         layout.addWidget(heading)
 
-        form = QFormLayout()
-        form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
-        form.setHorizontalSpacing(12)
-        form.setVerticalSpacing(8)
-        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
-        for action, keys in rows:
+        grid = QGridLayout()
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setHorizontalSpacing(18)
+        grid.setVerticalSpacing(8)
+        grid.setColumnStretch(0, 0)
+        grid.setColumnStretch(1, 1)
+        for row, (action, keys) in enumerate(rows):
             key_label = QLabel(keys)
+            key_label.setMinimumWidth(170)
+            key_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
             key_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
             action_label = QLabel(action)
             action_label.setWordWrap(True)
+            action_label.setMinimumWidth(360)
+            action_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
             action_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-            form.addRow(key_label, action_label)
-        layout.addLayout(form)
+            grid.addWidget(key_label, row, 0)
+            grid.addWidget(action_label, row, 1)
+        layout.addLayout(grid)
         return widget
 
     def _fit_to_parent(self) -> None:
@@ -1224,6 +1397,8 @@ class PropertiesDialog(QDialog):
         self.setWindowTitle("Properties")
         self.setMinimumWidth(520)
         self.icon_provider = QFileIconProvider()
+        self.default_app_mime = ""
+        self.default_app_combo: QComboBox | None = None
 
         total_size, files, folders = self._measure(paths)
         root = QVBoxLayout(self)
@@ -1267,6 +1442,8 @@ class PropertiesDialog(QDialog):
                 general.addRow("Size:", self._value(f"{readable_size(total_size)} in direct contents"))
             else:
                 general.addRow("Size:", self._value(readable_size(total_size)))
+                self.default_app_mime = file_mime_type(path)
+                general.addRow("MIME type:", self._value(self.default_app_mime))
             general.addRow("Modified:", self._value(info.lastModified().toString("yyyy-MM-dd HH:mm:ss")))
             general.addRow("Accessed:", self._value(info.lastRead().toString("yyyy-MM-dd HH:mm:ss")))
         else:
@@ -1299,6 +1476,36 @@ class PropertiesDialog(QDialog):
             permissions.addRow("", apply_permissions)
             root.addLayout(permissions)
 
+        if len(paths) == 1 and paths[0].is_file():
+            default_app = QFormLayout()
+            default_app.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+            self.default_app_combo = QComboBox()
+            current_default = default_app_for_mime(self.default_app_mime)
+            current_index = -1
+            for name, _exec_line, icon_name, desktop_id in mime_apps_for(paths[0], limit=100):
+                if not desktop_id:
+                    continue
+                label = f"{name} ({desktop_id})" if desktop_id == current_default else name
+                self.default_app_combo.addItem(cached_desktop_icon(self, icon_name), label, desktop_id)
+                if desktop_id == current_default:
+                    current_index = self.default_app_combo.count() - 1
+            if current_index >= 0:
+                self.default_app_combo.setCurrentIndex(current_index)
+            elif current_default:
+                self.default_app_combo.insertItem(0, f"Current: {current_default}", current_default)
+                self.default_app_combo.setCurrentIndex(0)
+            if self.default_app_combo.count() == 0:
+                self.default_app_combo.addItem("No matching applications", "")
+                self.default_app_combo.setEnabled(False)
+            set_default = QPushButton("Set Default")
+            set_default.setEnabled(self.default_app_combo.isEnabled())
+            set_default.clicked.connect(lambda _checked=False, dialog=self: dialog.apply_default_app())
+            default_row = QHBoxLayout()
+            default_row.addWidget(self.default_app_combo, 1)
+            default_row.addWidget(set_default)
+            default_app.addRow("Open with:", default_row)
+            root.addLayout(default_app)
+
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(lambda dialog=self: dialog.reject())
         root.addWidget(buttons)
@@ -1318,6 +1525,18 @@ class PropertiesDialog(QDialog):
             self.permission_path.chmod(mode)
         except OSError as exc:
             QMessageBox.warning(self, "Permissions Failed", str(exc))
+
+    def apply_default_app(self) -> None:
+        if not self.default_app_combo:
+            return
+        desktop_id = self.default_app_combo.currentData()
+        if not desktop_id:
+            return
+        ok, message = set_default_app_for_mime(self.default_app_mime, str(desktop_id))
+        if not ok:
+            QMessageBox.warning(self, "Default Application Failed", message)
+            return
+        QMessageBox.information(self, "Default Application", "Default application updated.")
 
     def _measure(self, paths: list[Path]) -> tuple[int, int, int]:
         total_size = 0
@@ -1898,6 +2117,7 @@ class FilePane(QWidget):
         self.manual_preview_active = False
         self.manual_preview_previous_enabled = True
         self.manual_preview_previous_sizes: list[int] = []
+        self.full_preview_zoom = 1.0
         self.preview_pdf_page = 0
         self.preview_pdf_page_count = 0
 
@@ -1997,6 +2217,7 @@ class FilePane(QWidget):
         self.status_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.full_preview_label = PreviewLabel()
         self.full_preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.full_preview_label.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.full_preview_label.setScaledContents(False)
         self.full_preview_label.setStyleSheet("background: #f8fafc; color: #111827;")
         self.full_preview_label.resized.connect(lambda pane=self: pane._rescale_full_preview())
@@ -2016,17 +2237,26 @@ class FilePane(QWidget):
         pdf_controls_layout.addWidget(self.pdf_next_button)
         self.pdf_controls.setVisible(False)
         self.full_preview_image = QWidget()
+        self.full_preview_image.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.full_preview_image.setStyleSheet("background: #f8fafc;")
         full_preview_image_layout = QVBoxLayout(self.full_preview_image)
         full_preview_image_layout.setContentsMargins(0, 0, 0, 0)
         full_preview_image_layout.setSpacing(0)
         full_preview_image_layout.addWidget(self.pdf_controls)
-        full_preview_image_layout.addWidget(self.full_preview_label, 1)
+        self.full_preview_scroll = QScrollArea()
+        self.full_preview_scroll.setWidget(self.full_preview_label)
+        self.full_preview_scroll.setWidgetResizable(False)
+        self.full_preview_scroll.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.full_preview_scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+        self.full_preview_scroll.setStyleSheet("background: #f8fafc;")
+        full_preview_image_layout.addWidget(self.full_preview_scroll, 1)
         self.full_preview_text = QTextEdit()
+        self.full_preview_text.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.full_preview_text.setReadOnly(True)
         self.full_preview_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
         self.full_preview_text.setStyleSheet("background: #f8fafc; color: #111827;")
         self.full_preview_stack = QStackedWidget()
+        self.full_preview_stack.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.full_preview_stack.addWidget(self.full_preview_image)
         self.full_preview_stack.addWidget(self.full_preview_text)
         self.stack.addWidget(self.full_preview_stack)
@@ -2611,6 +2841,9 @@ class FilePane(QWidget):
         path = self.current_item_path()
         if self.peer and path and path.is_file():
             self.peer.show_manual_preview(path)
+            window = self.window()
+            if hasattr(window, "set_active_pane"):
+                window.set_active_pane(self.peer)
 
     def copy_paths_to(self, paths: list[Path], destination: Path) -> None:
         if not paths:
@@ -2921,7 +3154,7 @@ class FilePane(QWidget):
             open_with_populated = True
             open_with_menu.clear()
             if paths:
-                for name, exec_line, icon_name in mime_apps_for(paths[0]):
+                for name, exec_line, icon_name, _desktop_id in mime_apps_for(paths[0]):
                     open_with_menu.addAction(
                         cached_desktop_icon(self, icon_name),
                         name,
@@ -3048,10 +3281,15 @@ class FilePane(QWidget):
 
     def show_manual_preview(self, path: Path) -> None:
         self.manual_preview_active = True
+        self.full_preview_zoom = 1.0
         self.preview_splitter.setSizes([max(1, sum(self.preview_splitter.sizes())), 0])
         self.preview_stack.setVisible(False)
         self.stack.setCurrentWidget(self.full_preview_stack)
         self._show_preview_path(path)
+        if self.full_preview_stack.currentWidget() is self.full_preview_text:
+            self.full_preview_text.setFocus()
+        else:
+            self.full_preview_image.setFocus()
 
     def close_manual_preview(self) -> bool:
         if not self.manual_preview_active:
@@ -3062,6 +3300,7 @@ class FilePane(QWidget):
         self._clear_preview()
         self.preview_source_path = None
         self.preview_source_pixmap = QPixmap()
+        self.full_preview_zoom = 1.0
         self.preview_pdf_page = 0
         self.preview_pdf_page_count = 0
         self.stack.setCurrentIndex(VIEW_MODES.index(self.view_combo.currentText()))
@@ -3082,13 +3321,37 @@ class FilePane(QWidget):
     def _rescale_full_preview(self) -> None:
         if self.preview_source_pixmap.isNull() or not self.full_preview_label.isVisible():
             return
-        self.full_preview_label.setPixmap(
-            self.preview_source_pixmap.scaled(
-                QSize(max(240, self.full_preview_label.width() - 24), max(180, self.full_preview_label.height() - 24)),
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation,
-            )
+        viewport = self.full_preview_scroll.viewport().size()
+        fit_size = self.preview_source_pixmap.size().scaled(
+            QSize(max(240, viewport.width() - 24), max(180, viewport.height() - 24)),
+            Qt.AspectRatioMode.KeepAspectRatio,
         )
+        scaled_size = QSize(
+            max(1, int(fit_size.width() * self.full_preview_zoom)),
+            max(1, int(fit_size.height() * self.full_preview_zoom)),
+        )
+        pixmap = self.preview_source_pixmap.scaled(
+            scaled_size,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        self.full_preview_label.setPixmap(pixmap)
+        self.full_preview_label.setFixedSize(pixmap.size())
+
+    def zoom_full_preview(self, step: int) -> bool:
+        if not self.manual_preview_active:
+            return False
+        if self.full_preview_stack.currentWidget() is self.full_preview_text:
+            self.full_preview_text.zoomIn(step)
+            return True
+        factor = 1.2 if step > 0 else 1 / 1.2
+        self.full_preview_zoom = max(0.4, min(4.0, self.full_preview_zoom * factor))
+        self._rescale_full_preview()
+        return True
+
+    def reset_full_preview_zoom(self) -> None:
+        self.full_preview_zoom = 1.0
+        self._rescale_full_preview()
 
     def _show_text_preview(self, path: Path) -> None:
         if self.preview_source_path != path or self.manual_preview_active:
@@ -3481,6 +3744,8 @@ class FileManager(QMainWindow):
         self.active_file_operations = 0
         self.operation_queue: list[tuple[str, Callable[[], None]]] = []
         self.running_queued_operation = False
+        self.zoomed_pane: FilePane | None = None
+        self.pre_zoom_splitter_sizes: list[int] = []
         self.setWindowTitle("fm")
         self.setMinimumSize(900, 560)
         self.settings = QSettings(APP_ORG, APP_NAME)
@@ -3601,6 +3866,10 @@ class FileManager(QMainWindow):
         side_action.setText("Side Panel")
         side_action.setIcon(menu_icon(self, "sidebar-show", QStyle.StandardPixmap.SP_FileDialogListView))
         toolbar.addAction(side_action)
+
+        help_action = QAction(menu_icon(self, "help-browser", QStyle.StandardPixmap.SP_MessageBoxQuestion), "Help", self)
+        help_action.triggered.connect(lambda _checked=False, window=self: window.open_help())
+        toolbar.addAction(help_action)
 
         settings_action = QAction(menu_icon(self, "preferences-system", QStyle.StandardPixmap.SP_FileDialogDetailedView), "Settings", self)
         settings_action.triggered.connect(lambda _checked=False, window=self: window.open_settings())
@@ -3769,9 +4038,34 @@ class FileManager(QMainWindow):
             event.accept()
             return True
         if event.type() in {QEvent.Type.ShortcutOverride, QEvent.Type.KeyPress}:
+            zoom_target = self._pane_zoom_target(watched) if self._is_plain_z(event) else None
+            if zoom_target:
+                if event.type() == QEvent.Type.KeyPress:
+                    self.set_active_pane(zoom_target)
+                    self.toggle_pane_zoom()
+                event.accept()
+                return True
             if self._is_plain_space(event) and self._space_targets_tag(watched):
                 if event.type() == QEvent.Type.KeyPress:
                     self.active_pane.toggle_current_tag()
+                event.accept()
+                return True
+            if self._is_plain_p(event) and self._space_targets_tag(watched):
+                path = self.active_pane.current_item_path()
+                if path and path.is_file() and is_previewable_file(path):
+                    if event.type() == QEvent.Type.KeyPress:
+                        self.active_pane.preview_selected_in_peer()
+                    event.accept()
+                    return True
+            if self._is_plain_o(event) and self._space_targets_tag(watched):
+                if self.active_pane.current_item_path():
+                    if event.type() == QEvent.Type.KeyPress:
+                        self.active_pane.open_selected()
+                    event.accept()
+                    return True
+            if self._is_plain_r(event) and self._space_targets_tag(watched):
+                if event.type() == QEvent.Type.KeyPress:
+                    self.active_pane.show_properties()
                 event.accept()
                 return True
             if self._is_plain_escape(event) and self._space_targets_tag(watched):
@@ -3813,6 +4107,18 @@ class FileManager(QMainWindow):
     def _is_plain_escape(self, event) -> bool:
         return event.key() == Qt.Key.Key_Escape and event.modifiers() == Qt.KeyboardModifier.NoModifier
 
+    def _is_plain_z(self, event) -> bool:
+        return event.key() == Qt.Key.Key_Z and event.modifiers() == Qt.KeyboardModifier.NoModifier
+
+    def _is_plain_p(self, event) -> bool:
+        return event.key() == Qt.Key.Key_P and event.modifiers() == Qt.KeyboardModifier.NoModifier
+
+    def _is_plain_o(self, event) -> bool:
+        return event.key() == Qt.Key.Key_O and event.modifiers() == Qt.KeyboardModifier.NoModifier
+
+    def _is_plain_r(self, event) -> bool:
+        return event.key() == Qt.Key.Key_R and event.modifiers() == Qt.KeyboardModifier.NoModifier
+
     def _space_targets_tag(self, watched) -> bool:
         pane = self.active_pane
         view = pane.current_view()
@@ -3826,15 +4132,70 @@ class FileManager(QMainWindow):
             return True
         return bool(focus and view.isAncestorOf(focus))
 
+    def _pane_zoom_target(self, watched) -> FilePane | None:
+        if QApplication.focusWidget() in {self.left.path_edit, self.left.search_edit, self.right.path_edit, self.right.search_edit}:
+            return None
+        if self.active_pane.manual_preview_active:
+            return self.active_pane
+        if self._space_targets_tag(watched):
+            return self.active_pane
+        focus = QApplication.focusWidget()
+        for pane in (self.left, self.right):
+            preview_widgets = {
+                pane.full_preview_stack,
+                pane.full_preview_image,
+                pane.full_preview_scroll,
+                pane.full_preview_label,
+                pane.full_preview_text,
+                pane.pdf_controls,
+                pane.pdf_prev_button,
+                pane.pdf_page_label,
+                pane.pdf_next_button,
+            }
+            if watched in preview_widgets or focus in preview_widgets:
+                return pane
+            if focus and any(widget.isAncestorOf(focus) for widget in preview_widgets):
+                return pane
+        return None
+
     def set_active_pane(self, pane: FilePane) -> None:
         if self.active_pane is pane:
             return
         self.active_pane = pane
         self._update_active_pane_style()
 
+    def toggle_pane_zoom(self) -> None:
+        if self.zoomed_pane is self.active_pane:
+            self.clear_pane_zoom()
+            return
+        self.zoom_pane(self.active_pane)
+
+    def zoom_pane(self, pane: FilePane) -> None:
+        if pane not in {self.left, self.right}:
+            return
+        if not self.pre_zoom_splitter_sizes:
+            self.pre_zoom_splitter_sizes = self.splitter.sizes()
+        self.zoomed_pane = pane
+        total = max(sum(self.splitter.sizes()), self.splitter.width(), 1)
+        if pane is self.left:
+            self.splitter.setSizes([total, 0])
+        else:
+            self.splitter.setSizes([0, total])
+        self._update_active_pane_style()
+
+    def clear_pane_zoom(self) -> None:
+        if not self.zoomed_pane:
+            return
+        restore_sizes = self.pre_zoom_splitter_sizes or [1, 1]
+        self.zoomed_pane = None
+        self.pre_zoom_splitter_sizes = []
+        self.splitter.setSizes(restore_sizes)
+        self._update_active_pane_style()
+
     def _update_active_pane_style(self) -> None:
         for pane in (self.left, self.right):
             pane.setProperty("active", pane is self.active_pane)
+            pane.setProperty("zoomed", pane is self.zoomed_pane)
             pane.style().unpolish(pane)
             pane.style().polish(pane)
             pane.update()
@@ -3882,6 +4243,8 @@ class FileManager(QMainWindow):
         self.apply_theme(self.current_theme)
 
     def save_settings(self) -> None:
+        if self.zoomed_pane:
+            self.clear_pane_zoom()
         self.settings.setValue("geometry", self.saveGeometry())
         self.settings.setValue("windowState", self.saveState())
         self.settings.setValue("splitter", self.splitter.saveState())
@@ -4053,6 +4416,10 @@ class FileManager(QMainWindow):
         for pane in (self.left, self.right):
             closed = pane.close_manual_preview() or closed
         return closed
+
+    def zoom_manual_preview(self, step: int) -> bool:
+        pane = self.left if self.left.manual_preview_active else self.right if self.right.manual_preview_active else None
+        return bool(pane and pane.zoom_full_preview(step))
 
     def handle_manual_preview_key(self, event) -> bool:
         if event.modifiers() != Qt.KeyboardModifier.NoModifier:
@@ -4227,15 +4594,21 @@ class FileManager(QMainWindow):
         self.active_pane.focus_search()
 
     def zoom_in(self) -> None:
+        if self.zoom_manual_preview(1):
+            return
         self.active_pane.zoom_in()
 
     def zoom_out(self) -> None:
+        if self.zoom_manual_preview(-1):
+            return
         self.active_pane.zoom_out()
 
     def home(self) -> None:
         self.active_pane.set_path(Path.home())
 
     def swap_panes(self) -> None:
+        if self.zoomed_pane:
+            self.clear_pane_zoom()
         left_state = self.left.state()
         right_state = self.right.state()
         self.left.restore_state(right_state)
