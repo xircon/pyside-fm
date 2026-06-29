@@ -6,17 +6,21 @@ This project is developed with AI assistance. Code, UI behavior, documentation, 
 
 ## Screenshot
 
-![pyside-fm screenshot](2026-06-27_20-52.png)
+![pyside-fm screenshot](screenshot.png)
 
 ## Features
 
-- Dual-pane file browsing with independent paths and view modes.
+- Dual-pane file browsing with independent paths, view modes, and sort order.
 - Icon, list, and details views.
+- Per-pane sort menu for name, size, type, modification date, ascending, descending, and reversed order.
 - Breadcrumb navigation and compact `~/...` path display.
 - Sidebar with favorites, places, recent folders, tree view, and Trash shortcut.
 - Copy, move, duplicate, rename, archive, extract, trash, delete, and undo support.
+- Copy/move collision prompts with Overwrite, Rename, and Cancel.
 - Copy/move progress dialogs reserve enough height for buttons on tiling/window-managed desktops such as MangoWM.
 - Drag and drop copy/move between panes.
+- Drag hover highlights a folder drop target; no highlight means dropping into the pane's current folder.
+- Wildcard pane filtering with `Ctrl+S`.
 - Active pane zoom with `Z` while a file pane or full preview is focused.
 - Text, image, and PDF previews.
 - Full-pane preview in the opposite pane, with Escape to close.
@@ -78,10 +82,13 @@ Each pane has:
 - Search field
 - Icon zoom buttons
 - View mode selector
+- Sort menu button
 - Breadcrumb buttons
 - File view
 - Status line
 - Optional preview area
+
+The Sort button beside each pane's Icon/List/Details selector controls that pane only. Sort choices are saved and restored independently for the left and right panes.
 
 The active pane is highlighted. Most commands operate on the active pane.
 
@@ -207,14 +214,33 @@ File pane single-key actions:
 - `R`: open Properties for the selected/current item.
 - `E`: open the emblem menu for the selected folder.
 - `Z`: zoom or restore the active pane.
+- `Q`: quit when focus is in a file pane or full preview.
 
 Details view also supports tagging:
 
 - Press Space to tag or untag the current row.
 - Tagged files take priority over ordinary selection for copy/move/trash operations.
-- Press Escape to clear selection if no manual preview is open.
+- Press Escape to clear an active wildcard filter first; if no wildcard filter is active, Escape clears selection when no manual preview is open.
 
 In icon view, empty space between icon hit areas can be used to start rubber-band selection.
+
+During drag and drop, folders under the cursor are highlighted as the drop destination. If no folder is highlighted, the drop goes into the current pane folder.
+
+## Filtering
+
+The search box filters by plain text as you type.
+
+Press `Ctrl+S` to filter the active pane by wildcard.
+
+Examples:
+
+```text
+*.mkv
+S01*
+*.jpg;*.png
+```
+
+Use an empty wildcard pattern to clear the wildcard filter. Typing in the normal search box clears the wildcard filter. When a wildcard filter is active, a small filter chip appears next to the search box; click it to clear the wildcard filter.
 
 ## Context Menu
 
@@ -238,6 +264,7 @@ Actions:
 - Preview in Other Pane: show selected text, image, or PDF file in the opposite pane.
 - Copy to Other Pane: copy selected/tagged items to the opposite pane.
 - Move to Other Pane: move selected/tagged items to the opposite pane.
+- Existing copy/move targets: choose Overwrite, Rename, or Cancel.
 - Move to Trash: move selected/tagged items to Trash.
 - Delete Permanently: permanently delete selected/tagged items.
 - Terminal Here: open a terminal in the current folder.
@@ -336,13 +363,20 @@ Available emblems:
 
 Use `Clear Emblem` from the same menu to remove one.
 
+Folder notes:
+
+- Right-click a folder and choose `Set Note...`.
+- Notes are stored by folder path in `fm` settings.
+- Notes are shown as folder tooltips inside `fm`.
+- Use `Clear Note` from the same menu to remove one.
+
 Emblems are stored persistently by folder path in app settings as:
 
 ```text
 folderEmblemsJson
 ```
 
-They are intentionally fm-only and do not modify Thunar, GVFS, or desktop file metadata.
+Emblems and notes are intentionally fm-only and do not modify Thunar, GVFS, or desktop file metadata.
 
 ## Help System
 
@@ -369,6 +403,7 @@ Navigation:
 | Go up | Alt+Up |
 | Focus path bar | Ctrl+L |
 | Focus pane search | Ctrl+F |
+| Wildcard filter active pane | Ctrl+S |
 | Refresh | Ctrl+R |
 
 File operations:
@@ -409,9 +444,10 @@ Display and app:
 | Zoom icons or full preview larger | Ctrl++ / Ctrl+= |
 | Zoom icons or full preview smaller | Ctrl+- |
 | Toggle side panel | Ctrl+B / F9 |
+| Edit dual bookmarks | Ctrl+D |
 | Settings | Ctrl+, |
 | Help | F1 |
-| Quit | Ctrl+Q |
+| Quit | Q / Ctrl+Q |
 | Close help or manual preview | Escape |
 
 ## Settings
@@ -424,6 +460,8 @@ Settings include:
 - Terminal arguments
 - Four custom user toolbar buttons
 - Dual Bookmarks: named left/right folder pairs for the top-center dropdown
+- Confirm quit while copy/move operations are running or queued
+- Folder notes and emblems are saved persistently in app settings
 
 Default terminal:
 

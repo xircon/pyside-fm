@@ -22,7 +22,7 @@ from typing import Callable
 from urllib.parse import quote
 
 from PySide6.QtCore import QDir, QEvent, QFile, QFileInfo, QItemSelectionModel, QMimeData, QModelIndex, QObject, QPoint, QRect, QRunnable, QSettings, QSize, Qt, QThread, QThreadPool, QTimer, QUrl, Signal, Slot
-from PySide6.QtGui import QAction, QBrush, QColor, QCursor, QDesktopServices, QDrag, QFont, QIcon, QImage, QImageReader, QKeySequence, QPainter, QPixmap, QShortcut
+from PySide6.QtGui import QAction, QActionGroup, QBrush, QColor, QCursor, QDesktopServices, QDrag, QFont, QIcon, QImage, QImageReader, QKeySequence, QPainter, QPixmap, QShortcut
 from PySide6.QtPdf import QPdfDocument
 from PySide6.QtWidgets import (
     QApplication,
@@ -69,9 +69,15 @@ from PySide6.QtWidgets import (
 APP_ID = "org.ai.fm"
 APP_ORG = "org.ai"
 APP_NAME = "fm"
-APP_VERSION = "0.84"
+APP_VERSION = "0.91"
 VIEW_MODES = ("Icon", "List", "Details")
 VIEW_ALIASES = {mode.lower(): mode for mode in VIEW_MODES}
+SORT_FIELDS = {
+    "name": ("By Name", 0),
+    "size": ("By Size", 1),
+    "type": ("By Type", 2),
+    "modified": ("By Modification Date", 3),
+}
 ICON_LAYOUTS = ("Compact", "Normal", "Spacious")
 ICON_LAYOUT_METRICS = {
     "Compact": (124, 168, 60, 104),
@@ -543,6 +549,10 @@ def same_path(left: Path, right: Path) -> bool:
         return left == right
 
 
+def path_exists_for_collision(path: Path) -> bool:
+    return path.exists() or path.is_symlink()
+
+
 def remove_existing(path: Path) -> None:
     if path.is_dir() and not path.is_symlink():
         shutil.rmtree(path)
@@ -551,26 +561,26 @@ def remove_existing(path: Path) -> None:
 
 
 def choose_existing_destination(parent: QWidget, source: Path, destination: Path) -> Path | None:
-    if not destination.exists():
+    if not path_exists_for_collision(destination):
         return destination
 
     box = QMessageBox(parent)
     box.setIcon(QMessageBox.Icon.Warning)
     box.setWindowTitle("File Already Exists")
     box.setText(f'"{destination.name}" already exists.')
-    box.setInformativeText("Choose a new name, replace the existing item, or cancel.")
+    box.setInformativeText(f"Destination:\n{destination}\n\nOverwrite the existing item, rename the incoming item, or cancel.")
+    overwrite_button = box.addButton("Overwrite", QMessageBox.ButtonRole.DestructiveRole)
     rename_button = box.addButton("Rename", QMessageBox.ButtonRole.AcceptRole)
-    replace_button = box.addButton("Replace", QMessageBox.ButtonRole.DestructiveRole)
     cancel_button = box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
     if same_path(source, destination):
-        replace_button.setEnabled(False)
+        overwrite_button.setEnabled(False)
     box.setDefaultButton(rename_button)
     box.exec()
 
     clicked = box.clickedButton()
     if clicked == cancel_button:
         return None
-    if clicked == replace_button:
+    if clicked == overwrite_button:
         if same_path(source, destination):
             return None
         remove_existing(destination)
@@ -589,25 +599,25 @@ def choose_existing_destination(parent: QWidget, source: Path, destination: Path
         if same_path(source, renamed_destination):
             QMessageBox.warning(parent, "Invalid Name", "Choose a different name.")
             continue
-        if renamed_destination.exists():
+        if path_exists_for_collision(renamed_destination):
             destination = renamed_destination
             suggested = unique_destination(destination.parent, destination.name).name
             box = QMessageBox(parent)
             box.setIcon(QMessageBox.Icon.Warning)
             box.setWindowTitle("File Already Exists")
             box.setText(f'"{destination.name}" already exists.')
-            box.setInformativeText("Choose another name, replace the existing item, or cancel.")
+            box.setInformativeText(f"Destination:\n{destination}\n\nOverwrite the existing item, rename the incoming item, or cancel.")
+            overwrite_button = box.addButton("Overwrite", QMessageBox.ButtonRole.DestructiveRole)
             rename_button = box.addButton("Rename", QMessageBox.ButtonRole.AcceptRole)
-            replace_button = box.addButton("Replace", QMessageBox.ButtonRole.DestructiveRole)
             cancel_button = box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
             if same_path(source, destination):
-                replace_button.setEnabled(False)
+                overwrite_button.setEnabled(False)
             box.setDefaultButton(rename_button)
             box.exec()
             clicked = box.clickedButton()
             if clicked == cancel_button:
                 return None
-            if clicked == replace_button:
+            if clicked == overwrite_button:
                 if same_path(source, destination):
                     return None
                 remove_existing(destination)
@@ -791,6 +801,8 @@ class FileOperationWorker(QObject):
 
     def _copy_file(self, source: Path, target: Path, state: dict[str, int | float]) -> None:
         self._check_cancel()
+        if path_exists_for_collision(target):
+            raise FileExistsError(f"Target already exists: {target}")
         target.parent.mkdir(parents=True, exist_ok=True)
         self._emit_progress(state, f"Copying {source.name}")
         if source.is_symlink():
@@ -816,6 +828,8 @@ class FileOperationWorker(QObject):
 
     def _copy_path(self, source: Path, target: Path, state: dict[str, int | float]) -> None:
         self._check_cancel()
+        if path_exists_for_collision(target):
+            raise FileExistsError(f"Target already exists: {target}")
         if source.is_dir() and not source.is_symlink():
             target.mkdir(parents=True, exist_ok=True)
             for root, dirs, filenames in os.walk(source):
@@ -838,6 +852,8 @@ class FileOperationWorker(QObject):
 
     def _move_path(self, source: Path, target: Path, state: dict[str, int | float]) -> None:
         self._check_cancel()
+        if path_exists_for_collision(target):
+            raise FileExistsError(f"Target already exists: {target}")
         self._emit_progress(state, f"Moving {source.name}")
         try:
             source_size = copy_size(source)
@@ -964,6 +980,9 @@ def move_to_trash(path: Path) -> Path | None:
 class PaneState:
     path: Path
     view_mode: str
+    sort_field: str = "name"
+    sort_descending: bool = False
+    sort_reversed: bool = False
 
 
 @dataclass
@@ -1101,6 +1120,8 @@ class SettingsDialog(QDialog):
         terminal_args: str,
         user_buttons: list[dict[str, str]],
         dual_bookmarks: list[dict[str, str]],
+        confirm_quit_operations: bool,
+        initial_tab: str = "General",
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -1114,6 +1135,8 @@ class SettingsDialog(QDialog):
         self.icon_layout_combo.setCurrentText(icon_layout if icon_layout in ICON_LAYOUTS else "Normal")
         self.terminal_command_edit = QLineEdit(terminal_command or DEFAULT_TERMINAL_COMMAND)
         self.terminal_args_edit = QLineEdit(terminal_args)
+        self.confirm_quit_operations_box = QCheckBox("Confirm quit while copy/move operations are running or queued")
+        self.confirm_quit_operations_box.setChecked(confirm_quit_operations)
         self.button_edits: list[tuple[QLineEdit, QLineEdit, QLineEdit]] = []
         self.dual_bookmark_list = QListWidget()
         self.dual_bookmark_name_edit = QLineEdit()
@@ -1123,8 +1146,8 @@ class SettingsDialog(QDialog):
         self._current_dual_bookmark_row = -1
 
         root = QVBoxLayout(self)
-        tabs = QTabWidget()
-        root.addWidget(tabs, 1)
+        self.tabs = QTabWidget()
+        root.addWidget(self.tabs, 1)
 
         general_tab = QWidget()
         general_layout = QFormLayout(general_tab)
@@ -1132,7 +1155,8 @@ class SettingsDialog(QDialog):
         general_layout.addRow("Icon layout", self.icon_layout_combo)
         general_layout.addRow("Terminal", self.terminal_command_edit)
         general_layout.addRow("Terminal args", self.terminal_args_edit)
-        tabs.addTab(general_tab, "General")
+        general_layout.addRow("Quit", self.confirm_quit_operations_box)
+        self.tabs.addTab(general_tab, "General")
 
         buttons_tab = QWidget()
         buttons_layout = QFormLayout(buttons_tab)
@@ -1150,9 +1174,13 @@ class SettingsDialog(QDialog):
             row.addWidget(command_edit, 1)
             self.button_edits.append((label_edit, symbol_edit, command_edit))
             buttons_layout.addRow(f"Button {index + 1}", row)
-        tabs.addTab(buttons_tab, "User Buttons")
+        self.tabs.addTab(buttons_tab, "User Buttons")
 
-        tabs.addTab(self._build_dual_bookmarks_tab(dual_bookmarks), "Dual Bookmarks")
+        self.tabs.addTab(self._build_dual_bookmarks_tab(dual_bookmarks), "Dual Bookmarks")
+        for index in range(self.tabs.count()):
+            if self.tabs.tabText(index) == initial_tab:
+                self.tabs.setCurrentIndex(index)
+                break
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Ok)
         buttons.accepted.connect(lambda dialog=self: dialog.accept())
@@ -1337,6 +1365,9 @@ class SettingsDialog(QDialog):
     def terminal_args(self) -> str:
         return self.terminal_args_edit.text().strip()
 
+    def confirm_quit_operations(self) -> bool:
+        return self.confirm_quit_operations_box.isChecked()
+
     def user_buttons(self) -> list[dict[str, str]]:
         buttons = []
         for label_edit, symbol_edit, command_edit in self.button_edits:
@@ -1380,6 +1411,7 @@ class HelpDialog(QDialog):
                 ("Go up", "Alt+Up"),
                 ("Focus path bar", "Ctrl+L"),
                 ("Focus pane search", "Ctrl+F"),
+                ("Wildcard filter active pane", "Ctrl+S"),
                 ("Refresh", "Ctrl+R"),
             ],
         ),
@@ -1419,9 +1451,10 @@ class HelpDialog(QDialog):
                 ("Zoom icons or preview larger", "Ctrl++"),
                 ("Zoom icons or preview smaller", "Ctrl+-"),
                 ("Toggle side panel", "Ctrl+B / F9"),
+                ("Edit dual bookmarks", "Ctrl+D"),
                 ("Settings", "Ctrl+,"),
                 ("Help", "F1"),
-                ("Quit", "Ctrl+Q"),
+                ("Quit", "Q / Ctrl+Q"),
                 ("Close this help", "Escape"),
             ],
         ),
@@ -1437,14 +1470,17 @@ class HelpDialog(QDialog):
               <li>Use the left and right panes to copy, move, compare, preview, and open files.</li>
               <li>Use the sidebar for shortcuts, favorites, recent folders, and the folder tree.</li>
               <li>Use toolbar buttons for common file operations, pane display, user commands, settings, and help.</li>
+              <li>Use each pane's Sort button beside the view selector to sort by name, size, type, or modification date.</li>
               <li>Right-click files, folders, sidebar entries, or tree rows for context actions.</li>
+              <li>Press Ctrl+S to filter the active pane by wildcard patterns such as <code>*.mkv</code> or <code>*.jpg;*.png</code>. Empty input clears the wildcard filter.</li>
             </ul>
             <h3>Selection</h3>
             <ul>
               <li>Normal selection comes from the current file view.</li>
               <li>In Details view, Space tags or untags the current row. Tagged files take priority for copy, move, trash, and delete.</li>
               <li>In Icon view, drag in the empty gap between icon hit areas to rubber-band select.</li>
-              <li>Escape clears selection when no manual preview is open.</li>
+              <li>Escape clears an active wildcard filter first; otherwise it clears selection when no manual preview is open.</li>
+              <li>During drag and drop, a folder under the cursor is highlighted. If no folder is highlighted, the drop goes into the current pane folder.</li>
             </ul>
             """,
         ),
@@ -1458,6 +1494,7 @@ class HelpDialog(QDialog):
               <li><b>Rename</b>: rename the selected/current item.</li>
               <li><b>Copy Across</b>: copy selected or tagged items to the other pane.</li>
               <li><b>Move Across</b>: move selected or tagged items to the other pane.</li>
+              <li><b>Existing targets</b>: copy and move prompt for Overwrite, Rename, or Cancel.</li>
               <li><b>Trash</b>: move selected or tagged items to Trash.</li>
               <li><b>Empty Trash</b>: permanently clear the desktop Trash.</li>
               <li><b>Terminal Here</b>: open the configured terminal at the active pane path.</li>
@@ -1466,6 +1503,7 @@ class HelpDialog(QDialog):
               <li><b>Hidden</b>: show or hide dotfiles.</li>
               <li><b>Preview</b>: enable or disable automatic preview.</li>
               <li><b>Dual Bookmarks</b>: open a saved pair of left and right folders from the top-center dropdown.</li>
+              <li><b>Pane Sort</b>: each pane has a Sort button beside Icon/List/Details for field, direction, and reversed order.</li>
               <li><b>Swap Panes</b>: swap the left and right pane paths and view modes.</li>
               <li><b>User buttons</b>: optional custom command buttons configured in Settings.</li>
               <li><b>Side Panel</b>: show or hide the sidebar.</li>
@@ -1488,6 +1526,7 @@ class HelpDialog(QDialog):
               <li><b>Add to Favorites</b>: add the selected path to the sidebar.</li>
               <li><b>Open in Other Pane</b>: open the selected folder in the opposite pane.</li>
               <li><b>Set Emblem</b>: add or clear an fm-only persistent emblem on a folder.</li>
+              <li><b>Set Note</b>: add or clear an fm-only persistent tooltip note on a folder.</li>
               <li><b>Preview in Other Pane</b>: show supported text, image, or PDF files in the opposite pane.</li>
               <li><b>Copy / Move to Other Pane</b>: transfer selected or tagged items.</li>
               <li><b>Move to Trash / Delete Permanently</b>: remove selected or tagged items.</li>
@@ -1541,6 +1580,7 @@ class HelpDialog(QDialog):
               <li><b>Terminal args</b>: arguments passed to the terminal command.</li>
               <li><b>User buttons</b>: up to four toolbar buttons. Symbols can be theme icon names, image paths, or short glyphs.</li>
               <li><b>Dual Bookmarks</b>: named left/right folder pairs shown in the top-center toolbar dropdown.</li>
+              <li><b>Quit confirmation</b>: optionally confirm quit only when copy/move operations are running or queued.</li>
             </ul>
             <h2>Dual Bookmarks</h2>
             <ul>
@@ -1563,6 +1603,8 @@ class HelpDialog(QDialog):
               <li>Emblems are stored by folder path in fm settings.</li>
               <li>They are persistent across restarts but only shown inside fm.</li>
               <li>Use <b>Clear Emblem</b> from the same menu to remove one.</li>
+              <li>Use <b>Set Note</b> on a folder to store an fm-only comment shown as the folder tooltip.</li>
+              <li>Use <b>Clear Note</b> to remove a folder note.</li>
             </ul>
             """,
         ),
@@ -1905,7 +1947,7 @@ class DropListView(QListView):
             event.accept()
             return True
         if self._is_plain_escape(event):
-            self.pane.clear_selection()
+            self.pane.clear_filter_or_selection()
             event.accept()
             return True
         return False
@@ -1990,10 +2032,12 @@ class DropListView(QListView):
         self._accept_file_drag(event)
 
     def dragMoveEvent(self, event) -> None:
+        self.pane.set_drop_target_for_view(self, event.position().toPoint())
         self._accept_file_drag(event)
 
     def dropEvent(self, event) -> None:
         if not event.mimeData().hasUrls():
+            self.pane.clear_drop_target()
             super().dropEvent(event)
             return
         action = self._drop_action(event)
@@ -2002,8 +2046,10 @@ class DropListView(QListView):
             event.accept()
         else:
             event.ignore()
+        self.pane.clear_drop_target()
 
     def dragLeaveEvent(self, event) -> None:
+        self.pane.clear_drop_target()
         super().dragLeaveEvent(event)
 
     def startDrag(self, supported_actions) -> None:
@@ -2090,7 +2136,7 @@ class DropTreeView(QTreeView):
             event.accept()
             return True
         if self._is_plain_escape(event):
-            self.pane.clear_selection()
+            self.pane.clear_filter_or_selection()
             event.accept()
             return True
         return False
@@ -2163,10 +2209,12 @@ class DropTreeView(QTreeView):
         self._accept_file_drag(event)
 
     def dragMoveEvent(self, event) -> None:
+        self.pane.set_drop_target_for_view(self, event.position().toPoint())
         self._accept_file_drag(event)
 
     def dropEvent(self, event) -> None:
         if not event.mimeData().hasUrls():
+            self.pane.clear_drop_target()
             super().dropEvent(event)
             return
         action = self._drop_action(event)
@@ -2175,8 +2223,10 @@ class DropTreeView(QTreeView):
             event.accept()
         else:
             event.ignore()
+        self.pane.clear_drop_target()
 
     def dragLeaveEvent(self, event) -> None:
+        self.pane.clear_drop_target()
         super().dragLeaveEvent(event)
 
     def startDrag(self, supported_actions) -> None:
@@ -2239,10 +2289,14 @@ class FileSystemNoDropModel(QFileSystemModel):
         self._tagged_paths: set[Path] = set()
         self._tagged_background = QBrush(QColor("#2b1268"))
         self._tagged_foreground = QBrush(QColor("#ffffff"))
+        self._drop_target_path: Path | None = None
+        self._drop_target_background = QBrush(QColor("#14532d"))
+        self._drop_target_foreground = QBrush(QColor("#ffffff"))
         self._thumbnail_cache: dict[tuple[str, int, int], QIcon] = {}
         self._thumbnail_pending: set[tuple[str, int, int]] = set()
         self._thumbnail_failed: set[tuple[str, int, int]] = set()
         self._folder_emblems: dict[str, str] = {}
+        self._folder_notes: dict[str, str] = {}
         self._emblem_icon_cache: dict[tuple[str, str], QIcon] = {}
         self._thumbnail_pool = QThreadPool(self)
         self._thumbnail_pool.setMaxThreadCount(2)
@@ -2256,12 +2310,20 @@ class FileSystemNoDropModel(QFileSystemModel):
         return Qt.DropAction.IgnoreAction
 
     def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole):
+        path = Path(self.filePath(index))
+        if role == Qt.ItemDataRole.BackgroundRole and self._drop_target_path and path == self._drop_target_path:
+            return self._drop_target_background
+        if role == Qt.ItemDataRole.ForegroundRole and self._drop_target_path and path == self._drop_target_path:
+            return self._drop_target_foreground
         if role == Qt.ItemDataRole.BackgroundRole and Path(self.filePath(index)) in self._tagged_paths:
             return self._tagged_background
         if role == Qt.ItemDataRole.ForegroundRole and Path(self.filePath(index)) in self._tagged_paths:
             return self._tagged_foreground
+        if role == Qt.ItemDataRole.ToolTipRole:
+            note = self._folder_notes.get(str(path))
+            if note:
+                return note
         if role == Qt.ItemDataRole.DecorationRole and index.column() == 0:
-            path = Path(self.filePath(index))
             emblem_key = self._folder_emblems.get(str(path))
             if emblem_key and path.is_dir():
                 base_icon = super().data(index, role)
@@ -2281,6 +2343,23 @@ class FileSystemNoDropModel(QFileSystemModel):
                     return icon
         return super().data(index, role)
 
+    def set_drop_target_path(self, path: Path | None) -> None:
+        if path == self._drop_target_path:
+            return
+        old_path = self._drop_target_path
+        self._drop_target_path = path
+        for changed in (old_path, path):
+            if not changed:
+                continue
+            index = self.index(str(changed))
+            if index.isValid():
+                last_column = max(0, self.columnCount(index.parent()) - 1)
+                self.dataChanged.emit(
+                    index.siblingAtColumn(0),
+                    index.siblingAtColumn(last_column),
+                    [Qt.ItemDataRole.BackgroundRole, Qt.ItemDataRole.ForegroundRole],
+                )
+
     def set_folder_emblems(self, emblems: dict[str, str]) -> None:
         old_paths = set(self._folder_emblems)
         self._folder_emblems = dict(emblems)
@@ -2289,6 +2368,14 @@ class FileSystemNoDropModel(QFileSystemModel):
             index = self.index(path_text)
             if index.isValid():
                 self.dataChanged.emit(index, index, [Qt.ItemDataRole.DecorationRole])
+
+    def set_folder_notes(self, notes: dict[str, str]) -> None:
+        old_paths = set(self._folder_notes)
+        self._folder_notes = dict(notes)
+        for path_text in old_paths | set(self._folder_notes):
+            index = self.index(path_text)
+            if index.isValid():
+                self.dataChanged.emit(index, index, [Qt.ItemDataRole.ToolTipRole])
 
     def set_tagged_paths(self, paths: set[Path]) -> None:
         old_paths = set(self._tagged_paths)
@@ -2414,7 +2501,11 @@ class FilePane(QWidget):
         self.show_hidden = False
         self.icon_zoom = 64
         self.icon_layout = "Normal"
+        self.sort_field = "name"
+        self.sort_descending = False
+        self.sort_reversed = False
         self.search_text = ""
+        self.wildcard_filter_text = ""
         self.preview_enabled = True
         self.last_preview_height = 140
         self.preview_source_path: Path | None = None
@@ -2440,10 +2531,19 @@ class FilePane(QWidget):
         self.search_edit.setClearButtonEnabled(True)
         self.search_edit.setMaximumWidth(180)
         self.search_edit.textChanged.connect(lambda text, pane=self: pane.set_search(text))
+        self.wildcard_filter_chip = QPushButton()
+        self.wildcard_filter_chip.setVisible(False)
+        self.wildcard_filter_chip.setToolTip("Click to clear wildcard filter")
+        self.wildcard_filter_chip.clicked.connect(lambda _checked=False, pane=self: pane.set_wildcard_filter(""))
 
         self.view_combo = QComboBox()
         self.view_combo.addItems(VIEW_MODES)
         self.view_combo.currentTextChanged.connect(lambda mode, pane=self: pane.set_view_mode(mode))
+        self.sort_button = QToolButton()
+        self.sort_button.setText("Sort")
+        self.sort_button.setToolTip("Sort")
+        self.sort_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        self.sort_button.setMenu(self._build_sort_menu())
         self.zoom_out_button = self._tool_button("Smaller icons", self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowDown), self.zoom_out)
         self.zoom_in_button = self._tool_button("Larger icons", self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowUp), self.zoom_in)
 
@@ -2464,9 +2564,11 @@ class FilePane(QWidget):
         top.addWidget(self.refresh_button)
         top.addWidget(self.path_edit, 1)
         top.addWidget(self.search_edit)
+        top.addWidget(self.wildcard_filter_chip)
         top.addWidget(self.zoom_out_button)
         top.addWidget(self.zoom_in_button)
         top.addWidget(self.view_combo)
+        top.addWidget(self.sort_button)
 
         self.breadcrumb_layout = QHBoxLayout()
         self.breadcrumb_layout.setContentsMargins(0, 0, 0, 0)
@@ -2489,7 +2591,7 @@ class FilePane(QWidget):
 
         self.detail_view = DropTreeView(self)
         self.detail_view.setSortingEnabled(True)
-        self.detail_view.sortByColumn(0, Qt.SortOrder.AscendingOrder)
+        self.detail_view.header().sortIndicatorChanged.connect(lambda column, order, pane=self: pane._header_sort_changed(column, order))
 
         self.views: list[QAbstractItemView] = [self.icon_view, self.list_view, self.detail_view]
         for view in self.views:
@@ -2600,6 +2702,7 @@ class FilePane(QWidget):
         self._operation_contexts: dict[FileOperationWorker, dict[str, object]] = {}
         self.apply_icon_zoom()
         self.set_view_mode("Details")
+        self._apply_sort()
 
     def resizeEvent(self, event) -> None:
         super().resizeEvent(event)
@@ -2633,14 +2736,52 @@ class FilePane(QWidget):
         self._apply_name_filter()
 
     def _apply_name_filter(self) -> None:
+        wildcard = self.wildcard_filter_text.strip()
+        if wildcard:
+            patterns = [part.strip() for chunk in wildcard.split(";") for part in chunk.split(",")]
+            self.model.setNameFilters([pattern for pattern in patterns if pattern])
+            return
         text = self.search_text.strip()
         self.model.setNameFilters([f"*{text}*"] if text else [])
 
     def set_search(self, text: str) -> None:
         self.search_text = text
+        if text.strip():
+            self.wildcard_filter_text = ""
+            self.wildcard_filter_chip.clear()
+            self.wildcard_filter_chip.setVisible(False)
         self._tagged_paths.clear()
         self._apply_name_filter()
         self._update_status()
+
+    def set_wildcard_filter(self, pattern: str) -> None:
+        self.wildcard_filter_text = pattern.strip()
+        if self.wildcard_filter_text:
+            self.search_text = ""
+            self.search_edit.blockSignals(True)
+            try:
+                self.search_edit.clear()
+            finally:
+                self.search_edit.blockSignals(False)
+            self.wildcard_filter_chip.setText(f"Filter: {self.wildcard_filter_text}  x")
+            self.wildcard_filter_chip.setVisible(True)
+        else:
+            self.wildcard_filter_chip.clear()
+            self.wildcard_filter_chip.setVisible(False)
+        self._tagged_paths.clear()
+        self._apply_name_filter()
+        self._update_status()
+
+    def clear_wildcard_filter(self) -> bool:
+        if not self.wildcard_filter_text.strip():
+            return False
+        self.set_wildcard_filter("")
+        return True
+
+    def clear_filter_or_selection(self) -> None:
+        if self.clear_wildcard_filter():
+            return
+        self.clear_selection()
 
     def set_preview_enabled(self, enabled: bool) -> None:
         sizes = self.preview_splitter.sizes()
@@ -2692,6 +2833,21 @@ class FilePane(QWidget):
     def set_folder_emblems(self, emblems: dict[str, str]) -> None:
         self.model.set_folder_emblems(emblems)
 
+    def set_folder_notes(self, notes: dict[str, str]) -> None:
+        self.model.set_folder_notes(notes)
+
+    def set_drop_target_for_view(self, view: QAbstractItemView, point: QPoint) -> None:
+        index = view.indexAt(point)
+        if index.isValid():
+            path = Path(self.model.filePath(index))
+            if path.is_dir():
+                self.model.set_drop_target_path(path)
+                return
+        self.clear_drop_target()
+
+    def clear_drop_target(self) -> None:
+        self.model.set_drop_target_path(None)
+
     def zoom_in(self) -> None:
         self.set_icon_zoom(self.icon_zoom + 16)
 
@@ -2713,11 +2869,112 @@ class FilePane(QWidget):
         self.peer = peer
 
     def state(self) -> PaneState:
-        return PaneState(self.current_path(), self.view_combo.currentText())
+        return PaneState(
+            self.current_path(),
+            self.view_combo.currentText(),
+            self.sort_field,
+            self.sort_descending,
+            self.sort_reversed,
+        )
 
     def restore_state(self, state: PaneState) -> None:
         self.set_path(state.path)
         self.set_view_mode(state.view_mode)
+        self.set_sort(
+            field=state.sort_field,
+            descending=state.sort_descending,
+            reversed_order=state.sort_reversed,
+        )
+
+    def _build_sort_menu(self) -> QMenu:
+        menu = QMenu(self)
+
+        field_group = QActionGroup(menu)
+        field_group.setExclusive(True)
+        for key, (label, _column) in SORT_FIELDS.items():
+            action = QAction(label, menu)
+            action.setCheckable(True)
+            action.setChecked(self.sort_field == key)
+            action.triggered.connect(lambda _checked=False, field=key, pane=self: pane.set_sort(field=field))
+            field_group.addAction(action)
+            menu.addAction(action)
+
+        menu.addSeparator()
+
+        order_group = QActionGroup(menu)
+        order_group.setExclusive(True)
+        ascending_action = QAction("Ascending", menu)
+        ascending_action.setCheckable(True)
+        ascending_action.setChecked(not self.sort_descending)
+        ascending_action.triggered.connect(lambda _checked=False, pane=self: pane.set_sort(descending=False))
+        descending_action = QAction("Descending", menu)
+        descending_action.setCheckable(True)
+        descending_action.setChecked(self.sort_descending)
+        descending_action.triggered.connect(lambda _checked=False, pane=self: pane.set_sort(descending=True))
+        order_group.addAction(ascending_action)
+        order_group.addAction(descending_action)
+        menu.addAction(ascending_action)
+        menu.addAction(descending_action)
+
+        menu.addSeparator()
+
+        reversed_action = QAction("Reversed Order", menu)
+        reversed_action.setCheckable(True)
+        reversed_action.setChecked(self.sort_reversed)
+        reversed_action.triggered.connect(lambda checked, pane=self: pane.set_sort(reversed_order=checked))
+        menu.addAction(reversed_action)
+
+        return menu
+
+    def _effective_sort_order(self) -> Qt.SortOrder:
+        descending = self.sort_descending ^ self.sort_reversed
+        return Qt.SortOrder.DescendingOrder if descending else Qt.SortOrder.AscendingOrder
+
+    def set_sort(
+        self,
+        *,
+        field: str | None = None,
+        descending: bool | None = None,
+        reversed_order: bool | None = None,
+    ) -> None:
+        if field is not None:
+            self.sort_field = field if field in SORT_FIELDS else "name"
+        if descending is not None:
+            self.sort_descending = bool(descending)
+        if reversed_order is not None:
+            self.sort_reversed = bool(reversed_order)
+        self._apply_sort()
+        self._refresh_sort_menu()
+
+    def _apply_sort(self) -> None:
+        _label, column = SORT_FIELDS.get(self.sort_field, SORT_FIELDS["name"])
+        order = self._effective_sort_order()
+        self.model.sort(column, order)
+        self.detail_view.header().blockSignals(True)
+        try:
+            self.detail_view.sortByColumn(column, order)
+        finally:
+            self.detail_view.header().blockSignals(False)
+        self._update_sort_button()
+
+    def _refresh_sort_menu(self) -> None:
+        self.sort_button.setMenu(self._build_sort_menu())
+
+    def _update_sort_button(self) -> None:
+        label = SORT_FIELDS.get(self.sort_field, SORT_FIELDS["name"])[0].removeprefix("By ")
+        direction = "Descending" if self.sort_descending else "Ascending"
+        reversed_text = ", reversed" if self.sort_reversed else ""
+        self.sort_button.setToolTip(f"Sort: {label}, {direction}{reversed_text}")
+
+    def _header_sort_changed(self, column: int, order: Qt.SortOrder) -> None:
+        for key, (_label, field_column) in SORT_FIELDS.items():
+            if field_column == column:
+                self.sort_field = key
+                break
+        effective_descending = order == Qt.SortOrder.DescendingOrder
+        self.sort_descending = bool(effective_descending) ^ self.sort_reversed
+        self._refresh_sort_menu()
+        self._update_sort_button()
 
     def current_view(self) -> QAbstractItemView:
         return self.stack.currentWidget()
@@ -3218,7 +3475,7 @@ class FilePane(QWidget):
         worker.completed.connect(self._file_operation_completed)
         worker.canceled.connect(self._file_operation_canceled)
         worker.failed.connect(self._file_operation_failed)
-        progress.canceled.connect(worker.cancel)
+        progress.canceled.connect(lambda w=worker: w.cancel())
         thread.started.connect(worker.run)
         thread.finished.connect(worker.deleteLater)
         thread.finished.connect(thread.deleteLater)
@@ -3491,6 +3748,17 @@ class FilePane(QWidget):
         current_path = self.current_item_path()
         if current_path and current_path.is_dir():
             self._add_emblem_menu(menu, current_path)
+            menu.addAction(
+                menu_icon(self, "accessories-text-editor", QStyle.StandardPixmap.SP_FileDialogInfoView),
+                "Set Note...",
+                lambda _checked=False, folder=current_path, pane=self: pane.edit_folder_note(folder),
+            )
+            clear_note_action = menu.addAction(
+                menu_icon(self, "edit-clear", QStyle.StandardPixmap.SP_DialogResetButton),
+                "Clear Note",
+                lambda _checked=False, folder=current_path, pane=self: pane.set_folder_note(folder, ""),
+            )
+            clear_note_action.setEnabled(bool(self.folder_note_for(current_path)))
         if self.peer:
             menu.addSeparator()
             open_peer_action = menu.addAction(menu_icon(self, "folder-open", QStyle.StandardPixmap.SP_DirOpenIcon), "Open in Other Pane", self.open_selected_in_peer)
@@ -3524,6 +3792,22 @@ class FilePane(QWidget):
         window = self.window()
         if hasattr(window, "set_folder_emblem"):
             window.set_folder_emblem(path, emblem)
+
+    def folder_note_for(self, path: Path) -> str:
+        window = self.window()
+        if hasattr(window, "folder_note_for"):
+            return str(window.folder_note_for(path))
+        return ""
+
+    def set_folder_note(self, path: Path, note: str) -> None:
+        window = self.window()
+        if hasattr(window, "set_folder_note"):
+            window.set_folder_note(path, note)
+
+    def edit_folder_note(self, path: Path) -> None:
+        note, ok = get_name(self, "Folder Note", "Note", self.folder_note_for(path))
+        if ok:
+            self.set_folder_note(path, note)
 
     def _add_emblem_menu(self, menu: QMenu, path: Path) -> QMenu:
         emblem_menu = menu.addMenu(emblem_icon("star"), "Set Emblem")
@@ -3593,7 +3877,11 @@ class FilePane(QWidget):
             entries = []
         dirs = sum(1 for entry in entries if entry.is_dir())
         files = len(entries) - dirs
-        suffix = f" matching '{self.search_text}'" if self.search_text.strip() else ""
+        suffix = ""
+        if self.wildcard_filter_text.strip():
+            suffix = f" matching wildcard '{self.wildcard_filter_text}'"
+        elif self.search_text.strip():
+            suffix = f" matching '{self.search_text}'"
         self.status_label.setText(f"{files} files, {dirs} folders{suffix}")
 
     def _update_preview(self) -> None:
@@ -4122,6 +4410,8 @@ class FileManager(QMainWindow):
         self.user_buttons = self._load_user_buttons()
         self.dual_bookmarks = self._load_dual_bookmarks()
         self.folder_emblems = self._load_folder_emblems()
+        self.folder_notes = self._load_folder_notes()
+        self.confirm_quit_operations = str(self.settings.value("confirmQuitOperations", "true")).lower() != "false"
         TERMINAL_SIGNALS.failed.connect(self._terminal_launch_failed)
         self.current_theme = str(self.settings.value("theme", "Dark"))
         if self.current_theme not in THEMES:
@@ -4136,6 +4426,8 @@ class FileManager(QMainWindow):
         self.right.set_icon_layout(self.icon_layout)
         self.left.set_folder_emblems(self.folder_emblems)
         self.right.set_folder_emblems(self.folder_emblems)
+        self.left.set_folder_notes(self.folder_notes)
+        self.right.set_folder_notes(self.folder_notes)
         self.active_pane = self.left
         self._update_active_pane_style()
 
@@ -4306,6 +4598,20 @@ class FileManager(QMainWindow):
                     emblems[path] = key
         return emblems
 
+    def _load_folder_notes(self) -> dict[str, str]:
+        try:
+            raw_notes = json.loads(str(self.settings.value("folderNotesJson", "{}")))
+        except json.JSONDecodeError:
+            raw_notes = {}
+        notes: dict[str, str] = {}
+        if isinstance(raw_notes, dict):
+            for path_text, note in raw_notes.items():
+                path = str(path_text).strip()
+                text = str(note).strip()
+                if path and text:
+                    notes[path] = text
+        return notes
+
     def _dual_bookmark_combo_label(self, bookmark: dict[str, str]) -> str:
         name = bookmark.get("name", "").strip()
         if name:
@@ -4359,6 +4665,21 @@ class FileManager(QMainWindow):
         self.left.set_folder_emblems(self.folder_emblems)
         self.right.set_folder_emblems(self.folder_emblems)
         self.settings.setValue("folderEmblemsJson", json.dumps(self.folder_emblems))
+        self.settings.sync()
+
+    def folder_note_for(self, path: Path) -> str:
+        return self.folder_notes.get(str(self._normalized_emblem_path(path)), "")
+
+    def set_folder_note(self, path: Path, note: str) -> None:
+        normalized = self._normalized_emblem_path(path)
+        text = str(note).strip()
+        if text:
+            self.folder_notes[str(normalized)] = text
+        else:
+            self.folder_notes.pop(str(normalized), None)
+        self.left.set_folder_notes(self.folder_notes)
+        self.right.set_folder_notes(self.folder_notes)
+        self.settings.setValue("folderNotesJson", json.dumps(self.folder_notes))
         self.settings.sync()
 
     def _normalized_emblem_path(self, path: Path) -> Path:
@@ -4477,12 +4798,14 @@ class FileManager(QMainWindow):
             (QKeySequence("Alt+Up"), self.go_up),
             (QKeySequence("Ctrl+L"), self.focus_path),
             (QKeySequence("Ctrl+F"), self.focus_search),
+            (QKeySequence("Ctrl+S"), self.filter_wildcard),
             (QKeySequence("Ctrl+H"), self.toggle_hidden),
             (QKeySequence("Ctrl++"), self.zoom_in),
             (QKeySequence("Ctrl+="), self.zoom_in),
             (QKeySequence("Ctrl+-"), self.zoom_out),
             (QKeySequence("F4"), self.terminal),
             (QKeySequence("Ctrl+B"), self.side_dock.toggleViewAction().trigger),
+            (QKeySequence("Ctrl+D"), self.open_dual_bookmarks_settings),
             (QKeySequence("F9"), self.side_dock.toggleViewAction().trigger),
             (QKeySequence("Alt+Return"), self.properties),
             (QKeySequence("Ctrl+,"), self.open_settings),
@@ -4511,6 +4834,12 @@ class FileManager(QMainWindow):
             event.accept()
             return True
         if event.type() in {QEvent.Type.ShortcutOverride, QEvent.Type.KeyPress}:
+            quit_target = self._pane_zoom_target(watched) if self._is_plain_q(event) else None
+            if quit_target:
+                if event.type() == QEvent.Type.KeyPress:
+                    self.close()
+                event.accept()
+                return True
             zoom_target = self._pane_zoom_target(watched) if self._is_plain_z(event) else None
             if zoom_target:
                 if event.type() == QEvent.Type.KeyPress:
@@ -4553,7 +4882,7 @@ class FileManager(QMainWindow):
                     if self.close_manual_previews():
                         event.accept()
                         return True
-                    self.active_pane.clear_selection()
+                    self.active_pane.clear_filter_or_selection()
                 event.accept()
                 return True
         if event.type() == QEvent.Type.FocusIn:
@@ -4589,6 +4918,9 @@ class FileManager(QMainWindow):
 
     def _is_plain_z(self, event) -> bool:
         return event.key() == Qt.Key.Key_Z and event.modifiers() == Qt.KeyboardModifier.NoModifier
+
+    def _is_plain_q(self, event) -> bool:
+        return event.key() == Qt.Key.Key_Q and event.modifiers() == Qt.KeyboardModifier.NoModifier
 
     def _is_plain_p(self, event) -> bool:
         return event.key() == Qt.Key.Key_P and event.modifiers() == Qt.KeyboardModifier.NoModifier
@@ -4697,10 +5029,16 @@ class FileManager(QMainWindow):
         left_state = self.cli_left_state or PaneState(
             Path(str(self.settings.value("left/path", str(Path.home())))),
             str(self.settings.value("left/view", "Details")),
+            str(self.settings.value("left/sortField", "name")),
+            str(self.settings.value("left/sortDescending", "false")).lower() == "true",
+            str(self.settings.value("left/sortReversed", "false")).lower() == "true",
         )
         right_state = self.cli_right_state or PaneState(
             Path(str(self.settings.value("right/path", str(Path.home())))),
             str(self.settings.value("right/view", "Details")),
+            str(self.settings.value("right/sortField", "name")),
+            str(self.settings.value("right/sortDescending", "false")).lower() == "true",
+            str(self.settings.value("right/sortReversed", "false")).lower() == "true",
         )
         self.left.restore_state(left_state)
         self.right.restore_state(right_state)
@@ -4743,6 +5081,8 @@ class FileManager(QMainWindow):
         self.settings.setValue("userButtonsJson", json.dumps(self.user_buttons))
         self.settings.setValue("dualBookmarksJson", json.dumps(self.dual_bookmarks))
         self.settings.setValue("folderEmblemsJson", json.dumps(self.folder_emblems))
+        self.settings.setValue("folderNotesJson", json.dumps(self.folder_notes))
+        self.settings.setValue("confirmQuitOperations", self.confirm_quit_operations)
         self.settings.setValue("sidePanel/visible", self.side_dock.isVisible())
         self.settings.setValue("sidePanel/mode", self.side_panel.current_mode())
         if self.side_dock.isVisible():
@@ -4752,6 +5092,9 @@ class FileManager(QMainWindow):
             state = pane.state()
             self.settings.setValue(f"{prefix}/path", str(state.path))
             self.settings.setValue(f"{prefix}/view", state.view_mode)
+            self.settings.setValue(f"{prefix}/sortField", state.sort_field)
+            self.settings.setValue(f"{prefix}/sortDescending", state.sort_descending)
+            self.settings.setValue(f"{prefix}/sortReversed", state.sort_reversed)
             self.settings.setValue(f"{prefix}/iconZoom", pane.icon_zoom)
             self.settings.setValue(f"{prefix}/previewSplitter", pane.preview_state())
         self.settings.sync()
@@ -4775,11 +5118,11 @@ class FileManager(QMainWindow):
         self.schedule_side_panel_width_restore(self.side_panel_width)
 
     def closeEvent(self, event) -> None:
-        if self.active_file_operations > 0:
+        if self.confirm_quit_operations and (self.active_file_operations > 0 or self.operation_queue):
             response = QMessageBox.question(
                 self,
                 "File Operation in Progress",
-                "A copy or move operation is still running. Quit anyway?",
+                "A copy or move operation is running or queued. Quit anyway?",
                 QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                 QMessageBox.StandardButton.No,
             )
@@ -4823,7 +5166,7 @@ class FileManager(QMainWindow):
         self.left.set_icon_layout(self.icon_layout)
         self.right.set_icon_layout(self.icon_layout)
 
-    def open_settings(self) -> None:
+    def open_settings(self, initial_tab: str = "General") -> None:
         dialog = SettingsDialog(
             self.current_theme,
             self.icon_layout,
@@ -4831,6 +5174,8 @@ class FileManager(QMainWindow):
             self.terminal_args,
             self.user_buttons,
             self.dual_bookmarks,
+            self.confirm_quit_operations,
+            initial_tab,
             self,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -4841,6 +5186,7 @@ class FileManager(QMainWindow):
         self.terminal_args = dialog.terminal_args()
         self.user_buttons = dialog.user_buttons()
         self.dual_bookmarks = dialog.dual_bookmarks()
+        self.confirm_quit_operations = dialog.confirm_quit_operations()
         self._populate_user_toolbar_buttons()
         self._populate_dual_bookmark_combo()
         self.settings.setValue("theme", self.current_theme)
@@ -4849,7 +5195,11 @@ class FileManager(QMainWindow):
         self.settings.setValue("terminal/args", self.terminal_args)
         self.settings.setValue("userButtonsJson", json.dumps(self.user_buttons))
         self.settings.setValue("dualBookmarksJson", json.dumps(self.dual_bookmarks))
+        self.settings.setValue("confirmQuitOperations", self.confirm_quit_operations)
         self.settings.sync()
+
+    def open_dual_bookmarks_settings(self) -> None:
+        self.open_settings("Dual Bookmarks")
 
     def open_help(self) -> None:
         dialog = HelpDialog(self)
@@ -5088,6 +5438,13 @@ class FileManager(QMainWindow):
 
     def focus_search(self) -> None:
         self.active_pane.focus_search()
+
+    def filter_wildcard(self) -> None:
+        current = self.active_pane.wildcard_filter_text
+        pattern, ok = get_name(self, "Wildcard Filter", "Pattern", current)
+        if not ok:
+            return
+        self.active_pane.set_wildcard_filter(pattern)
 
     def zoom_in(self) -> None:
         if self.zoom_manual_preview(1):
