@@ -15,6 +15,7 @@ This project is developed with AI assistance. Code, UI behavior, documentation, 
 - Breadcrumb navigation and compact `~/...` path display.
 - Sidebar with favorites, places, recent folders, tree view, and Trash shortcut.
 - Copy, move, duplicate, rename, archive, extract, trash, delete, and undo support.
+- Copy/move progress dialogs reserve enough height for buttons on tiling/window-managed desktops such as MangoWM.
 - Drag and drop copy/move between panes.
 - Active pane zoom with `Z` while a file pane or full preview is focused.
 - Text, image, and PDF previews.
@@ -22,12 +23,14 @@ This project is developed with AI assistance. Code, UI behavior, documentation, 
 - Full-pane preview zoom with Ctrl++ / Ctrl+= and Ctrl+-.
 - PDF preview page navigation with buttons and keyboard controls.
 - Comprehensive tabbed Help system.
+- Dual Bookmarks dropdown for opening saved left/right folder pairs.
 - Configurable icon layout density: Compact, Normal, Spacious.
 - Per-pane icon zoom persistence.
 - Theme support: Light, Dark, Very Dark.
 - Custom user toolbar buttons.
 - Open With menu using cached desktop entries and cached application icons.
 - Default application editing from file Properties using desktop MIME associations.
+- Persistent fm-only folder emblems.
 
 ## Requirements
 
@@ -98,6 +101,7 @@ The top toolbar contains:
 - Properties: show properties for the selected item or current folder.
 - Hidden: toggle hidden files.
 - Preview: toggle automatic preview panes.
+- Dual Bookmarks dropdown: open a saved pair of left/right folders. It sits in the top-center toolbar area.
 - Swap Panes: swap left and right pane paths and view modes.
 - Side Panel: show or hide the side panel.
 - Help: open the tabbed help system. This button is immediately left of Settings.
@@ -125,6 +129,29 @@ User commands support placeholders:
 {right}     right pane path
 {selected}  selected or tagged paths
 ```
+
+## Dual Bookmarks
+
+Dual Bookmarks are named pairs of folders that open both panes together.
+
+Examples:
+
+- Downloads / Completed
+- Completed / TV
+- Completed / Movies
+
+Use the top-center toolbar dropdown to apply a dual bookmark. Choosing one entry sets the left pane to the saved left folder and the right pane to the saved right folder.
+
+Configure Dual Bookmarks in Settings:
+
+- Open Settings.
+- Go to the Dual Bookmarks tab.
+- Fill in Name, Left folder, and Right folder.
+- Use Add to create a new pair.
+- Select an existing pair, edit the fields, then use Update to change it.
+- Use Delete to remove the selected pair.
+
+Paths may use `~`.
 
 ## Sidebar
 
@@ -178,6 +205,7 @@ File pane single-key actions:
 - `O`: open the selected/current item. Files open with the desktop default app; folders open in the pane.
 - `P`: preview the selected supported file in the other pane.
 - `R`: open Properties for the selected/current item.
+- `E`: open the emblem menu for the selected folder.
 - `Z`: zoom or restore the active pane.
 
 Details view also supports tagging:
@@ -206,6 +234,7 @@ Actions:
 - Extract To: extract selected archive into a new chosen folder.
 - Add to Favorites: add selected path to the sidebar favorites.
 - Open in Other Pane: open selected folder in the opposite pane.
+- Set Emblem: add or clear a persistent fm-only emblem on a selected folder.
 - Preview in Other Pane: show selected text, image, or PDF file in the opposite pane.
 - Copy to Other Pane: copy selected/tagged items to the opposite pane.
 - Move to Other Pane: move selected/tagged items to the opposite pane.
@@ -283,6 +312,38 @@ xdg-mime default <desktop-file> <mime-type>
 
 This is the same desktop association system used by most Linux file managers. After changing a default, `O`, Enter, Ctrl+O, and the context menu Open action use the new default handler.
 
+## Folder Emblems
+
+Folder emblems are visual markers shown inside `fm`.
+
+To set one:
+
+1. Right-click a folder.
+2. Open `Set Emblem`.
+3. Choose an emblem.
+
+You can also select a folder in a file pane and press `E`.
+
+Available emblems:
+
+- Star
+- Important
+- Work
+- TV
+- Movies
+- Completed
+- Warning
+
+Use `Clear Emblem` from the same menu to remove one.
+
+Emblems are stored persistently by folder path in app settings as:
+
+```text
+folderEmblemsJson
+```
+
+They are intentionally fm-only and do not modify Thunar, GVFS, or desktop file metadata.
+
 ## Help System
 
 Open Help with the toolbar Help button or `F1`.
@@ -294,7 +355,7 @@ Help is tabbed:
 - Toolbar: toolbar button descriptions.
 - Context Menus: file pane, sidebar, and tree menu actions.
 - Preview: automatic preview, peer preview, PDF pages, preview zoom, and pane zoom.
-- Settings: app settings, user buttons, and default application notes.
+- Settings: app settings, user buttons, Dual Bookmarks, folder emblems, and default application notes.
 
 ## Keyboard Shortcuts
 
@@ -325,6 +386,7 @@ File operations:
 | New file | Ctrl+N |
 | Open terminal here | F4 |
 | Properties | R / Alt+Return |
+| Set folder emblem | E |
 
 Panes and selection:
 
@@ -361,6 +423,7 @@ Settings include:
 - Terminal command
 - Terminal arguments
 - Four custom user toolbar buttons
+- Dual Bookmarks: named left/right folder pairs for the top-center dropdown
 
 Default terminal:
 
@@ -425,19 +488,19 @@ APP_VERSION
 Project convention:
 
 - Update `APP_VERSION` for app source changes.
-- Back up the previous build in this project directory before source edits:
+- Back up the previous build in the project backup folder before source edits:
 
 ```text
-fm<version>.zip
+zips/fm<version>.zip
 ```
 
 Example:
 
 ```text
-fm0.72.zip
+zips/fm0.72.zip
 ```
 
-Backup zip files are ignored by Git.
+The `zips/` backup folder is ignored by Git.
 
 ## Git Workflow
 

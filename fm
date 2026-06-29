@@ -22,7 +22,7 @@ from typing import Callable
 from urllib.parse import quote
 
 from PySide6.QtCore import QDir, QEvent, QFile, QFileInfo, QItemSelectionModel, QMimeData, QModelIndex, QObject, QPoint, QRect, QRunnable, QSettings, QSize, Qt, QThread, QThreadPool, QTimer, QUrl, Signal, Slot
-from PySide6.QtGui import QAction, QBrush, QColor, QDesktopServices, QDrag, QIcon, QImage, QImageReader, QKeySequence, QPainter, QPixmap, QShortcut
+from PySide6.QtGui import QAction, QBrush, QColor, QCursor, QDesktopServices, QDrag, QFont, QIcon, QImage, QImageReader, QKeySequence, QPainter, QPixmap, QShortcut
 from PySide6.QtPdf import QPdfDocument
 from PySide6.QtWidgets import (
     QApplication,
@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QDockWidget,
     QCheckBox,
+    QFileDialog,
     QFileIconProvider,
     QFileSystemModel,
     QFormLayout,
@@ -68,7 +69,7 @@ from PySide6.QtWidgets import (
 APP_ID = "org.ai.fm"
 APP_ORG = "org.ai"
 APP_NAME = "fm"
-APP_VERSION = "0.81"
+APP_VERSION = "0.84"
 VIEW_MODES = ("Icon", "List", "Details")
 VIEW_ALIASES = {mode.lower(): mode for mode in VIEW_MODES}
 ICON_LAYOUTS = ("Compact", "Normal", "Spacious")
@@ -87,6 +88,15 @@ PROGRESS_DIALOG_WIDTH = 533
 DEFAULT_TERMINAL_COMMAND = "kitty"
 DEFAULT_TERMINAL_ARGS = "--app-id=org.ai.floater"
 USER_BUTTON_COUNT = 4
+FOLDER_EMBLEMS = [
+    ("star", "Star", "★", "#facc15"),
+    ("important", "Important", "!", "#ef4444"),
+    ("work", "Work", "W", "#38bdf8"),
+    ("tv", "TV", "TV", "#a78bfa"),
+    ("movies", "Movies", "▶", "#fb923c"),
+    ("completed", "Completed", "✓", "#22c55e"),
+    ("warning", "Warning", "!", "#f97316"),
+]
 IMAGE_EXTENSIONS = {".bmp", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"}
 PDF_EXTENSIONS = {".pdf"}
 TEXT_EXTENSIONS = {
@@ -255,6 +265,51 @@ def tinted_icon(icon: QIcon, color: str, size: int = 32) -> QIcon:
     painter.fillRect(tinted.rect(), QColor(color))
     painter.end()
     return QIcon(tinted)
+
+
+def folder_emblem_definitions() -> dict[str, tuple[str, str, str]]:
+    return {key: (label, glyph, color) for key, label, glyph, color in FOLDER_EMBLEMS}
+
+
+def emblem_icon(key: str, size: int = 32) -> QIcon:
+    label, glyph, color = folder_emblem_definitions().get(key, ("Emblem", "●", "#64748b"))
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(QColor(color))
+    painter.drawEllipse(1, 1, size - 2, size - 2)
+    painter.setPen(QColor("#111827"))
+    font = QFont()
+    font.setBold(True)
+    font.setPointSize(max(8, size // (3 if len(glyph) > 1 else 2)))
+    painter.setFont(font)
+    painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, glyph)
+    painter.end()
+    return QIcon(pixmap)
+
+
+def folder_emblem_label(key: str) -> str:
+    return folder_emblem_definitions().get(key, ("Emblem", "", ""))[0]
+
+
+def folder_icon_with_emblem(base_icon: QIcon, emblem_key: str, size: int = 96) -> QIcon:
+    base = base_icon.pixmap(size, size)
+    if base.isNull():
+        return emblem_icon(emblem_key, size)
+    canvas = QPixmap(size, size)
+    canvas.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(canvas)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    x = (size - base.width()) // 2
+    y = (size - base.height()) // 2
+    painter.drawPixmap(x, y, base)
+    emblem_size = max(20, size // 3)
+    badge = emblem_icon(emblem_key, emblem_size).pixmap(emblem_size, emblem_size)
+    painter.drawPixmap(size - emblem_size - 2, size - emblem_size - 2, badge)
+    painter.end()
+    return QIcon(canvas)
 
 
 def terminal_toolbar_icon(accent: str, size: int = 32) -> QIcon:
@@ -854,7 +909,10 @@ def finish_visible_progress(progress: QProgressDialog, value: int, started_at: f
 
 def widen_progress_dialog(progress: QProgressDialog) -> None:
     progress.setMinimumWidth(PROGRESS_DIALOG_WIDTH)
-    progress.resize(PROGRESS_DIALOG_WIDTH, progress.sizeHint().height())
+    progress.setMinimumHeight(max(180, progress.sizeHint().height() + 44))
+    progress.resize(PROGRESS_DIALOG_WIDTH, max(progress.minimumHeight(), progress.sizeHint().height() + 44))
+    for button in progress.findChildren(QPushButton):
+        button.setMinimumHeight(max(30, button.sizeHint().height()))
 
 
 def make_file_drag(source: QWidget, paths: list[Path]) -> QDrag:
@@ -1042,10 +1100,12 @@ class SettingsDialog(QDialog):
         terminal_command: str,
         terminal_args: str,
         user_buttons: list[dict[str, str]],
+        dual_bookmarks: list[dict[str, str]],
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Settings")
+        self.setMinimumWidth(760)
         self.theme_combo = QComboBox()
         self.theme_combo.addItems(THEMES)
         self.theme_combo.setCurrentText(current_theme if current_theme in THEMES else "Dark")
@@ -1055,13 +1115,27 @@ class SettingsDialog(QDialog):
         self.terminal_command_edit = QLineEdit(terminal_command or DEFAULT_TERMINAL_COMMAND)
         self.terminal_args_edit = QLineEdit(terminal_args)
         self.button_edits: list[tuple[QLineEdit, QLineEdit, QLineEdit]] = []
+        self.dual_bookmark_list = QListWidget()
+        self.dual_bookmark_name_edit = QLineEdit()
+        self.dual_bookmark_left_edit = QLineEdit()
+        self.dual_bookmark_right_edit = QLineEdit()
+        self._loading_dual_bookmark = False
+        self._current_dual_bookmark_row = -1
 
-        layout = QFormLayout(self)
-        layout.addRow("Theme", self.theme_combo)
-        layout.addRow("Icon layout", self.icon_layout_combo)
-        layout.addRow("Terminal", self.terminal_command_edit)
-        layout.addRow("Terminal args", self.terminal_args_edit)
+        root = QVBoxLayout(self)
+        tabs = QTabWidget()
+        root.addWidget(tabs, 1)
 
+        general_tab = QWidget()
+        general_layout = QFormLayout(general_tab)
+        general_layout.addRow("Theme", self.theme_combo)
+        general_layout.addRow("Icon layout", self.icon_layout_combo)
+        general_layout.addRow("Terminal", self.terminal_command_edit)
+        general_layout.addRow("Terminal args", self.terminal_args_edit)
+        tabs.addTab(general_tab, "General")
+
+        buttons_tab = QWidget()
+        buttons_layout = QFormLayout(buttons_tab)
         for index in range(USER_BUTTON_COUNT):
             button = user_buttons[index] if index < len(user_buttons) else {}
             row = QHBoxLayout()
@@ -1075,12 +1149,181 @@ class SettingsDialog(QDialog):
             row.addWidget(symbol_edit)
             row.addWidget(command_edit, 1)
             self.button_edits.append((label_edit, symbol_edit, command_edit))
-            layout.addRow(f"Button {index + 1}", row)
+            buttons_layout.addRow(f"Button {index + 1}", row)
+        tabs.addTab(buttons_tab, "User Buttons")
+
+        tabs.addTab(self._build_dual_bookmarks_tab(dual_bookmarks), "Dual Bookmarks")
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Ok)
         buttons.accepted.connect(lambda dialog=self: dialog.accept())
         buttons.rejected.connect(lambda dialog=self: dialog.reject())
-        layout.addRow(buttons)
+        root.addWidget(buttons)
+
+    def _build_dual_bookmarks_tab(self, dual_bookmarks: list[dict[str, str]]) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setSpacing(10)
+
+        body = QHBoxLayout()
+        body.setSpacing(12)
+        self.dual_bookmark_list.setMinimumWidth(240)
+        self.dual_bookmark_list.currentRowChanged.connect(self._dual_bookmark_row_changed)
+        body.addWidget(self.dual_bookmark_list, 1)
+
+        editor = QVBoxLayout()
+        form = QFormLayout()
+        self.dual_bookmark_name_edit.setPlaceholderText("Downloads / Completed")
+        self.dual_bookmark_left_edit.setPlaceholderText("~/Downloads")
+        self.dual_bookmark_right_edit.setPlaceholderText("~/Downloads/Completed")
+
+        left_row = QHBoxLayout()
+        left_row.addWidget(self.dual_bookmark_left_edit, 1)
+        left_browse = QPushButton("Browse")
+        left_browse.clicked.connect(lambda _checked=False, side="left": self._browse_dual_bookmark_path(side))
+        left_row.addWidget(left_browse)
+
+        right_row = QHBoxLayout()
+        right_row.addWidget(self.dual_bookmark_right_edit, 1)
+        right_browse = QPushButton("Browse")
+        right_browse.clicked.connect(lambda _checked=False, side="right": self._browse_dual_bookmark_path(side))
+        right_row.addWidget(right_browse)
+
+        form.addRow("Name", self.dual_bookmark_name_edit)
+        form.addRow("Left folder", left_row)
+        form.addRow("Right folder", right_row)
+        editor.addLayout(form)
+
+        action_row = QHBoxLayout()
+        add_button = QPushButton("Add")
+        update_button = QPushButton("Update")
+        delete_button = QPushButton("Delete")
+        add_button.clicked.connect(lambda _checked=False: self._add_dual_bookmark())
+        update_button.clicked.connect(lambda _checked=False: self._update_dual_bookmark())
+        delete_button.clicked.connect(lambda _checked=False: self._delete_dual_bookmark())
+        action_row.addWidget(add_button)
+        action_row.addWidget(update_button)
+        action_row.addWidget(delete_button)
+        action_row.addStretch(1)
+        editor.addLayout(action_row)
+        editor.addStretch(1)
+        body.addLayout(editor, 2)
+        layout.addLayout(body, 1)
+
+        note = QLabel("Each dual bookmark opens both panes at once. Paths may use ~.")
+        note.setWordWrap(True)
+        layout.addWidget(note)
+
+        for bookmark in dual_bookmarks:
+            self._append_dual_bookmark(bookmark)
+        if self.dual_bookmark_list.count():
+            self.dual_bookmark_list.setCurrentRow(0)
+        return tab
+
+    def _dual_bookmark_row_changed(self, row: int) -> None:
+        if self._loading_dual_bookmark:
+            return
+        previous = self._current_dual_bookmark_row
+        if previous >= 0 and previous != row:
+            self._sync_dual_bookmark_row(previous)
+        self._current_dual_bookmark_row = row
+        self._load_dual_bookmark_row(row)
+
+    def _load_dual_bookmark_row(self, row: int) -> None:
+        self._loading_dual_bookmark = True
+        try:
+            item = self.dual_bookmark_list.item(row)
+            bookmark = item.data(Qt.ItemDataRole.UserRole) if item else {}
+            self.dual_bookmark_name_edit.setText(str(bookmark.get("name", "")) if isinstance(bookmark, dict) else "")
+            self.dual_bookmark_left_edit.setText(str(bookmark.get("left", "")) if isinstance(bookmark, dict) else "")
+            self.dual_bookmark_right_edit.setText(str(bookmark.get("right", "")) if isinstance(bookmark, dict) else "")
+        finally:
+            self._loading_dual_bookmark = False
+
+    def _current_dual_bookmark(self) -> dict[str, str]:
+        name = self.dual_bookmark_name_edit.text().strip()
+        left = self.dual_bookmark_left_edit.text().strip()
+        right = self.dual_bookmark_right_edit.text().strip()
+        if not name:
+            left_name = Path(left).expanduser().name or left
+            right_name = Path(right).expanduser().name or right
+            name = f"{left_name} / {right_name}".strip(" /")
+        return {"name": name, "left": left, "right": right}
+
+    def _dual_bookmark_label(self, bookmark: dict[str, str]) -> str:
+        name = bookmark.get("name", "").strip() or "Dual bookmark"
+        left = bookmark.get("left", "").strip()
+        right = bookmark.get("right", "").strip()
+        if left and right:
+            return f"{name}: {left} -> {right}"
+        return name
+
+    def _append_dual_bookmark(self, bookmark: dict[str, str]) -> None:
+        cleaned = {
+            "name": str(bookmark.get("name", "")).strip(),
+            "left": str(bookmark.get("left", "")).strip(),
+            "right": str(bookmark.get("right", "")).strip(),
+        }
+        item = QListWidgetItem(self._dual_bookmark_label(cleaned))
+        item.setData(Qt.ItemDataRole.UserRole, cleaned)
+        self.dual_bookmark_list.addItem(item)
+
+    def _sync_dual_bookmark_row(self, row: int) -> None:
+        item = self.dual_bookmark_list.item(row)
+        if not item:
+            return
+        bookmark = self._current_dual_bookmark()
+        item.setData(Qt.ItemDataRole.UserRole, bookmark)
+        item.setText(self._dual_bookmark_label(bookmark))
+
+    def _add_dual_bookmark(self) -> None:
+        bookmark = self._current_dual_bookmark()
+        if not bookmark["left"] or not bookmark["right"]:
+            QMessageBox.warning(self, "Dual Bookmark", "Choose both left and right folders.")
+            return
+        self._append_dual_bookmark(bookmark)
+        row = self.dual_bookmark_list.count() - 1
+        self._loading_dual_bookmark = True
+        try:
+            self.dual_bookmark_list.setCurrentRow(row)
+            self._current_dual_bookmark_row = row
+        finally:
+            self._loading_dual_bookmark = False
+        self._load_dual_bookmark_row(row)
+
+    def _update_dual_bookmark(self) -> None:
+        row = self.dual_bookmark_list.currentRow()
+        if row < 0:
+            self._add_dual_bookmark()
+            return
+        self._sync_dual_bookmark_row(row)
+
+    def _delete_dual_bookmark(self) -> None:
+        row = self.dual_bookmark_list.currentRow()
+        if row < 0:
+            return
+        self._loading_dual_bookmark = True
+        try:
+            self.dual_bookmark_list.takeItem(row)
+            if self.dual_bookmark_list.count():
+                self._current_dual_bookmark_row = min(row, self.dual_bookmark_list.count() - 1)
+                self.dual_bookmark_list.setCurrentRow(self._current_dual_bookmark_row)
+            else:
+                self._current_dual_bookmark_row = -1
+        finally:
+            self._loading_dual_bookmark = False
+        self._load_dual_bookmark_row(self._current_dual_bookmark_row)
+
+    def _browse_dual_bookmark_path(self, side: str) -> None:
+        current_text = self.dual_bookmark_left_edit.text() if side == "left" else self.dual_bookmark_right_edit.text()
+        start = str(Path(current_text or "~").expanduser())
+        chosen = QFileDialog.getExistingDirectory(self, "Choose Folder", start)
+        if not chosen:
+            return
+        display = display_path_label(Path(chosen))
+        if side == "left":
+            self.dual_bookmark_left_edit.setText(display)
+        else:
+            self.dual_bookmark_right_edit.setText(display)
 
     def theme(self) -> str:
         return self.theme_combo.currentText()
@@ -1105,6 +1348,25 @@ class SettingsDialog(QDialog):
                 }
             )
         return buttons
+
+    def dual_bookmarks(self) -> list[dict[str, str]]:
+        row = self.dual_bookmark_list.currentRow()
+        if row >= 0:
+            self._sync_dual_bookmark_row(row)
+        bookmarks: list[dict[str, str]] = []
+        for index in range(self.dual_bookmark_list.count()):
+            item = self.dual_bookmark_list.item(index)
+            bookmark = item.data(Qt.ItemDataRole.UserRole)
+            if not isinstance(bookmark, dict):
+                continue
+            cleaned = {
+                "name": str(bookmark.get("name", "")).strip(),
+                "left": str(bookmark.get("left", "")).strip(),
+                "right": str(bookmark.get("right", "")).strip(),
+            }
+            if cleaned["left"] and cleaned["right"]:
+                bookmarks.append(cleaned)
+        return bookmarks
 
 
 class HelpDialog(QDialog):
@@ -1135,6 +1397,7 @@ class HelpDialog(QDialog):
                 ("New file", "Ctrl+N"),
                 ("Open terminal here", "F4"),
                 ("Properties", "R / Alt+Return"),
+                ("Set folder emblem", "E"),
             ],
         ),
         (
@@ -1202,6 +1465,7 @@ class HelpDialog(QDialog):
               <li><b>Properties</b>: open Properties for the selected/current item.</li>
               <li><b>Hidden</b>: show or hide dotfiles.</li>
               <li><b>Preview</b>: enable or disable automatic preview.</li>
+              <li><b>Dual Bookmarks</b>: open a saved pair of left and right folders from the top-center dropdown.</li>
               <li><b>Swap Panes</b>: swap the left and right pane paths and view modes.</li>
               <li><b>User buttons</b>: optional custom command buttons configured in Settings.</li>
               <li><b>Side Panel</b>: show or hide the sidebar.</li>
@@ -1223,6 +1487,7 @@ class HelpDialog(QDialog):
               <li><b>Extract Here / Extract To</b>: extract supported archives.</li>
               <li><b>Add to Favorites</b>: add the selected path to the sidebar.</li>
               <li><b>Open in Other Pane</b>: open the selected folder in the opposite pane.</li>
+              <li><b>Set Emblem</b>: add or clear an fm-only persistent emblem on a folder.</li>
               <li><b>Preview in Other Pane</b>: show supported text, image, or PDF files in the opposite pane.</li>
               <li><b>Copy / Move to Other Pane</b>: transfer selected or tagged items.</li>
               <li><b>Move to Trash / Delete Permanently</b>: remove selected or tagged items.</li>
@@ -1275,6 +1540,14 @@ class HelpDialog(QDialog):
               <li><b>Terminal command</b>: terminal executable used by terminal actions.</li>
               <li><b>Terminal args</b>: arguments passed to the terminal command.</li>
               <li><b>User buttons</b>: up to four toolbar buttons. Symbols can be theme icon names, image paths, or short glyphs.</li>
+              <li><b>Dual Bookmarks</b>: named left/right folder pairs shown in the top-center toolbar dropdown.</li>
+            </ul>
+            <h2>Dual Bookmarks</h2>
+            <ul>
+              <li>Add, update, and delete pairs from the Dual Bookmarks settings tab.</li>
+              <li>Each pair stores a left folder and a right folder.</li>
+              <li>Paths may use <code>~</code>.</li>
+              <li>Selecting a pair from the toolbar opens both panes together.</li>
             </ul>
             <h2>Default Applications</h2>
             <ul>
@@ -1282,6 +1555,14 @@ class HelpDialog(QDialog):
               <li>Use <b>Open with</b> and <b>Set Default</b> to change the desktop default application for that MIME type.</li>
               <li>This uses <code>xdg-mime default</code>, so it follows the same desktop associations used by most Linux file managers.</li>
               <li>Press <b>O</b>, Enter, or Ctrl+O to open a file with the current desktop default application.</li>
+            </ul>
+            <h2>Folder Emblems</h2>
+            <ul>
+              <li>Right-click a folder and choose <b>Set Emblem</b>.</li>
+              <li>Or select a folder in a file pane and press <b>E</b>.</li>
+              <li>Emblems are stored by folder path in fm settings.</li>
+              <li>They are persistent across restarts but only shown inside fm.</li>
+              <li>Use <b>Clear Emblem</b> from the same menu to remove one.</li>
             </ul>
             """,
         ),
@@ -1961,6 +2242,8 @@ class FileSystemNoDropModel(QFileSystemModel):
         self._thumbnail_cache: dict[tuple[str, int, int], QIcon] = {}
         self._thumbnail_pending: set[tuple[str, int, int]] = set()
         self._thumbnail_failed: set[tuple[str, int, int]] = set()
+        self._folder_emblems: dict[str, str] = {}
+        self._emblem_icon_cache: dict[tuple[str, str], QIcon] = {}
         self._thumbnail_pool = QThreadPool(self)
         self._thumbnail_pool.setMaxThreadCount(2)
         self._thumbnail_signals = THUMBNAIL_SIGNALS
@@ -1979,11 +2262,33 @@ class FileSystemNoDropModel(QFileSystemModel):
             return self._tagged_foreground
         if role == Qt.ItemDataRole.DecorationRole and index.column() == 0:
             path = Path(self.filePath(index))
+            emblem_key = self._folder_emblems.get(str(path))
+            if emblem_key and path.is_dir():
+                base_icon = super().data(index, role)
+                if isinstance(base_icon, QIcon):
+                    cache_key = (str(path), emblem_key)
+                    cached = self._emblem_icon_cache.get(cache_key)
+                    if cached:
+                        return cached
+                    icon = folder_icon_with_emblem(base_icon, emblem_key)
+                    self._emblem_icon_cache[cache_key] = icon
+                    if len(self._emblem_icon_cache) > 512:
+                        self._emblem_icon_cache.clear()
+                    return icon
             if path.suffix.lower() in IMAGE_EXTENSIONS and path.is_file():
                 icon = self._thumbnail_icon(path)
                 if icon:
                     return icon
         return super().data(index, role)
+
+    def set_folder_emblems(self, emblems: dict[str, str]) -> None:
+        old_paths = set(self._folder_emblems)
+        self._folder_emblems = dict(emblems)
+        self._emblem_icon_cache.clear()
+        for path_text in old_paths | set(self._folder_emblems):
+            index = self.index(path_text)
+            if index.isValid():
+                self.dataChanged.emit(index, index, [Qt.ItemDataRole.DecorationRole])
 
     def set_tagged_paths(self, paths: set[Path]) -> None:
         old_paths = set(self._tagged_paths)
@@ -2383,6 +2688,9 @@ class FilePane(QWidget):
         self.icon_layout = layout if layout in ICON_LAYOUTS else "Normal"
         self.icon_view.icon_layout = self.icon_layout
         self.apply_icon_zoom()
+
+    def set_folder_emblems(self, emblems: dict[str, str]) -> None:
+        self.model.set_folder_emblems(emblems)
 
     def zoom_in(self) -> None:
         self.set_icon_zoom(self.icon_zoom + 16)
@@ -2931,6 +3239,7 @@ class FilePane(QWidget):
             progress.setRange(0, maximum)
         speed_text = readable_size(int(speed)) + "/s" if speed and speed > 0 else "calculating speed..."
         progress.setLabelText(f"{label}\n{speed_text}")
+        widen_progress_dialog(progress)
         progress.setValue(min(value, maximum))
 
     @Slot(str, object)
@@ -3179,9 +3488,11 @@ class FilePane(QWidget):
         if self.add_favorite_callback:
             menu.addSeparator()
             menu.addAction(menu_icon(self, "bookmark-new", QStyle.StandardPixmap.SP_DialogYesButton), "Add to Favorites", self.add_selected_to_favorites)
+        current_path = self.current_item_path()
+        if current_path and current_path.is_dir():
+            self._add_emblem_menu(menu, current_path)
         if self.peer:
             menu.addSeparator()
-            current_path = self.current_item_path()
             open_peer_action = menu.addAction(menu_icon(self, "folder-open", QStyle.StandardPixmap.SP_DirOpenIcon), "Open in Other Pane", self.open_selected_in_peer)
             open_peer_action.setEnabled(bool(current_path and current_path.is_dir()))
             preview_peer_action = menu.addAction(menu_icon(self, "view-preview", QStyle.StandardPixmap.SP_FileDialogInfoView), "Preview in Other Pane", self.preview_selected_in_peer)
@@ -3202,6 +3513,56 @@ class FilePane(QWidget):
         path = self.current_item_path() or self.current_path()
         if self.add_favorite_callback:
             self.add_favorite_callback(path)
+
+    def folder_emblem_for(self, path: Path) -> str:
+        window = self.window()
+        if hasattr(window, "folder_emblem_for"):
+            return str(window.folder_emblem_for(path))
+        return ""
+
+    def set_folder_emblem(self, path: Path, emblem: str) -> None:
+        window = self.window()
+        if hasattr(window, "set_folder_emblem"):
+            window.set_folder_emblem(path, emblem)
+
+    def _add_emblem_menu(self, menu: QMenu, path: Path) -> QMenu:
+        emblem_menu = menu.addMenu(emblem_icon("star"), "Set Emblem")
+        for key, label, _glyph, _color in FOLDER_EMBLEMS:
+            emblem_menu.addAction(
+                emblem_icon(key),
+                label,
+                lambda _checked=False, emblem=key, folder=path, pane=self: pane.set_folder_emblem(folder, emblem),
+            )
+        emblem_menu.addSeparator()
+        clear_action = emblem_menu.addAction(
+            menu_icon(self, "edit-clear", QStyle.StandardPixmap.SP_DialogResetButton),
+            "Clear Emblem",
+            lambda _checked=False, folder=path, pane=self: pane.set_folder_emblem(folder, ""),
+        )
+        clear_action.setEnabled(bool(self.folder_emblem_for(path)))
+        return emblem_menu
+
+    def show_emblem_menu_for_current(self) -> bool:
+        path = self.current_item_path()
+        if not path or not path.is_dir():
+            return False
+        menu = QMenu(self)
+        self._add_emblem_menu(menu, path)
+        emblem_action = menu.actions()[0] if menu.actions() else None
+        emblem_menu = emblem_action.menu() if emblem_action else None
+        if not emblem_menu:
+            return False
+        view = self.current_view()
+        index = view.currentIndex()
+        if not index.isValid():
+            index = self.model.index(str(path))
+        rect = view.visualRect(index) if index.isValid() else QRect()
+        if rect.isValid():
+            global_pos = view.viewport().mapToGlobal(rect.center())
+        else:
+            global_pos = QCursor.pos()
+        emblem_menu.exec(global_pos)
+        return True
 
     def _on_directory_loaded(self, path: str) -> None:
         if Path(path) == self.current_path():
@@ -3759,6 +4120,8 @@ class FileManager(QMainWindow):
         self.terminal_command = str(self.settings.value("terminal/command", DEFAULT_TERMINAL_COMMAND))
         self.terminal_args = str(self.settings.value("terminal/args", DEFAULT_TERMINAL_ARGS))
         self.user_buttons = self._load_user_buttons()
+        self.dual_bookmarks = self._load_dual_bookmarks()
+        self.folder_emblems = self._load_folder_emblems()
         TERMINAL_SIGNALS.failed.connect(self._terminal_launch_failed)
         self.current_theme = str(self.settings.value("theme", "Dark"))
         if self.current_theme not in THEMES:
@@ -3771,6 +4134,8 @@ class FileManager(QMainWindow):
         self.right.set_peer(self.left)
         self.left.set_icon_layout(self.icon_layout)
         self.right.set_icon_layout(self.icon_layout)
+        self.left.set_folder_emblems(self.folder_emblems)
+        self.right.set_folder_emblems(self.folder_emblems)
         self.active_pane = self.left
         self._update_active_pane_style()
 
@@ -3852,9 +4217,21 @@ class FileManager(QMainWindow):
         self.preview_action.toggled.connect(lambda checked, window=self: window.set_preview_enabled(checked))
         toolbar.addAction(self.preview_action)
 
-        spacer = QWidget()
-        spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        toolbar.addWidget(spacer)
+        left_spacer = QWidget()
+        left_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        toolbar.addWidget(left_spacer)
+
+        self.dual_bookmark_combo = QComboBox()
+        self.dual_bookmark_combo.setMinimumWidth(260)
+        self.dual_bookmark_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.dual_bookmark_combo.setToolTip("Open a saved left/right folder pair")
+        self.dual_bookmark_combo.activated.connect(lambda index, window=self: window.apply_dual_bookmark(index))
+        toolbar.addWidget(self.dual_bookmark_combo)
+        self._populate_dual_bookmark_combo()
+
+        right_spacer = QWidget()
+        right_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        toolbar.addWidget(right_spacer)
 
         swap_action = QAction(menu_icon(self, "view-refresh", QStyle.StandardPixmap.SP_BrowserReload), "Swap Panes", self)
         swap_action.triggered.connect(lambda _checked=False, window=self: window.swap_panes())
@@ -3894,6 +4271,102 @@ class FileManager(QMainWindow):
         while len(buttons) < USER_BUTTON_COUNT:
             buttons.append({"label": "", "symbol": "", "command": ""})
         return buttons
+
+    def _load_dual_bookmarks(self) -> list[dict[str, str]]:
+        try:
+            raw_bookmarks = json.loads(str(self.settings.value("dualBookmarksJson", "[]")))
+        except json.JSONDecodeError:
+            raw_bookmarks = []
+        bookmarks: list[dict[str, str]] = []
+        if isinstance(raw_bookmarks, list):
+            for item in raw_bookmarks:
+                if not isinstance(item, dict):
+                    continue
+                bookmark = {
+                    "name": str(item.get("name", "")).strip(),
+                    "left": str(item.get("left", "")).strip(),
+                    "right": str(item.get("right", "")).strip(),
+                }
+                if bookmark["left"] and bookmark["right"]:
+                    bookmarks.append(bookmark)
+        return bookmarks
+
+    def _load_folder_emblems(self) -> dict[str, str]:
+        try:
+            raw_emblems = json.loads(str(self.settings.value("folderEmblemsJson", "{}")))
+        except json.JSONDecodeError:
+            raw_emblems = {}
+        valid_keys = {key for key, _label, _glyph, _color in FOLDER_EMBLEMS}
+        emblems: dict[str, str] = {}
+        if isinstance(raw_emblems, dict):
+            for path_text, emblem in raw_emblems.items():
+                path = str(path_text).strip()
+                key = str(emblem).strip()
+                if path and key in valid_keys:
+                    emblems[path] = key
+        return emblems
+
+    def _dual_bookmark_combo_label(self, bookmark: dict[str, str]) -> str:
+        name = bookmark.get("name", "").strip()
+        if name:
+            return name
+        left = Path(bookmark.get("left", "")).expanduser().name or bookmark.get("left", "")
+        right = Path(bookmark.get("right", "")).expanduser().name or bookmark.get("right", "")
+        return f"{left} / {right}".strip(" /") or "Dual bookmark"
+
+    def _populate_dual_bookmark_combo(self) -> None:
+        combo = getattr(self, "dual_bookmark_combo", None)
+        if not isinstance(combo, QComboBox):
+            return
+        combo.blockSignals(True)
+        try:
+            combo.clear()
+            combo.addItem("Dual Bookmarks", None)
+            for bookmark in self.dual_bookmarks:
+                combo.addItem(self._dual_bookmark_combo_label(bookmark), bookmark)
+            combo.setEnabled(bool(self.dual_bookmarks))
+            combo.setCurrentIndex(0)
+        finally:
+            combo.blockSignals(False)
+
+    def apply_dual_bookmark(self, index: int) -> None:
+        combo = getattr(self, "dual_bookmark_combo", None)
+        if not isinstance(combo, QComboBox) or index <= 0:
+            return
+        bookmark = combo.itemData(index)
+        combo.setCurrentIndex(0)
+        if not isinstance(bookmark, dict):
+            return
+        left_path = Path(str(bookmark.get("left", ""))).expanduser()
+        right_path = Path(str(bookmark.get("right", ""))).expanduser()
+        self.clear_pane_zoom()
+        self.left.set_path(left_path)
+        self.right.set_path(right_path)
+
+    def folder_emblem_for(self, path: Path) -> str:
+        return self.folder_emblems.get(str(self._normalized_emblem_path(path)), "")
+
+    def set_folder_emblem(self, path: Path, emblem: str) -> None:
+        normalized = self._normalized_emblem_path(path)
+        key = str(emblem).strip()
+        valid_keys = {value for value, _label, _glyph, _color in FOLDER_EMBLEMS}
+        if key and key not in valid_keys:
+            return
+        if key:
+            self.folder_emblems[str(normalized)] = key
+        else:
+            self.folder_emblems.pop(str(normalized), None)
+        self.left.set_folder_emblems(self.folder_emblems)
+        self.right.set_folder_emblems(self.folder_emblems)
+        self.settings.setValue("folderEmblemsJson", json.dumps(self.folder_emblems))
+        self.settings.sync()
+
+    def _normalized_emblem_path(self, path: Path) -> Path:
+        expanded = path.expanduser()
+        try:
+            return expanded.resolve()
+        except OSError:
+            return expanded
 
     def _populate_user_toolbar_buttons(self) -> None:
         if not hasattr(self, "main_toolbar"):
@@ -4068,6 +4541,13 @@ class FileManager(QMainWindow):
                     self.active_pane.show_properties()
                 event.accept()
                 return True
+            if self._is_plain_e(event) and self._space_targets_tag(watched):
+                path = self.active_pane.current_item_path()
+                if path and path.is_dir():
+                    if event.type() == QEvent.Type.KeyPress:
+                        self.active_pane.show_emblem_menu_for_current()
+                    event.accept()
+                    return True
             if self._is_plain_escape(event) and self._space_targets_tag(watched):
                 if event.type() == QEvent.Type.KeyPress:
                     if self.close_manual_previews():
@@ -4118,6 +4598,9 @@ class FileManager(QMainWindow):
 
     def _is_plain_r(self, event) -> bool:
         return event.key() == Qt.Key.Key_R and event.modifiers() == Qt.KeyboardModifier.NoModifier
+
+    def _is_plain_e(self, event) -> bool:
+        return event.key() == Qt.Key.Key_E and event.modifiers() == Qt.KeyboardModifier.NoModifier
 
     def _space_targets_tag(self, watched) -> bool:
         pane = self.active_pane
@@ -4258,6 +4741,8 @@ class FileManager(QMainWindow):
         self.settings.setValue("terminal/command", self.terminal_command)
         self.settings.setValue("terminal/args", self.terminal_args)
         self.settings.setValue("userButtonsJson", json.dumps(self.user_buttons))
+        self.settings.setValue("dualBookmarksJson", json.dumps(self.dual_bookmarks))
+        self.settings.setValue("folderEmblemsJson", json.dumps(self.folder_emblems))
         self.settings.setValue("sidePanel/visible", self.side_dock.isVisible())
         self.settings.setValue("sidePanel/mode", self.side_panel.current_mode())
         if self.side_dock.isVisible():
@@ -4339,7 +4824,15 @@ class FileManager(QMainWindow):
         self.right.set_icon_layout(self.icon_layout)
 
     def open_settings(self) -> None:
-        dialog = SettingsDialog(self.current_theme, self.icon_layout, self.terminal_command, self.terminal_args, self.user_buttons, self)
+        dialog = SettingsDialog(
+            self.current_theme,
+            self.icon_layout,
+            self.terminal_command,
+            self.terminal_args,
+            self.user_buttons,
+            self.dual_bookmarks,
+            self,
+        )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         self.apply_theme(dialog.theme())
@@ -4347,12 +4840,15 @@ class FileManager(QMainWindow):
         self.terminal_command = dialog.terminal_command()
         self.terminal_args = dialog.terminal_args()
         self.user_buttons = dialog.user_buttons()
+        self.dual_bookmarks = dialog.dual_bookmarks()
         self._populate_user_toolbar_buttons()
+        self._populate_dual_bookmark_combo()
         self.settings.setValue("theme", self.current_theme)
         self.settings.setValue("iconLayout", self.icon_layout)
         self.settings.setValue("terminal/command", self.terminal_command)
         self.settings.setValue("terminal/args", self.terminal_args)
         self.settings.setValue("userButtonsJson", json.dumps(self.user_buttons))
+        self.settings.setValue("dualBookmarksJson", json.dumps(self.dual_bookmarks))
         self.settings.sync()
 
     def open_help(self) -> None:
