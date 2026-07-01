@@ -69,7 +69,12 @@ from PySide6.QtWidgets import (
 APP_ID = "org.ai.fm"
 APP_ORG = "org.ai"
 APP_NAME = "fm"
-APP_VERSION = "0.91"
+APP_VERSION = "0.96"
+APP_DIR = Path(__file__).resolve().parent
+APP_LOG_PATH = APP_DIR / "fm.log"
+FM_LOGGING_ENABLED = False
+FM_LOG_LOCK = threading.Lock()
+GNOME_COPIED_FILES_MIME = "x-special/gnome-copied-files"
 VIEW_MODES = ("Icon", "List", "Details")
 VIEW_ALIASES = {mode.lower(): mode for mode in VIEW_MODES}
 SORT_FIELDS = {
@@ -103,6 +108,37 @@ FOLDER_EMBLEMS = [
     ("completed", "Completed", "✓", "#22c55e"),
     ("warning", "Warning", "!", "#f97316"),
 ]
+
+
+def set_fm_logging_enabled(enabled: bool) -> None:
+    global FM_LOGGING_ENABLED
+    FM_LOGGING_ENABLED = bool(enabled)
+    if FM_LOGGING_ENABLED:
+        fm_log("logging.enabled", path=APP_LOG_PATH, version=APP_VERSION)
+
+
+def fm_log(event: str, **details) -> None:
+    if not FM_LOGGING_ENABLED:
+        return
+    try:
+        timestamp = datetime.now().isoformat(timespec="milliseconds")
+        thread_id = threading.get_ident()
+        parts = [f"{timestamp}", f"thread={thread_id}", f"event={event}"]
+        for key, value in details.items():
+            parts.append(f"{key}={value!r}")
+        line = " ".join(parts)
+        with FM_LOG_LOCK:
+            with APP_LOG_PATH.open("a", encoding="utf-8") as log_file:
+                log_file.write(line + "\n")
+    except OSError:
+        pass
+
+
+def filesystem_id(path: Path) -> int | None:
+    try:
+        return path.stat().st_dev
+    except OSError:
+        return None
 IMAGE_EXTENSIONS = {".bmp", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"}
 PDF_EXTENSIONS = {".pdf"}
 TEXT_EXTENSIONS = {
@@ -151,6 +187,15 @@ THEME_STYLES = {
             background: #ffffff; color: #202124; border: 1px solid #c8ccd0;
             selection-background-color: #2f6fbd; selection-color: #ffffff;
         }
+        FilePane[fsRole="same"], FilePane[fsRole="same"] QListView, FilePane[fsRole="same"] QTreeView {
+            background: #ffffff;
+        }
+        FilePane[fsRole="different-left"], FilePane[fsRole="different-left"] QListView, FilePane[fsRole="different-left"] QTreeView {
+            background: #fff1f2;
+        }
+        FilePane[fsRole="different-right"], FilePane[fsRole="different-right"] QListView, FilePane[fsRole="different-right"] QTreeView {
+            background: #eff6ff;
+        }
         QToolBar { background: #eceff1; border-bottom: 1px solid #c8ccd0; }
         QToolButton, QPushButton { background: #ffffff; border: 1px solid #c8ccd0; padding: 4px 8px; }
         QToolButton:hover, QPushButton:hover { background: #e7edf7; }
@@ -176,6 +221,15 @@ THEME_STYLES = {
             background: #1f2226; color: #e5e7eb; border: 1px solid #3f454d;
             selection-background-color: #3b78c2; selection-color: #ffffff;
         }
+        FilePane[fsRole="same"], FilePane[fsRole="same"] QListView, FilePane[fsRole="same"] QTreeView {
+            background: #05070a;
+        }
+        FilePane[fsRole="different-left"], FilePane[fsRole="different-left"] QListView, FilePane[fsRole="different-left"] QTreeView {
+            background: #2d2022;
+        }
+        FilePane[fsRole="different-right"], FilePane[fsRole="different-right"] QListView, FilePane[fsRole="different-right"] QTreeView {
+            background: #1d2634;
+        }
         QToolBar { background: #202328; border-bottom: 1px solid #3f454d; }
         QToolButton, QPushButton { background: #30343a; border: 1px solid #4a515b; padding: 4px 8px; }
         QToolButton:hover, QPushButton:hover { background: #39404a; }
@@ -200,6 +254,15 @@ THEME_STYLES = {
         QLineEdit, QComboBox, QListView, QTreeView {
             background: #05070a; color: #e6edf3; border: 1px solid #2a3038;
             selection-background-color: #1f6feb; selection-color: #ffffff;
+        }
+        FilePane[fsRole="same"], FilePane[fsRole="same"] QListView, FilePane[fsRole="same"] QTreeView {
+            background: #05070a;
+        }
+        FilePane[fsRole="different-left"], FilePane[fsRole="different-left"] QListView, FilePane[fsRole="different-left"] QTreeView {
+            background: #16090d;
+        }
+        FilePane[fsRole="different-right"], FilePane[fsRole="different-right"] QListView, FilePane[fsRole="different-right"] QTreeView {
+            background: #07111f;
         }
         QToolBar { background: #080b0f; border-bottom: 1px solid #2a3038; }
         QToolButton, QPushButton { background: #151a21; border: 1px solid #303845; padding: 4px 8px; }
@@ -562,8 +625,10 @@ def remove_existing(path: Path) -> None:
 
 def choose_existing_destination(parent: QWidget, source: Path, destination: Path) -> Path | None:
     if not path_exists_for_collision(destination):
+        fm_log("collision.none", source=source, destination=destination)
         return destination
 
+    fm_log("collision.prompt", source=source, destination=destination)
     box = QMessageBox(parent)
     box.setIcon(QMessageBox.Icon.Warning)
     box.setWindowTitle("File Already Exists")
@@ -579,10 +644,13 @@ def choose_existing_destination(parent: QWidget, source: Path, destination: Path
 
     clicked = box.clickedButton()
     if clicked == cancel_button:
+        fm_log("collision.cancel", source=source, destination=destination)
         return None
     if clicked == overwrite_button:
         if same_path(source, destination):
+            fm_log("collision.overwrite.same_path_blocked", source=source, destination=destination)
             return None
+        fm_log("collision.overwrite", source=source, destination=destination)
         remove_existing(destination)
         return destination
 
@@ -590,6 +658,7 @@ def choose_existing_destination(parent: QWidget, source: Path, destination: Path
     while True:
         name, ok = get_name(parent, "Rename Copy", "New name:", suggested)
         if not ok:
+            fm_log("collision.rename.cancel", source=source, destination=destination)
             return None
         name = name.strip()
         if not name:
@@ -600,6 +669,7 @@ def choose_existing_destination(parent: QWidget, source: Path, destination: Path
             QMessageBox.warning(parent, "Invalid Name", "Choose a different name.")
             continue
         if path_exists_for_collision(renamed_destination):
+            fm_log("collision.rename.exists", source=source, destination=renamed_destination)
             destination = renamed_destination
             suggested = unique_destination(destination.parent, destination.name).name
             box = QMessageBox(parent)
@@ -616,13 +686,17 @@ def choose_existing_destination(parent: QWidget, source: Path, destination: Path
             box.exec()
             clicked = box.clickedButton()
             if clicked == cancel_button:
+                fm_log("collision.rename.cancel", source=source, destination=destination)
                 return None
             if clicked == overwrite_button:
                 if same_path(source, destination):
+                    fm_log("collision.rename.overwrite.same_path_blocked", source=source, destination=destination)
                     return None
+                fm_log("collision.rename.overwrite", source=source, destination=destination)
                 remove_existing(destination)
                 return destination
             continue
+        fm_log("collision.rename", source=source, destination=renamed_destination)
         return renamed_destination
 
 
@@ -751,17 +825,22 @@ class FileOperationWorker(QObject):
     @Slot()
     def cancel(self) -> None:
         self.cancel_requested = True
+        fm_log("operation.cancel_requested", operation=self.operation, targets=len(self.targets))
 
     @Slot()
     def run(self) -> None:
         completed: list[tuple[Path, Path]] = []
         try:
+            started_at = time.monotonic()
+            fm_log("operation.worker.start", operation=self.operation, targets=len(self.targets))
             total_bytes = sum(copy_size(source) for source, _target in self.targets)
             total_units = max(1, (total_bytes + (64 * 1024 - 1)) // (64 * 1024))
             state = {"done": 0, "done_bytes": 0, "total": total_units, "total_bytes": total_bytes, "started_at": time.monotonic()}
+            fm_log("operation.worker.sized", operation=self.operation, total_bytes=total_bytes, total_units=total_units)
             self.progress.emit(0, total_units, self._preparing_label(), 0.0)
             for source, target in self.targets:
                 self._check_cancel()
+                fm_log("operation.target.start", operation=self.operation, source=source, target=target)
                 if self.operation == "copy":
                     self._copy_path(source, target, state)
                     completed.append((target, Path()))
@@ -770,11 +849,21 @@ class FileOperationWorker(QObject):
                     completed.append((target, source))
                 else:
                     raise ValueError(f"Unsupported operation: {self.operation}")
+                fm_log("operation.target.done", operation=self.operation, source=source, target=target, done_bytes=state["done_bytes"])
             self.progress.emit(total_units, total_units, self._done_label(), self._speed_bytes_per_second(state))
+            fm_log(
+                "operation.worker.done",
+                operation=self.operation,
+                completed=len(completed),
+                elapsed_seconds=round(time.monotonic() - started_at, 3),
+                done_bytes=state["done_bytes"],
+            )
             self.completed.emit(self.operation, completed)
         except InterruptedError:
+            fm_log("operation.worker.canceled", operation=self.operation, completed=len(completed))
             self.canceled.emit(self.operation, completed)
         except Exception as exc:
+            fm_log("operation.worker.failed", operation=self.operation, completed=len(completed), error=repr(exc))
             self.failed.emit(str(exc), completed)
 
     def _preparing_label(self) -> str:
@@ -799,12 +888,14 @@ class FileOperationWorker(QObject):
             self._speed_bytes_per_second(state),
         )
 
-    def _copy_file(self, source: Path, target: Path, state: dict[str, int | float]) -> None:
+    def _copy_file(self, source: Path, target: Path, state: dict[str, int | float], verb: str = "Copying", done_verb: str = "Copied") -> None:
         self._check_cancel()
         if path_exists_for_collision(target):
             raise FileExistsError(f"Target already exists: {target}")
         target.parent.mkdir(parents=True, exist_ok=True)
-        self._emit_progress(state, f"Copying {source.name}")
+        file_started_at = time.monotonic()
+        self._emit_progress(state, f"{verb} {source.name}")
+        fm_log("copy.file.start", operation=self.operation, source=source, target=target)
         if source.is_symlink():
             shutil.copy2(source, target, follow_symlinks=False)
             state["done"] += 1
@@ -812,7 +903,8 @@ class FileOperationWorker(QObject):
                 state["done_bytes"] += source.lstat().st_size
             except OSError:
                 pass
-            self._emit_progress(state, f"Copied {source.name}")
+            self._emit_progress(state, f"{done_verb} {source.name}")
+            fm_log("copy.symlink.done", operation=self.operation, source=source, target=target, elapsed_seconds=round(time.monotonic() - file_started_at, 3))
             return
         with source.open("rb") as reader, target.open("wb") as writer:
             while True:
@@ -823,14 +915,24 @@ class FileOperationWorker(QObject):
                 writer.write(chunk)
                 state["done"] += max(1, len(chunk) // (64 * 1024))
                 state["done_bytes"] += len(chunk)
-                self._emit_progress(state, f"Copying {source.name}")
+                self._emit_progress(state, f"{verb} {source.name}")
         shutil.copystat(source, target, follow_symlinks=False)
+        fm_log(
+            "copy.file.done",
+            operation=self.operation,
+            source=source,
+            target=target,
+            bytes=copy_size(target),
+            elapsed_seconds=round(time.monotonic() - file_started_at, 3),
+        )
 
-    def _copy_path(self, source: Path, target: Path, state: dict[str, int | float]) -> None:
+    def _copy_path(self, source: Path, target: Path, state: dict[str, int | float], verb: str = "Copying", done_verb: str = "Copied") -> None:
         self._check_cancel()
         if path_exists_for_collision(target):
             raise FileExistsError(f"Target already exists: {target}")
         if source.is_dir() and not source.is_symlink():
+            fm_log("copy.directory.start", operation=self.operation, source=source, target=target)
+            directory_started_at = time.monotonic()
             target.mkdir(parents=True, exist_ok=True)
             for root, dirs, filenames in os.walk(source):
                 self._check_cancel()
@@ -842,32 +944,41 @@ class FileOperationWorker(QObject):
                     self._check_cancel()
                     (target_root / dirname).mkdir(exist_ok=True)
                 for filename in filenames:
-                    self._copy_file(root_path / filename, target_root / filename, state)
+                    self._copy_file(root_path / filename, target_root / filename, state, verb, done_verb)
             try:
                 shutil.copystat(source, target, follow_symlinks=False)
             except OSError:
                 pass
+            fm_log("copy.directory.done", operation=self.operation, source=source, target=target, elapsed_seconds=round(time.monotonic() - directory_started_at, 3))
             return
-        self._copy_file(source, target, state)
+        self._copy_file(source, target, state, verb, done_verb)
 
     def _move_path(self, source: Path, target: Path, state: dict[str, int | float]) -> None:
         self._check_cancel()
         if path_exists_for_collision(target):
             raise FileExistsError(f"Target already exists: {target}")
         self._emit_progress(state, f"Moving {source.name}")
+        move_started_at = time.monotonic()
+        fm_log("move.start", source=source, target=target)
         try:
             source_size = copy_size(source)
+            fm_log("move.rename.try", source=source, target=target, source_size=source_size)
             source.rename(target)
             state["done"] = min(state["total"], state["done"] + max(1, copy_size(target) // (64 * 1024)))
             state["done_bytes"] += source_size
             self._emit_progress(state, f"Moved {source.name}")
+            fm_log("move.rename.done", source=source, target=target, elapsed_seconds=round(time.monotonic() - move_started_at, 3))
             return
-        except OSError:
-            pass
-        self._copy_path(source, target, state)
+        except OSError as exc:
+            fm_log("move.rename.failed", source=source, target=target, error=repr(exc), elapsed_seconds=round(time.monotonic() - move_started_at, 3))
+        fm_log("move.copy_delete.start", source=source, target=target)
+        self._copy_path(source, target, state, "Moving", "Moved")
         self._check_cancel()
+        fm_log("move.remove_source.start", source=source)
         remove_existing(source)
+        fm_log("move.remove_source.done", source=source)
         self._emit_progress(state, f"Moved {source.name}")
+        fm_log("move.copy_delete.done", source=source, target=target, elapsed_seconds=round(time.monotonic() - move_started_at, 3))
 
 
 class TerminalLaunchSignals(QObject):
@@ -946,6 +1057,35 @@ def make_file_drag(source: QWidget, paths: list[Path]) -> QDrag:
     drag.setPixmap(pixmap)
     drag.setHotSpot(QPoint(12, 12))
     return drag
+
+
+def make_file_clipboard_mime(paths: list[Path], operation: str) -> QMimeData:
+    mime = QMimeData()
+    urls = [QUrl.fromLocalFile(str(path)) for path in paths]
+    mime.setUrls(urls)
+    action = "cut" if operation == "move" else "copy"
+    payload = "\n".join([action, *[url.toString() for url in urls]])
+    mime.setData(GNOME_COPIED_FILES_MIME, payload.encode("utf-8"))
+    return mime
+
+
+def clipboard_paths_and_operation(mime: QMimeData) -> tuple[list[Path], str]:
+    operation = "copy"
+    paths: list[Path] = []
+    if mime.hasFormat(GNOME_COPIED_FILES_MIME):
+        try:
+            lines = bytes(mime.data(GNOME_COPIED_FILES_MIME)).decode("utf-8", errors="replace").splitlines()
+        except (TypeError, ValueError):
+            lines = []
+        if lines:
+            operation = "move" if lines[0].strip().lower() == "cut" else "copy"
+            for line in lines[1:]:
+                url = QUrl(line.strip())
+                if url.isLocalFile():
+                    paths.append(Path(url.toLocalFile()))
+    if not paths:
+        paths = [Path(url.toLocalFile()) for url in mime.urls() if url.isLocalFile()]
+    return paths, operation
 
 
 def move_to_trash(path: Path) -> Path | None:
@@ -1121,6 +1261,7 @@ class SettingsDialog(QDialog):
         user_buttons: list[dict[str, str]],
         dual_bookmarks: list[dict[str, str]],
         confirm_quit_operations: bool,
+        file_logging_enabled: bool,
         initial_tab: str = "General",
         parent: QWidget | None = None,
     ) -> None:
@@ -1137,6 +1278,8 @@ class SettingsDialog(QDialog):
         self.terminal_args_edit = QLineEdit(terminal_args)
         self.confirm_quit_operations_box = QCheckBox("Confirm quit while copy/move operations are running or queued")
         self.confirm_quit_operations_box.setChecked(confirm_quit_operations)
+        self.file_logging_box = QCheckBox(f"Create detailed log at {APP_LOG_PATH}")
+        self.file_logging_box.setChecked(file_logging_enabled)
         self.button_edits: list[tuple[QLineEdit, QLineEdit, QLineEdit]] = []
         self.dual_bookmark_list = QListWidget()
         self.dual_bookmark_name_edit = QLineEdit()
@@ -1156,6 +1299,7 @@ class SettingsDialog(QDialog):
         general_layout.addRow("Terminal", self.terminal_command_edit)
         general_layout.addRow("Terminal args", self.terminal_args_edit)
         general_layout.addRow("Quit", self.confirm_quit_operations_box)
+        general_layout.addRow("Logging", self.file_logging_box)
         self.tabs.addTab(general_tab, "General")
 
         buttons_tab = QWidget()
@@ -1368,6 +1512,9 @@ class SettingsDialog(QDialog):
     def confirm_quit_operations(self) -> bool:
         return self.confirm_quit_operations_box.isChecked()
 
+    def file_logging_enabled(self) -> bool:
+        return self.file_logging_box.isChecked()
+
     def user_buttons(self) -> list[dict[str, str]]:
         buttons = []
         for label_edit, symbol_edit, command_edit in self.button_edits:
@@ -1419,7 +1566,8 @@ class HelpDialog(QDialog):
             "File Operations",
             [
                 ("Copy selected or tagged files", "Ctrl+C"),
-                ("Paste copied files into active pane", "Ctrl+V"),
+                ("Cut selected or tagged files", "Ctrl+X"),
+                ("Paste copied or cut files into active pane", "Ctrl+V"),
                 ("Move selected or tagged to other pane", "Ctrl+M"),
                 ("Undo last operation", "Ctrl+Z"),
                 ("Move to trash", "Delete"),
@@ -1520,7 +1668,8 @@ class HelpDialog(QDialog):
               <li><b>Open</b>: open a folder in the pane or a file with the desktop default application.</li>
               <li><b>Open With</b>: choose a matching desktop application, with icons cached after first load.</li>
               <li><b>Other Command</b>: run a manually entered command with selected paths.</li>
-              <li><b>New Folder / New File / Rename / Duplicate</b>: common item management actions.</li>
+              <li><b>Copy / Cut / Paste</b>: clipboard actions grouped near the top of the menu.</li>
+              <li><b>Rename / Duplicate / New Folder / New File</b>: common item management actions.</li>
               <li><b>Create Archive</b>: create a zip archive from selected items.</li>
               <li><b>Extract Here / Extract To</b>: extract supported archives.</li>
               <li><b>Add to Favorites</b>: add the selected path to the sidebar.</li>
@@ -1565,6 +1714,7 @@ class HelpDialog(QDialog):
             <ul>
               <li>Press <b>Z</b> while a file pane or full preview is focused to zoom that pane.</li>
               <li>The zoomed pane uses a <b>#00ff00</b> border.</li>
+              <li>When panes are on different filesystems, the left pane is red-tinted and the right pane is blue-tinted. Same-filesystem panes use the normal background.</li>
               <li>Press <b>Z</b> again to restore the normal split.</li>
             </ul>
             """,
@@ -1581,6 +1731,7 @@ class HelpDialog(QDialog):
               <li><b>User buttons</b>: up to four toolbar buttons. Symbols can be theme icon names, image paths, or short glyphs.</li>
               <li><b>Dual Bookmarks</b>: named left/right folder pairs shown in the top-center toolbar dropdown.</li>
               <li><b>Quit confirmation</b>: optionally confirm quit only when copy/move operations are running or queued.</li>
+              <li><b>Logging</b>: create <code>fm.log</code> beside the app for detailed diagnostic events while enabled.</li>
             </ul>
             <h2>Dual Bookmarks</h2>
             <ul>
@@ -2062,8 +2213,10 @@ class DropListView(QListView):
         paths = self.pane.operation_paths()
         if not paths:
             return False
+        fm_log("drag.start", pane=self.pane.title, count=len(paths), paths=[str(path) for path in paths])
         drag = make_file_drag(self, paths)
         drag.exec(Qt.DropAction.CopyAction | Qt.DropAction.MoveAction, Qt.DropAction.CopyAction)
+        fm_log("drag.done", pane=self.pane.title, count=len(paths))
         return True
 
     def _drop_action(self, event) -> Qt.DropAction:
@@ -2239,8 +2392,10 @@ class DropTreeView(QTreeView):
         paths = self.pane.operation_paths()
         if not paths:
             return False
+        fm_log("drag.start", pane=self.pane.title, count=len(paths), paths=[str(path) for path in paths])
         drag = make_file_drag(self, paths)
         drag.exec(Qt.DropAction.CopyAction | Qt.DropAction.MoveAction, Qt.DropAction.CopyAction)
+        fm_log("drag.done", pane=self.pane.title, count=len(paths))
         return True
 
     def keyPressEvent(self, event) -> None:
@@ -3103,6 +3258,8 @@ class FilePane(QWidget):
         window = self.window()
         if hasattr(window, "record_recent_path"):
             window.record_recent_path(resolved)
+        if hasattr(window, "update_filesystem_tints"):
+            window.update_filesystem_tints()
 
     def set_view_mode(self, mode: str) -> None:
         if mode not in VIEW_MODES:
@@ -3413,38 +3570,47 @@ class FilePane(QWidget):
     def copy_paths_to(self, paths: list[Path], destination: Path) -> None:
         if not paths:
             return
+        fm_log("copy.request", pane=self.title, count=len(paths), destination=destination, paths=[str(path) for path in paths])
         window = self.window()
         if hasattr(window, "queue_file_operation") and window.queue_file_operation(
             "Copy files", lambda p=list(paths), d=destination, pane=self: pane.copy_paths_to(p, d)
         ):
+            fm_log("copy.queued", pane=self.title, count=len(paths), destination=destination)
             return
         targets: list[tuple[Path, Path]] = []
         for path in paths:
             target = choose_existing_destination(self, path, destination / path.name)
             if target is None:
+                fm_log("copy.cancelled_before_start", pane=self.title, source=path, destination=destination)
                 return
             targets.append((path, target))
+        fm_log("copy.start_dialog", pane=self.title, targets=[(str(source), str(target)) for source, target in targets])
         self._start_file_operation("copy", targets, "Copying files...", "created")
 
     def move_paths_to(self, paths: list[Path], destination: Path) -> None:
         if not paths:
             return
+        fm_log("move.request", pane=self.title, count=len(paths), destination=destination, paths=[str(path) for path in paths])
         window = self.window()
         if hasattr(window, "queue_file_operation") and window.queue_file_operation(
             "Move files", lambda p=list(paths), d=destination, pane=self: pane.move_paths_to(p, d)
         ):
+            fm_log("move.queued", pane=self.title, count=len(paths), destination=destination)
             return
         targets: list[tuple[Path, Path]] = []
         for path in paths:
             target = choose_existing_destination(self, path, destination / path.name)
             if target is None:
+                fm_log("move.cancelled_before_start", pane=self.title, source=path, destination=destination)
                 return
             targets.append((path, target))
+        fm_log("move.start_dialog", pane=self.title, targets=[(str(source), str(target)) for source, target in targets])
         self._start_file_operation("move", targets, "Moving files...", "move")
 
     def _start_file_operation(self, operation: str, targets: list[tuple[Path, Path]], title: str, undo_kind: str) -> None:
         if not targets:
             return
+        fm_log("operation.dialog.create", pane=self.title, operation=operation, targets=len(targets), title=title)
         window = self.window()
         if hasattr(window, "begin_file_operation"):
             window.begin_file_operation()
@@ -3482,6 +3648,7 @@ class FilePane(QWidget):
         thread.finished.connect(lambda t=thread: self._operation_threads.remove(t) if t in self._operation_threads else None)
         thread.finished.connect(lambda w=worker: self._cleanup_file_worker(w))
         thread.start()
+        fm_log("operation.thread.started", pane=self.title, operation=operation, targets=len(targets))
 
     @Slot(int, int, str, object)
     def _file_operation_progress(self, value: int, maximum: int, label: str, speed: float) -> None:
@@ -3501,14 +3668,17 @@ class FilePane(QWidget):
 
     @Slot(str, object)
     def _file_operation_completed(self, _operation: str, completed: list[tuple[Path, Path]]) -> None:
+        fm_log("operation.completed.signal", pane=self.title, operation=_operation, completed=len(completed))
         self._finish_file_operation(completed)
 
     @Slot(str, object)
     def _file_operation_canceled(self, _operation: str, completed: list[tuple[Path, Path]]) -> None:
+        fm_log("operation.canceled.signal", pane=self.title, operation=_operation, completed=len(completed))
         self._finish_file_operation(completed)
 
     @Slot(str, object)
     def _file_operation_failed(self, message: str, completed: list[tuple[Path, Path]]) -> None:
+        fm_log("operation.failed.signal", pane=self.title, message=message, completed=len(completed))
         self._finish_file_operation(completed, message)
 
     def _finish_file_operation(self, completed: list[tuple[Path, Path]], warning: str | None = None) -> None:
@@ -3526,11 +3696,16 @@ class FilePane(QWidget):
         if warning:
             QMessageBox.warning(self, f"{operation.title()} Failed", warning)
         if isinstance(progress, QProgressDialog):
+            try:
+                progress.canceled.disconnect()
+            except (TypeError, RuntimeError):
+                pass
             progress.close()
         if hasattr(window, "end_file_operation"):
             window.end_file_operation()
         if isinstance(thread, QThread):
             thread.quit()
+        fm_log("operation.finish", pane=self.title, operation=operation, completed=len(completed), warning=warning)
 
     def _cleanup_file_worker(self, worker: FileOperationWorker) -> None:
         if worker in self._operation_workers:
@@ -3540,6 +3715,7 @@ class FilePane(QWidget):
     def handle_drop(self, urls: list[QUrl], action: Qt.DropAction, target_index: QModelIndex) -> bool:
         paths = [Path(url.toLocalFile()) for url in urls if url.isLocalFile()]
         if not paths:
+            fm_log("drop.ignored.no_paths", pane=self.title, urls=len(urls))
             return False
 
         destination = self.current_path()
@@ -3547,6 +3723,7 @@ class FilePane(QWidget):
             target_path = Path(self.model.filePath(target_index))
             if target_path.is_dir():
                 destination = target_path
+        fm_log("drop.received", pane=self.title, action=str(action), paths=[str(path) for path in paths], destination=destination)
 
         try:
             destination = destination.resolve()
@@ -3560,16 +3737,21 @@ class FilePane(QWidget):
             except OSError:
                 resolved = path
             if resolved == destination:
+                fm_log("drop.filtered.same_destination", pane=self.title, path=path, destination=destination)
                 continue
             if path.is_dir() and not path.is_symlink() and resolved in destination.parents:
+                fm_log("drop.filtered.into_child", pane=self.title, path=path, destination=destination)
                 continue
             filtered_paths.append(path)
         if not filtered_paths:
+            fm_log("drop.ignored.filtered_all", pane=self.title, destination=destination)
             return False
 
         if action == Qt.DropAction.MoveAction:
+            fm_log("drop.move", pane=self.title, count=len(filtered_paths), destination=destination)
             self.move_paths_to(filtered_paths, destination)
         else:
+            fm_log("drop.copy", pane=self.title, count=len(filtered_paths), destination=destination)
             self.copy_paths_to(filtered_paths, destination)
         return True
 
@@ -3676,6 +3858,24 @@ class FilePane(QWidget):
         dialog = PropertiesDialog(paths, self)
         dialog.exec()
 
+    def copy_to_clipboard(self) -> None:
+        window = self.window()
+        if hasattr(window, "set_active_pane") and hasattr(window, "copy_highlighted"):
+            window.set_active_pane(self)
+            window.copy_highlighted()
+
+    def cut_to_clipboard(self) -> None:
+        window = self.window()
+        if hasattr(window, "set_active_pane") and hasattr(window, "cut_highlighted"):
+            window.set_active_pane(self)
+            window.cut_highlighted()
+
+    def paste_from_clipboard(self) -> None:
+        window = self.window()
+        if hasattr(window, "set_active_pane") and hasattr(window, "paste_copied"):
+            window.set_active_pane(self)
+            window.paste_copied()
+
     def calculate_selected_size(self) -> None:
         paths = self.selected_or_current_paths()
         if not paths:
@@ -3708,9 +3908,11 @@ class FilePane(QWidget):
 
     def _show_context_menu_for_view(self, view: QAbstractItemView, position) -> None:
         menu = QMenu(self)
+        paths = self.selected_or_current_paths()
+        current_path = self.current_item_path()
+
         menu.addAction(menu_icon(self, ("document-open", "folder-open"), QStyle.StandardPixmap.SP_DialogOpenButton), "Open", self.open_selected)
         open_with_menu = menu.addMenu(menu_icon(self, "system-run", QStyle.StandardPixmap.SP_ComputerIcon), "Open With")
-        paths = self.selected_or_current_paths()
         open_with_populated = False
 
         def populate_open_with_menu() -> None:
@@ -3731,21 +3933,39 @@ class FilePane(QWidget):
             open_with_menu.addAction(menu_icon(self, "utilities-terminal", QStyle.StandardPixmap.SP_ComputerIcon), "Other Command...", self.open_with)
 
         open_with_menu.aboutToShow.connect(populate_open_with_menu)
+
         menu.addSeparator()
-        menu.addAction(menu_icon(self, "folder-new", QStyle.StandardPixmap.SP_DirIcon), "New Folder", self.new_folder)
-        menu.addAction(menu_icon(self, "document-new", QStyle.StandardPixmap.SP_FileIcon), "New File", self.new_file)
+
+        copy_action = menu.addAction(menu_icon(self, "edit-copy", QStyle.StandardPixmap.SP_FileIcon), "Copy", self.copy_to_clipboard)
+        copy_action.setShortcut(QKeySequence.StandardKey.Copy)
+        cut_action = menu.addAction(menu_icon(self, "edit-cut", QStyle.StandardPixmap.SP_FileIcon), "Cut", self.cut_to_clipboard)
+        cut_action.setShortcut(QKeySequence.StandardKey.Cut)
+        paste_action = menu.addAction(menu_icon(self, "edit-paste", QStyle.StandardPixmap.SP_FileIcon), "Paste", self.paste_from_clipboard)
+        paste_action.setShortcut(QKeySequence.StandardKey.Paste)
+        has_item = bool(paths)
+        copy_action.setEnabled(has_item)
+        cut_action.setEnabled(has_item)
+
+        menu.addSeparator()
+
         menu.addAction(menu_icon(self, "edit-rename", QStyle.StandardPixmap.SP_FileDialogDetailedView), "Rename", self.rename_selected)
         menu.addAction(menu_icon(self, "edit-copy", QStyle.StandardPixmap.SP_FileIcon), "Duplicate", self.duplicate_selected)
-        menu.addSeparator()
-        menu.addAction(menu_icon(self, ("package-x-generic", "archive-insert"), QStyle.StandardPixmap.SP_DriveHDIcon), "Create Archive...", self.create_archive_selected)
-        archive_paths = [path for path in paths if is_archive(path)]
-        if archive_paths:
-            menu.addAction(menu_icon(self, "archive-extract", QStyle.StandardPixmap.SP_DirOpenIcon), "Extract Here", self.extract_archives_here)
-            menu.addAction(menu_icon(self, "archive-extract", QStyle.StandardPixmap.SP_DirOpenIcon), "Extract To...", self.extract_archive_to_folder)
-        if self.add_favorite_callback:
+        menu.addAction(menu_icon(self, "folder-new", QStyle.StandardPixmap.SP_DirIcon), "New Folder", self.new_folder)
+        menu.addAction(menu_icon(self, "document-new", QStyle.StandardPixmap.SP_FileIcon), "New File", self.new_file)
+
+        if self.peer:
             menu.addSeparator()
+            open_peer_action = menu.addAction(menu_icon(self, "folder-open", QStyle.StandardPixmap.SP_DirOpenIcon), "Open in Other Pane", self.open_selected_in_peer)
+            open_peer_action.setEnabled(bool(current_path and current_path.is_dir()))
+            preview_peer_action = menu.addAction(menu_icon(self, "view-preview", QStyle.StandardPixmap.SP_FileDialogInfoView), "Preview in Other Pane", self.preview_selected_in_peer)
+            preview_peer_action.setEnabled(bool(current_path and current_path.is_file() and is_previewable_file(current_path)))
+            menu.addAction(menu_icon(self, "edit-copy", QStyle.StandardPixmap.SP_ArrowRight), "Copy to Other Pane", self.copy_selected_to_peer)
+            menu.addAction(menu_icon(self, "go-jump", QStyle.StandardPixmap.SP_ArrowRight), "Move to Other Pane", self.move_selected_to_peer)
+
+        if self.add_favorite_callback or (current_path and current_path.is_dir()):
+            menu.addSeparator()
+        if self.add_favorite_callback:
             menu.addAction(menu_icon(self, "bookmark-new", QStyle.StandardPixmap.SP_DialogYesButton), "Add to Favorites", self.add_selected_to_favorites)
-        current_path = self.current_item_path()
         if current_path and current_path.is_dir():
             self._add_emblem_menu(menu, current_path)
             menu.addAction(
@@ -3759,19 +3979,23 @@ class FilePane(QWidget):
                 lambda _checked=False, folder=current_path, pane=self: pane.set_folder_note(folder, ""),
             )
             clear_note_action.setEnabled(bool(self.folder_note_for(current_path)))
-        if self.peer:
-            menu.addSeparator()
-            open_peer_action = menu.addAction(menu_icon(self, "folder-open", QStyle.StandardPixmap.SP_DirOpenIcon), "Open in Other Pane", self.open_selected_in_peer)
-            open_peer_action.setEnabled(bool(current_path and current_path.is_dir()))
-            preview_peer_action = menu.addAction(menu_icon(self, "view-preview", QStyle.StandardPixmap.SP_FileDialogInfoView), "Preview in Other Pane", self.preview_selected_in_peer)
-            preview_peer_action.setEnabled(bool(current_path and current_path.is_file() and is_previewable_file(current_path)))
-            menu.addAction(menu_icon(self, "edit-copy", QStyle.StandardPixmap.SP_ArrowRight), "Copy to Other Pane", self.copy_selected_to_peer)
-            menu.addAction(menu_icon(self, "go-jump", QStyle.StandardPixmap.SP_ArrowRight), "Move to Other Pane", self.move_selected_to_peer)
+
         menu.addSeparator()
+
+        menu.addAction(menu_icon(self, ("package-x-generic", "archive-insert"), QStyle.StandardPixmap.SP_DriveHDIcon), "Create Archive...", self.create_archive_selected)
+        archive_paths = [path for path in paths if is_archive(path)]
+        if archive_paths:
+            menu.addAction(menu_icon(self, "archive-extract", QStyle.StandardPixmap.SP_DirOpenIcon), "Extract Here", self.extract_archives_here)
+            menu.addAction(menu_icon(self, "archive-extract", QStyle.StandardPixmap.SP_DirOpenIcon), "Extract To...", self.extract_archive_to_folder)
+
+        menu.addSeparator()
+
         menu.addAction(menu_icon(self, "user-trash", QStyle.StandardPixmap.SP_TrashIcon), "Move to Trash", self.trash_selected)
         delete_action = menu.addAction(menu_icon(self, "edit-delete", QStyle.StandardPixmap.SP_MessageBoxCritical), "Delete Permanently", self.delete_permanently_selected)
         delete_action.setShortcut(QKeySequence.StandardKey.Delete)
+
         menu.addSeparator()
+
         menu.addAction(menu_icon(self, "utilities-terminal", QStyle.StandardPixmap.SP_ComputerIcon), "Terminal Here", self.open_terminal_here)
         menu.addAction(menu_icon(self, "accessories-calculator", QStyle.StandardPixmap.SP_FileDialogInfoView), "Calculate Size", self.calculate_selected_size)
         menu.addAction(menu_icon(self, "document-properties", QStyle.StandardPixmap.SP_FileDialogDetailedView), "Properties", self.show_properties)
@@ -4389,6 +4613,7 @@ class FileManager(QMainWindow):
         self.cli_left_state = left_state
         self.cli_right_state = right_state
         self.copy_buffer: list[Path] = []
+        self.clipboard_operation = "copy"
         self.undo_stack: list[UndoAction] = []
         self.active_file_operations = 0
         self.operation_queue: list[tuple[str, Callable[[], None]]] = []
@@ -4412,6 +4637,9 @@ class FileManager(QMainWindow):
         self.folder_emblems = self._load_folder_emblems()
         self.folder_notes = self._load_folder_notes()
         self.confirm_quit_operations = str(self.settings.value("confirmQuitOperations", "true")).lower() != "false"
+        self.file_logging_enabled = str(self.settings.value("fileLoggingEnabled", "false")).lower() == "true"
+        set_fm_logging_enabled(self.file_logging_enabled)
+        fm_log("app.start", version=APP_VERSION)
         TERMINAL_SIGNALS.failed.connect(self._terminal_launch_failed)
         self.current_theme = str(self.settings.value("theme", "Dark"))
         if self.current_theme not in THEMES:
@@ -4782,6 +5010,7 @@ class FileManager(QMainWindow):
             (QKeySequence(Qt.Key.Key_Enter), self.open_selected),
             (QKeySequence("Ctrl+R"), self.refresh),
             (QKeySequence.StandardKey.Copy, self.copy_highlighted),
+            (QKeySequence.StandardKey.Cut, self.cut_highlighted),
             (QKeySequence.StandardKey.Paste, self.paste_copied),
             (QKeySequence.StandardKey.Undo, self.undo_last_action),
             (QKeySequence.StandardKey.Delete, self.trash),
@@ -5011,9 +5240,33 @@ class FileManager(QMainWindow):
         for pane in (self.left, self.right):
             pane.setProperty("active", pane is self.active_pane)
             pane.setProperty("zoomed", pane is self.zoomed_pane)
-            pane.style().unpolish(pane)
-            pane.style().polish(pane)
-            pane.update()
+            self._refresh_pane_style(pane)
+
+    def update_filesystem_tints(self) -> None:
+        if not hasattr(self, "left") or not hasattr(self, "right"):
+            return
+        left_fs = filesystem_id(self.left.current_path())
+        right_fs = filesystem_id(self.right.current_path())
+        different = left_fs is not None and right_fs is not None and left_fs != right_fs
+        self.left.setProperty("fsRole", "different-left" if different else "same")
+        self.right.setProperty("fsRole", "different-right" if different else "same")
+        fm_log(
+            "pane.filesystem_tint",
+            left=self.left.current_path(),
+            right=self.right.current_path(),
+            left_fs=left_fs,
+            right_fs=right_fs,
+            different=different,
+        )
+        self._refresh_pane_style(self.left)
+        self._refresh_pane_style(self.right)
+
+    def _refresh_pane_style(self, pane: FilePane) -> None:
+        widgets = [pane, pane.icon_view, pane.list_view, pane.detail_view]
+        for widget in widgets:
+            widget.style().unpolish(widget)
+            widget.style().polish(widget)
+            widget.update()
 
     def restore_settings(self) -> None:
         geometry = self.settings.value("geometry")
@@ -5062,6 +5315,7 @@ class FileManager(QMainWindow):
         self.side_panel_width = int(self.settings.value("sidePanel/width", self.side_panel_width or 180))
         self.schedule_side_panel_width_restore(self.side_panel_width)
         self.apply_theme(self.current_theme)
+        self.update_filesystem_tints()
 
     def save_settings(self) -> None:
         if self.zoomed_pane:
@@ -5083,6 +5337,7 @@ class FileManager(QMainWindow):
         self.settings.setValue("folderEmblemsJson", json.dumps(self.folder_emblems))
         self.settings.setValue("folderNotesJson", json.dumps(self.folder_notes))
         self.settings.setValue("confirmQuitOperations", self.confirm_quit_operations)
+        self.settings.setValue("fileLoggingEnabled", self.file_logging_enabled)
         self.settings.setValue("sidePanel/visible", self.side_dock.isVisible())
         self.settings.setValue("sidePanel/mode", self.side_panel.current_mode())
         if self.side_dock.isVisible():
@@ -5118,6 +5373,7 @@ class FileManager(QMainWindow):
         self.schedule_side_panel_width_restore(self.side_panel_width)
 
     def closeEvent(self, event) -> None:
+        fm_log("app.close.request", active_file_operations=self.active_file_operations, queued=len(self.operation_queue))
         if self.confirm_quit_operations and (self.active_file_operations > 0 or self.operation_queue):
             response = QMessageBox.question(
                 self,
@@ -5127,24 +5383,30 @@ class FileManager(QMainWindow):
                 QMessageBox.StandardButton.No,
             )
             if response != QMessageBox.StandardButton.Yes:
+                fm_log("app.close.cancelled_by_user")
                 event.ignore()
                 return
         self.save_settings()
+        fm_log("app.close.accepted")
         super().closeEvent(event)
 
     def begin_file_operation(self) -> None:
         self.active_file_operations += 1
+        fm_log("operation.begin", active=self.active_file_operations, queued=len(self.operation_queue))
 
     def end_file_operation(self) -> None:
         self.active_file_operations = max(0, self.active_file_operations - 1)
+        fm_log("operation.end", active=self.active_file_operations, queued=len(self.operation_queue))
         if self.active_file_operations == 0 and self.operation_queue:
-            _name, callback = self.operation_queue.pop(0)
+            name, callback = self.operation_queue.pop(0)
+            fm_log("operation.queue.run", name=name, remaining=len(self.operation_queue))
             self.running_queued_operation = True
             QTimer.singleShot(0, lambda cb=callback: self._run_queued_operation(cb))
 
     def queue_file_operation(self, name: str, callback) -> bool:
         if self.active_file_operations > 0 and not self.running_queued_operation:
             self.operation_queue.append((name, callback))
+            fm_log("operation.queue.add", name=name, active=self.active_file_operations, queued=len(self.operation_queue))
             QMessageBox.information(self, "Operation Queued", f"Queued: {name}")
             return True
         return False
@@ -5160,6 +5422,8 @@ class FileManager(QMainWindow):
         app = QApplication.instance()
         if app:
             app.setStyleSheet(THEME_STYLES[self.current_theme])
+        if hasattr(self, "left") and hasattr(self, "right"):
+            self.update_filesystem_tints()
 
     def set_icon_layout(self, layout: str) -> None:
         self.icon_layout = layout if layout in ICON_LAYOUTS else "Normal"
@@ -5175,6 +5439,7 @@ class FileManager(QMainWindow):
             self.user_buttons,
             self.dual_bookmarks,
             self.confirm_quit_operations,
+            self.file_logging_enabled,
             initial_tab,
             self,
         )
@@ -5187,6 +5452,9 @@ class FileManager(QMainWindow):
         self.user_buttons = dialog.user_buttons()
         self.dual_bookmarks = dialog.dual_bookmarks()
         self.confirm_quit_operations = dialog.confirm_quit_operations()
+        self.file_logging_enabled = dialog.file_logging_enabled()
+        set_fm_logging_enabled(self.file_logging_enabled)
+        fm_log("settings.accepted", file_logging_enabled=self.file_logging_enabled)
         self._populate_user_toolbar_buttons()
         self._populate_dual_bookmark_combo()
         self.settings.setValue("theme", self.current_theme)
@@ -5196,6 +5464,7 @@ class FileManager(QMainWindow):
         self.settings.setValue("userButtonsJson", json.dumps(self.user_buttons))
         self.settings.setValue("dualBookmarksJson", json.dumps(self.dual_bookmarks))
         self.settings.setValue("confirmQuitOperations", self.confirm_quit_operations)
+        self.settings.setValue("fileLoggingEnabled", self.file_logging_enabled)
         self.settings.sync()
 
     def open_dual_bookmarks_settings(self) -> None:
@@ -5389,18 +5658,40 @@ class FileManager(QMainWindow):
         paths = self.active_pane.operation_paths()
         if not paths:
             return
+        self._set_clipboard_paths(paths, "copy")
+
+    def cut_highlighted(self) -> None:
+        paths = self.active_pane.operation_paths()
+        if not paths:
+            return
+        self._set_clipboard_paths(paths, "move")
+
+    def _set_clipboard_paths(self, paths: list[Path], operation: str) -> None:
+        operation = "move" if operation == "move" else "copy"
+        fm_log(f"clipboard.{operation}", pane=self.active_pane.title, count=len(paths), paths=[str(path) for path in paths])
         self.copy_buffer = paths
-        mime = QMimeData()
-        mime.setUrls([QUrl.fromLocalFile(str(path)) for path in paths])
-        QApplication.clipboard().setMimeData(mime)
+        self.clipboard_operation = operation
+        QApplication.clipboard().setMimeData(make_file_clipboard_mime(paths, operation))
 
     def paste_copied(self) -> None:
         paths = [path for path in self.copy_buffer if path.exists()]
+        operation = self.clipboard_operation
+        source = "internal"
         if not paths:
             mime = QApplication.clipboard().mimeData()
-            paths = [Path(url.toLocalFile()) for url in mime.urls() if url.isLocalFile()]
+            paths, operation = clipboard_paths_and_operation(mime)
+            source = "clipboard"
         if paths:
-            self.active_pane.copy_paths_to(paths, self.active_pane.current_path())
+            destination = self.active_pane.current_path()
+            fm_log("clipboard.paste", pane=self.active_pane.title, source=source, operation=operation, count=len(paths), destination=destination, paths=[str(path) for path in paths])
+            if operation == "move":
+                self.active_pane.move_paths_to(paths, destination)
+                self.copy_buffer = []
+                self.clipboard_operation = "copy"
+            else:
+                self.active_pane.copy_paths_to(paths, destination)
+        else:
+            fm_log("clipboard.paste.empty", pane=self.active_pane.title)
 
     def copy_across(self) -> None:
         self.active_pane.copy_selected_to_peer()

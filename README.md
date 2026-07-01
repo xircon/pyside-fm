@@ -35,6 +35,7 @@ This project is developed with AI assistance. Code, UI behavior, documentation, 
 - Open With menu using cached desktop entries and cached application icons.
 - Default application editing from file Properties using desktop MIME associations.
 - Persistent fm-only folder emblems.
+- Optional diagnostic logging to `fm.log` in the app folder.
 
 ## Requirements
 
@@ -246,24 +247,28 @@ Use an empty wildcard pattern to clear the wildcard filter. Typing in the normal
 
 Right-click in a file pane opens the file context menu.
 
-Actions:
+Actions are grouped with separators:
 
 - Open: open folder in the current pane, or open file with the desktop default handler.
 - Open With: lazily loads matching desktop applications for the selected file type.
 - Other Command: enter a command manually.
-- New Folder: create a folder in the current pane.
-- New File: create a file in the current pane.
+- Copy: copy selected/tagged items to the clipboard.
+- Cut: mark selected/tagged items to move on paste.
+- Paste: paste copied items, or move cut items, into the current pane.
 - Rename: rename the selected item.
 - Duplicate: duplicate selected items.
-- Create Archive: create an archive from selected items.
-- Extract Here: extract selected archive into the current folder.
-- Extract To: extract selected archive into a new chosen folder.
-- Add to Favorites: add selected path to the sidebar favorites.
+- New Folder: create a folder in the current pane.
+- New File: create a file in the current pane.
 - Open in Other Pane: open selected folder in the opposite pane.
-- Set Emblem: add or clear a persistent fm-only emblem on a selected folder.
 - Preview in Other Pane: show selected text, image, or PDF file in the opposite pane.
 - Copy to Other Pane: copy selected/tagged items to the opposite pane.
 - Move to Other Pane: move selected/tagged items to the opposite pane.
+- Add to Favorites: add selected path to the sidebar favorites.
+- Set Emblem: add or clear a persistent fm-only emblem on a selected folder.
+- Set Note: add or clear a persistent fm-only note on a selected folder.
+- Create Archive: create an archive from selected items.
+- Extract Here: extract selected archive into the current folder.
+- Extract To: extract selected archive into a new chosen folder.
 - Existing copy/move targets: choose Overwrite, Rename, or Cancel.
 - Move to Trash: move selected/tagged items to Trash.
 - Delete Permanently: permanently delete selected/tagged items.
@@ -319,6 +324,11 @@ Pane zoom:
 - The active pane expands to take the available pane area.
 - The zoomed pane border is `#00ff00`.
 - Press `Z` again to restore the previous split.
+
+Filesystem tint:
+
+- If both panes are on the same filesystem, panes use the normal background.
+- If panes are on different filesystems, the left pane is red-tinted and the right pane is blue-tinted.
 
 ## Properties And Default Applications
 
@@ -411,7 +421,8 @@ File operations:
 | Action | Shortcut |
 | --- | --- |
 | Copy selected or tagged files | Ctrl+C |
-| Paste copied files into active pane | Ctrl+V |
+| Cut selected or tagged files | Ctrl+X |
+| Paste copied or cut files into active pane | Ctrl+V |
 | Move selected or tagged to other pane | Ctrl+M |
 | Undo last operation | Ctrl+Z |
 | Move to trash | Delete |
@@ -461,6 +472,7 @@ Settings include:
 - Four custom user toolbar buttons
 - Dual Bookmarks: named left/right folder pairs for the top-center dropdown
 - Confirm quit while copy/move operations are running or queued
+- Diagnostic logging to `fm.log` in the app folder while enabled
 - Folder notes and emblems are saved persistently in app settings
 
 Default terminal:

@@ -1,0 +1,260 @@
+2026-07-01T11:46:29.230 thread=140243694140352 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='0.92'
+2026-07-01T11:46:29.230 thread=140243694140352 event=settings.accepted file_logging_enabled=True
+2026-07-01T11:46:49.086 thread=140243694140352 event=drag.start pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file']
+2026-07-01T11:46:52.629 thread=140243694140352 event=drop.received pane='Left' action='DropAction.CopyAction' paths=['/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file'] destination=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir')
+2026-07-01T11:46:52.629 thread=140243694140352 event=drop.copy pane='Left' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir')
+2026-07-01T11:46:52.629 thread=140243694140352 event=copy.request pane='Left' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir') paths=['/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file']
+2026-07-01T11:46:52.629 thread=140243694140352 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file') destination=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir/Test2gb.file')
+2026-07-01T11:46:52.630 thread=140243694140352 event=copy.start_dialog pane='Left' targets=[('/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file', '/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir/Test2gb.file')]
+2026-07-01T11:46:52.630 thread=140243694140352 event=operation.dialog.create pane='Left' operation='copy' targets=1 title='Copying files...'
+2026-07-01T11:46:52.630 thread=140243694140352 event=operation.begin active=1 queued=0
+2026-07-01T11:46:52.633 thread=140243694140352 event=operation.thread.started pane='Left' operation='copy' targets=1
+2026-07-01T11:46:52.633 thread=140242501924544 event=operation.worker.start operation='copy' targets=1
+2026-07-01T11:46:52.634 thread=140242501924544 event=operation.worker.sized operation='copy' total_bytes=2000000000 total_units=30518
+2026-07-01T11:46:52.634 thread=140242501924544 event=operation.target.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir/Test2gb.file')
+2026-07-01T11:46:52.634 thread=140242501924544 event=copy.file.start source=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir/Test2gb.file')
+2026-07-01T11:46:52.635 thread=140243694140352 event=drag.done pane='Left' count=1
+2026-07-01T11:46:53.667 thread=140242501924544 event=copy.file.done source=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir/Test2gb.file') bytes=2000000000 elapsed_seconds=1.033
+2026-07-01T11:46:53.667 thread=140242501924544 event=operation.target.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir/Test2gb.file') done_bytes=2000000000
+2026-07-01T11:46:53.668 thread=140242501924544 event=operation.worker.done operation='copy' completed=1 elapsed_seconds=1.034 done_bytes=2000000000
+2026-07-01T11:46:53.668 thread=140243694140352 event=operation.completed.signal pane='Left' operation='copy' completed=1
+2026-07-01T11:46:53.669 thread=140243694140352 event=operation.cancel_requested operation='copy' targets=1
+2026-07-01T11:46:53.669 thread=140243694140352 event=operation.end active=0 queued=0
+2026-07-01T11:46:53.669 thread=140243694140352 event=operation.finish pane='Left' operation='copy' completed=1 warning=None
+2026-07-01T11:47:18.187 thread=140243694140352 event=operation.begin active=1 queued=0
+2026-07-01T11:47:19.676 thread=140243694140352 event=operation.end active=0 queued=0
+2026-07-01T11:47:30.626 thread=140243694140352 event=clipboard.paste.empty pane='Left'
+2026-07-01T11:47:47.405 thread=140243694140352 event=clipboard.paste.empty pane='Left'
+2026-07-01T11:48:23.002 thread=140243694140352 event=move.request pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir') paths=['/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file']
+2026-07-01T11:48:23.002 thread=140243694140352 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file') destination=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir/Test2gb.file')
+2026-07-01T11:48:23.002 thread=140243694140352 event=move.start_dialog pane='Right' targets=[('/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file', '/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir/Test2gb.file')]
+2026-07-01T11:48:23.003 thread=140243694140352 event=operation.dialog.create pane='Right' operation='move' targets=1 title='Moving files...'
+2026-07-01T11:48:23.003 thread=140243694140352 event=operation.begin active=1 queued=0
+2026-07-01T11:48:23.005 thread=140243694140352 event=operation.thread.started pane='Right' operation='move' targets=1
+2026-07-01T11:48:23.005 thread=140242501924544 event=operation.worker.start operation='move' targets=1
+2026-07-01T11:48:23.006 thread=140242501924544 event=operation.worker.sized operation='move' total_bytes=2000000000 total_units=30518
+2026-07-01T11:48:23.006 thread=140242501924544 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir/Test2gb.file')
+2026-07-01T11:48:23.007 thread=140242501924544 event=move.start source=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir/Test2gb.file')
+2026-07-01T11:48:23.007 thread=140242501924544 event=move.rename.try source=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir/Test2gb.file') source_size=2000000000
+2026-07-01T11:48:23.007 thread=140242501924544 event=move.rename.done source=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir/Test2gb.file') elapsed_seconds=0.0
+2026-07-01T11:48:23.007 thread=140242501924544 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/Test2gb.file') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/TestDir/Test2gb.file') done_bytes=2000000000
+2026-07-01T11:48:23.007 thread=140242501924544 event=operation.worker.done operation='move' completed=1 elapsed_seconds=0.002 done_bytes=2000000000
+2026-07-01T11:48:23.013 thread=140243694140352 event=operation.completed.signal pane='Right' operation='move' completed=1
+2026-07-01T11:48:23.013 thread=140243694140352 event=operation.cancel_requested operation='move' targets=1
+2026-07-01T11:48:23.013 thread=140243694140352 event=operation.end active=0 queued=0
+2026-07-01T11:48:23.013 thread=140243694140352 event=operation.finish pane='Right' operation='move' completed=1 warning=None
+2026-07-01T11:49:29.032 thread=140243694140352 event=app.close.request active_file_operations=0 queued=0
+2026-07-01T11:49:29.035 thread=140243694140352 event=app.close.accepted
+2026-07-01T11:49:29.038 thread=140243694140352 event=operation.cancel_requested operation='copy' targets=1
+2026-07-01T11:49:29.038 thread=140243694140352 event=operation.cancel_requested operation='move' targets=1
+2026-07-01T11:49:32.110 thread=140659421150144 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='0.92'
+2026-07-01T11:49:32.110 thread=140659421150144 event=app.start version='0.92'
+2026-07-01T11:49:35.161 thread=140659421150144 event=app.close.request active_file_operations=0 queued=0
+2026-07-01T11:49:35.179 thread=140659421150144 event=app.close.accepted
+2026-07-01T11:51:16.729 thread=140668809759680 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='0.93'
+2026-07-01T11:51:16.729 thread=140668809759680 event=app.start version='0.93'
+2026-07-01T11:51:19.062 thread=140668809759680 event=app.close.request active_file_operations=0 queued=0
+2026-07-01T11:51:19.077 thread=140668809759680 event=app.close.accepted
+2026-07-01T11:51:22.068 thread=139929746209728 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='0.93'
+2026-07-01T11:51:22.068 thread=139929746209728 event=app.start version='0.93'
+2026-07-01T11:51:24.218 thread=139929746209728 event=app.close.request active_file_operations=0 queued=0
+2026-07-01T11:51:24.230 thread=139929746209728 event=app.close.accepted
+2026-07-01T11:54:35.676 thread=139682280127424 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='0.93'
+2026-07-01T11:54:35.676 thread=139682280127424 event=app.start version='0.93'
+2026-07-01T11:54:49.732 thread=139682280127424 event=clipboard.move pane='Right' count=1 paths=['/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img']
+2026-07-01T11:54:55.992 thread=139682280127424 event=clipboard.paste pane='Left' source='internal' operation='move' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') paths=['/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img']
+2026-07-01T11:54:55.992 thread=139682280127424 event=move.request pane='Left' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') paths=['/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img']
+2026-07-01T11:54:55.992 thread=139682280127424 event=collision.none source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img')
+2026-07-01T11:54:55.992 thread=139682280127424 event=move.start_dialog pane='Left' targets=[('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img', '/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img')]
+2026-07-01T11:54:55.992 thread=139682280127424 event=operation.dialog.create pane='Left' operation='move' targets=1 title='Moving files...'
+2026-07-01T11:54:55.992 thread=139682280127424 event=operation.begin active=1 queued=0
+2026-07-01T11:54:55.995 thread=139682280127424 event=operation.thread.started pane='Left' operation='move' targets=1
+2026-07-01T11:54:55.995 thread=139681043838656 event=operation.worker.start operation='move' targets=1
+2026-07-01T11:54:55.996 thread=139681043838656 event=operation.worker.sized operation='move' total_bytes=50000000 total_units=763
+2026-07-01T11:54:55.996 thread=139681043838656 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img')
+2026-07-01T11:54:55.997 thread=139681043838656 event=move.start source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img')
+2026-07-01T11:54:55.997 thread=139681043838656 event=move.rename.try source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') source_size=50000000
+2026-07-01T11:54:55.997 thread=139681043838656 event=move.rename.failed source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') error="OSError(18, 'Invalid cross-device link')" elapsed_seconds=0.0
+2026-07-01T11:54:55.997 thread=139681043838656 event=copy.file.start source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img')
+2026-07-01T11:55:18.923 thread=139682280127424 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='0.93'
+2026-07-01T11:55:18.923 thread=139682280127424 event=settings.accepted file_logging_enabled=True
+2026-07-01T11:55:31.092 thread=139681043838656 event=copy.file.done source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') bytes=50000000 elapsed_seconds=35.095
+2026-07-01T11:55:31.092 thread=139681043838656 event=move.remove_source.start source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img')
+2026-07-01T11:55:31.138 thread=139681043838656 event=move.remove_source.done source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img')
+2026-07-01T11:55:31.138 thread=139681043838656 event=move.copy_delete.done source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') elapsed_seconds=35.142
+2026-07-01T11:55:31.139 thread=139681043838656 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') done_bytes=50000000
+2026-07-01T11:55:31.139 thread=139681043838656 event=operation.worker.done operation='move' completed=1 elapsed_seconds=35.143 done_bytes=50000000
+2026-07-01T11:55:31.140 thread=139682280127424 event=operation.completed.signal pane='Left' operation='move' completed=1
+2026-07-01T11:55:31.140 thread=139682280127424 event=operation.end active=0 queued=0
+2026-07-01T11:55:31.140 thread=139682280127424 event=operation.finish pane='Left' operation='move' completed=1 warning=None
+2026-07-01T11:58:22.413 thread=139682280127424 event=app.close.request active_file_operations=0 queued=0
+2026-07-01T11:58:22.431 thread=139682280127424 event=app.close.accepted
+2026-07-01T11:58:30.885 thread=139675542174656 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='0.94'
+2026-07-01T11:58:30.885 thread=139675542174656 event=app.start version='0.94'
+2026-07-01T11:58:40.313 thread=139675542174656 event=clipboard.move pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img']
+2026-07-01T11:58:43.829 thread=139675542174656 event=clipboard.paste pane='Right' source='internal' operation='move' count=1 destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img']
+2026-07-01T11:58:43.829 thread=139675542174656 event=move.request pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img']
+2026-07-01T11:58:43.846 thread=139675542174656 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img')
+2026-07-01T11:58:43.846 thread=139675542174656 event=move.start_dialog pane='Right' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img', '/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img')]
+2026-07-01T11:58:43.846 thread=139675542174656 event=operation.dialog.create pane='Right' operation='move' targets=1 title='Moving files...'
+2026-07-01T11:58:43.846 thread=139675542174656 event=operation.begin active=1 queued=0
+2026-07-01T11:58:43.849 thread=139675542174656 event=operation.thread.started pane='Right' operation='move' targets=1
+2026-07-01T11:58:43.849 thread=139674374895296 event=operation.worker.start operation='move' targets=1
+2026-07-01T11:58:43.850 thread=139674374895296 event=operation.worker.sized operation='move' total_bytes=50000000 total_units=763
+2026-07-01T11:58:43.850 thread=139674374895296 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img')
+2026-07-01T11:58:43.868 thread=139674374895296 event=move.start source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img')
+2026-07-01T11:58:43.869 thread=139674374895296 event=move.rename.try source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') source_size=50000000
+2026-07-01T11:58:43.869 thread=139674374895296 event=move.rename.failed source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') error="OSError(18, 'Invalid cross-device link')" elapsed_seconds=0.001
+2026-07-01T11:58:43.870 thread=139674374895296 event=move.copy_delete.start source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img')
+2026-07-01T11:58:43.919 thread=139674374895296 event=copy.file.start operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img')
+2026-07-01T11:59:21.924 thread=139674374895296 event=copy.file.done operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') bytes=50000000 elapsed_seconds=38.005
+2026-07-01T11:59:21.924 thread=139674374895296 event=move.remove_source.start source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img')
+2026-07-01T11:59:21.927 thread=139674374895296 event=move.remove_source.done source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img')
+2026-07-01T11:59:21.927 thread=139674374895296 event=move.copy_delete.done source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') elapsed_seconds=38.059
+2026-07-01T11:59:21.928 thread=139674374895296 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') done_bytes=50000000
+2026-07-01T11:59:21.928 thread=139674374895296 event=operation.worker.done operation='move' completed=1 elapsed_seconds=38.078 done_bytes=50000000
+2026-07-01T11:59:21.929 thread=139675542174656 event=operation.completed.signal pane='Right' operation='move' completed=1
+2026-07-01T11:59:21.930 thread=139675542174656 event=operation.end active=0 queued=0
+2026-07-01T11:59:21.930 thread=139675542174656 event=operation.finish pane='Right' operation='move' completed=1 warning=None
+2026-07-01T12:01:51.696 thread=139675542174656 event=clipboard.move pane='Right' count=1 paths=['/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img']
+2026-07-01T12:02:01.559 thread=139675542174656 event=clipboard.paste pane='Left' source='internal' operation='move' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') paths=['/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img']
+2026-07-01T12:02:01.560 thread=139675542174656 event=move.request pane='Left' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') paths=['/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img']
+2026-07-01T12:02:01.560 thread=139675542174656 event=collision.none source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img')
+2026-07-01T12:02:01.560 thread=139675542174656 event=move.start_dialog pane='Left' targets=[('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img', '/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img')]
+2026-07-01T12:02:01.560 thread=139675542174656 event=operation.dialog.create pane='Left' operation='move' targets=1 title='Moving files...'
+2026-07-01T12:02:01.560 thread=139675542174656 event=operation.begin active=1 queued=0
+2026-07-01T12:02:01.563 thread=139675542174656 event=operation.thread.started pane='Left' operation='move' targets=1
+2026-07-01T12:02:01.563 thread=139674374895296 event=operation.worker.start operation='move' targets=1
+2026-07-01T12:02:01.563 thread=139674374895296 event=operation.worker.sized operation='move' total_bytes=50000000 total_units=763
+2026-07-01T12:02:01.564 thread=139674374895296 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img')
+2026-07-01T12:02:01.564 thread=139674374895296 event=move.start source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img')
+2026-07-01T12:02:01.564 thread=139674374895296 event=move.rename.try source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') source_size=50000000
+2026-07-01T12:02:01.564 thread=139674374895296 event=move.rename.failed source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img') error="OSError(18, 'Invalid cross-device link')" elapsed_seconds=0.0
+2026-07-01T12:02:01.564 thread=139674374895296 event=move.copy_delete.start source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img')
+2026-07-01T12:02:01.564 thread=139674374895296 event=copy.file.start operation='move' source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/gentoo_root.img')
+2026-07-01T12:02:14.513 thread=139675542174656 event=operation.cancel_requested operation='move' targets=1
+2026-07-01T12:02:15.570 thread=139674374895296 event=operation.worker.canceled operation='move' completed=0
+2026-07-01T12:02:15.572 thread=139675542174656 event=operation.canceled.signal pane='Left' operation='move' completed=0
+2026-07-01T12:02:15.572 thread=139675542174656 event=operation.end active=0 queued=0
+2026-07-01T12:02:15.572 thread=139675542174656 event=operation.finish pane='Left' operation='move' completed=0 warning=None
+2026-07-01T12:02:19.872 thread=139675542174656 event=operation.begin active=1 queued=0
+2026-07-01T12:02:20.543 thread=139675542174656 event=operation.end active=0 queued=0
+2026-07-01T12:02:31.724 thread=139675542174656 event=clipboard.move pane='Right' count=1 paths=['/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img']
+2026-07-01T12:02:35.659 thread=139675542174656 event=clipboard.paste pane='Left' source='internal' operation='move' count=1 destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV') paths=['/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img']
+2026-07-01T12:02:35.659 thread=139675542174656 event=move.request pane='Left' count=1 destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV') paths=['/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img']
+2026-07-01T12:02:35.668 thread=139675542174656 event=collision.none source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img')
+2026-07-01T12:02:35.668 thread=139675542174656 event=move.start_dialog pane='Left' targets=[('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img', '/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img')]
+2026-07-01T12:02:35.668 thread=139675542174656 event=operation.dialog.create pane='Left' operation='move' targets=1 title='Moving files...'
+2026-07-01T12:02:35.668 thread=139675542174656 event=operation.begin active=1 queued=0
+2026-07-01T12:02:35.672 thread=139675542174656 event=operation.thread.started pane='Left' operation='move' targets=1
+2026-07-01T12:02:35.672 thread=139674374895296 event=operation.worker.start operation='move' targets=1
+2026-07-01T12:02:35.672 thread=139674374895296 event=operation.worker.sized operation='move' total_bytes=50000000 total_units=763
+2026-07-01T12:02:35.672 thread=139674374895296 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img')
+2026-07-01T12:02:35.681 thread=139674374895296 event=move.start source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img')
+2026-07-01T12:02:35.682 thread=139674374895296 event=move.rename.try source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img') source_size=50000000
+2026-07-01T12:02:35.694 thread=139674374895296 event=move.rename.done source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img') elapsed_seconds=0.013
+2026-07-01T12:02:35.695 thread=139674374895296 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img') done_bytes=50000000
+2026-07-01T12:02:35.695 thread=139674374895296 event=operation.worker.done operation='move' completed=1 elapsed_seconds=0.023 done_bytes=50000000
+2026-07-01T12:02:35.696 thread=139675542174656 event=operation.completed.signal pane='Left' operation='move' completed=1
+2026-07-01T12:02:35.697 thread=139675542174656 event=operation.end active=0 queued=0
+2026-07-01T12:02:35.697 thread=139675542174656 event=operation.finish pane='Left' operation='move' completed=1 warning=None
+2026-07-01T12:02:47.223 thread=139675542174656 event=clipboard.move pane='Left' count=1 paths=['/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img']
+2026-07-01T12:02:53.759 thread=139675542174656 event=clipboard.paste pane='Left' source='internal' operation='move' count=1 destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb') paths=['/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img']
+2026-07-01T12:02:53.759 thread=139675542174656 event=move.request pane='Left' count=1 destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb') paths=['/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img']
+2026-07-01T12:02:53.962 thread=139675542174656 event=collision.none source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img') destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img')
+2026-07-01T12:02:53.962 thread=139675542174656 event=move.start_dialog pane='Left' targets=[('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img', '/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img')]
+2026-07-01T12:02:53.962 thread=139675542174656 event=operation.dialog.create pane='Left' operation='move' targets=1 title='Moving files...'
+2026-07-01T12:02:53.962 thread=139675542174656 event=operation.begin active=1 queued=0
+2026-07-01T12:02:53.965 thread=139675542174656 event=operation.thread.started pane='Left' operation='move' targets=1
+2026-07-01T12:02:53.965 thread=139674374895296 event=operation.worker.start operation='move' targets=1
+2026-07-01T12:02:53.966 thread=139674374895296 event=operation.worker.sized operation='move' total_bytes=50000000 total_units=763
+2026-07-01T12:02:53.966 thread=139674374895296 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img')
+2026-07-01T12:02:54.309 thread=139674374895296 event=move.start source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img')
+2026-07-01T12:02:54.310 thread=139674374895296 event=move.rename.try source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') source_size=50000000
+2026-07-01T12:02:54.480 thread=139674374895296 event=move.rename.done source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') elapsed_seconds=0.171
+2026-07-01T12:02:54.481 thread=139674374895296 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') done_bytes=50000000
+2026-07-01T12:02:54.482 thread=139674374895296 event=operation.worker.done operation='move' completed=1 elapsed_seconds=0.516 done_bytes=50000000
+2026-07-01T12:02:54.482 thread=139675542174656 event=operation.completed.signal pane='Left' operation='move' completed=1
+2026-07-01T12:02:54.483 thread=139675542174656 event=operation.end active=0 queued=0
+2026-07-01T12:02:54.483 thread=139675542174656 event=operation.finish pane='Left' operation='move' completed=1 warning=None
+2026-07-01T12:04:40.130 thread=139675542174656 event=clipboard.move pane='Right' count=1 paths=['/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img']
+2026-07-01T12:04:46.517 thread=139675542174656 event=clipboard.paste pane='Left' source='internal' operation='move' count=1 destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV') paths=['/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img']
+2026-07-01T12:04:46.518 thread=139675542174656 event=move.request pane='Left' count=1 destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV') paths=['/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img']
+2026-07-01T12:04:46.852 thread=139675542174656 event=collision.none source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img')
+2026-07-01T12:04:46.853 thread=139675542174656 event=move.start_dialog pane='Left' targets=[('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img', '/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img')]
+2026-07-01T12:04:46.853 thread=139675542174656 event=operation.dialog.create pane='Left' operation='move' targets=1 title='Moving files...'
+2026-07-01T12:04:46.853 thread=139675542174656 event=operation.begin active=1 queued=0
+2026-07-01T12:04:46.856 thread=139675542174656 event=operation.thread.started pane='Left' operation='move' targets=1
+2026-07-01T12:04:46.856 thread=139674374895296 event=operation.worker.start operation='move' targets=1
+2026-07-01T12:04:46.856 thread=139674374895296 event=operation.worker.sized operation='move' total_bytes=50000000 total_units=763
+2026-07-01T12:04:46.856 thread=139674374895296 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img')
+2026-07-01T12:04:47.256 thread=139674374895296 event=move.start source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img')
+2026-07-01T12:04:47.256 thread=139674374895296 event=move.rename.try source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img') source_size=50000000
+2026-07-01T12:04:47.404 thread=139674374895296 event=move.rename.done source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img') elapsed_seconds=0.148
+2026-07-01T12:04:47.404 thread=139674374895296 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/gentoo_root.img') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/gentoo_root.img') done_bytes=50000000
+2026-07-01T12:04:47.405 thread=139674374895296 event=operation.worker.done operation='move' completed=1 elapsed_seconds=0.549 done_bytes=50000000
+2026-07-01T12:04:47.406 thread=139675542174656 event=operation.completed.signal pane='Left' operation='move' completed=1
+2026-07-01T12:04:47.406 thread=139675542174656 event=operation.end active=0 queued=0
+2026-07-01T12:04:47.406 thread=139675542174656 event=operation.finish pane='Left' operation='move' completed=1 warning=None
+2026-07-01T12:06:09.968 thread=139675542174656 event=operation.begin active=1 queued=0
+2026-07-01T12:06:12.680 thread=139675542174656 event=operation.end active=0 queued=0
+2026-07-01T12:12:35.496 thread=139675542174656 event=app.close.request active_file_operations=0 queued=0
+2026-07-01T12:12:35.508 thread=139675542174656 event=app.close.accepted
+2026-07-01T12:12:38.356 thread=140023353396160 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='0.95'
+2026-07-01T12:12:38.356 thread=140023353396160 event=app.start version='0.95'
+2026-07-01T12:13:03.494 thread=140023353396160 event=clipboard.move pane='Left' count=1 paths=['/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file']
+2026-07-01T12:13:06.723 thread=140023353396160 event=clipboard.paste pane='Right' source='internal' operation='move' count=1 destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb') paths=['/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file']
+2026-07-01T12:13:06.723 thread=140023353396160 event=move.request pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb') paths=['/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file']
+2026-07-01T12:13:06.761 thread=140023353396160 event=collision.none source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file') destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file')
+2026-07-01T12:13:06.761 thread=140023353396160 event=move.start_dialog pane='Right' targets=[('/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file', '/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file')]
+2026-07-01T12:13:06.761 thread=140023353396160 event=operation.dialog.create pane='Right' operation='move' targets=1 title='Moving files...'
+2026-07-01T12:13:06.761 thread=140023353396160 event=operation.begin active=1 queued=0
+2026-07-01T12:13:06.764 thread=140023353396160 event=operation.thread.started pane='Right' operation='move' targets=1
+2026-07-01T12:13:06.764 thread=140022107862720 event=operation.worker.start operation='move' targets=1
+2026-07-01T12:13:06.765 thread=140022107862720 event=operation.worker.sized operation='move' total_bytes=0 total_units=1
+2026-07-01T12:13:06.765 thread=140022107862720 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file')
+2026-07-01T12:13:06.774 thread=140022107862720 event=move.start source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file')
+2026-07-01T12:13:06.775 thread=140022107862720 event=move.rename.try source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file') source_size=0
+2026-07-01T12:13:06.788 thread=140022107862720 event=move.rename.done source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file') elapsed_seconds=0.013
+2026-07-01T12:13:06.789 thread=140022107862720 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file') done_bytes=0
+2026-07-01T12:13:06.789 thread=140022107862720 event=operation.worker.done operation='move' completed=1 elapsed_seconds=0.025 done_bytes=0
+2026-07-01T12:13:06.793 thread=140023353396160 event=operation.completed.signal pane='Right' operation='move' completed=1
+2026-07-01T12:13:06.793 thread=140023353396160 event=operation.end active=0 queued=0
+2026-07-01T12:13:06.793 thread=140023353396160 event=operation.finish pane='Right' operation='move' completed=1 warning=None
+2026-07-01T12:13:27.062 thread=140023353396160 event=clipboard.move pane='Right' count=1 paths=['/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file']
+2026-07-01T12:13:29.835 thread=140023353396160 event=clipboard.paste pane='Left' source='internal' operation='move' count=1 destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923') paths=['/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file']
+2026-07-01T12:13:29.835 thread=140023353396160 event=move.request pane='Left' count=1 destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923') paths=['/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file']
+2026-07-01T12:13:29.911 thread=140023353396160 event=collision.none source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file') destination=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file')
+2026-07-01T12:13:29.912 thread=140023353396160 event=move.start_dialog pane='Left' targets=[('/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file', '/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file')]
+2026-07-01T12:13:29.912 thread=140023353396160 event=operation.dialog.create pane='Left' operation='move' targets=1 title='Moving files...'
+2026-07-01T12:13:29.912 thread=140023353396160 event=operation.begin active=1 queued=0
+2026-07-01T12:13:29.915 thread=140023353396160 event=operation.thread.started pane='Left' operation='move' targets=1
+2026-07-01T12:13:29.915 thread=140022107862720 event=operation.worker.start operation='move' targets=1
+2026-07-01T12:13:29.915 thread=140022107862720 event=operation.worker.sized operation='move' total_bytes=0 total_units=1
+2026-07-01T12:13:29.915 thread=140022107862720 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file')
+2026-07-01T12:13:29.924 thread=140022107862720 event=move.start source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file')
+2026-07-01T12:13:29.924 thread=140022107862720 event=move.rename.try source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file') source_size=0
+2026-07-01T12:13:29.942 thread=140022107862720 event=move.rename.done source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file') elapsed_seconds=0.018
+2026-07-01T12:13:29.942 thread=140022107862720 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb/Test2gb.file') target=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923/Test2gb.file') done_bytes=0
+2026-07-01T12:13:29.943 thread=140022107862720 event=operation.worker.done operation='move' completed=1 elapsed_seconds=0.028 done_bytes=0
+2026-07-01T12:13:29.943 thread=140023353396160 event=operation.completed.signal pane='Left' operation='move' completed=1
+2026-07-01T12:13:29.944 thread=140023353396160 event=operation.end active=0 queued=0
+2026-07-01T12:13:29.944 thread=140023353396160 event=operation.finish pane='Left' operation='move' completed=1 warning=None
+2026-07-01T12:16:14.866 thread=140023353396160 event=app.close.request active_file_operations=0 queued=0
+2026-07-01T12:16:14.881 thread=140023353396160 event=app.close.accepted
+2026-07-01T12:19:55.294 thread=140302765329344 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='0.96'
+2026-07-01T12:19:55.294 thread=140302765329344 event=app.start version='0.96'
+2026-07-01T12:19:55.674 thread=140302765329344 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923') right=PosixPath('/home/xircon') left_fs=108 right_fs=66306 different=True
+2026-07-01T12:19:55.767 thread=140302765329344 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb') left_fs=108 right_fs=108 different=False
+2026-07-01T12:19:55.799 thread=140302765329344 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb') left_fs=108 right_fs=108 different=False
+2026-07-01T12:19:55.812 thread=140302765329344 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb') left_fs=108 right_fs=108 different=False
+2026-07-01T12:19:56.045 thread=140302765329344 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb') left_fs=108 right_fs=108 different=False
+2026-07-01T12:19:56.051 thread=140302765329344 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/htpc-mech/TV/1923') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb') left_fs=108 right_fs=108 different=False
+2026-07-01T12:20:03.043 thread=140302765329344 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/50mb') left_fs=66309 right_fs=108 different=True
+2026-07-01T12:20:03.264 thread=140302765329344 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-01T12:20:14.557 thread=140302765329344 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-01T12:20:14.572 thread=140302765329344 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') left_fs=66309 right_fs=66309 different=False
+2026-07-01T12:20:20.444 thread=140302765329344 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') left_fs=66309 right_fs=66309 different=False
+2026-07-01T12:20:20.459 thread=140302765329344 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') left_fs=66309 right_fs=66309 different=False
+2026-07-01T12:20:23.878 thread=140302765329344 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') left_fs=66309 right_fs=66309 different=False
+2026-07-01T12:20:23.902 thread=140302765329344 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
