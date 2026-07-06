@@ -17,12 +17,14 @@ This project is developed with AI assistance. Code, UI behavior, documentation, 
 - Sidebar with favorites, places, recent folders, tree view, and Trash shortcut.
 - Copy, move, duplicate, rename, archive, extract, trash, delete, and undo support.
 - Copy/move collision prompts with Overwrite, Rename, and Cancel.
-- Copy/move progress dialogs reserve enough height for buttons on tiling/window-managed desktops such as MangoWM.
+- Copy/move progress dialogs show current speed and estimated finish time, and reserve enough height for buttons on tiling/window-managed desktops such as MangoWM.
 - Drag and drop copy/move between panes.
 - Drag hover highlights a folder drop target; no highlight means dropping into the pane's current folder.
 - Wildcard pane filtering with `Ctrl+S`.
 - Active pane zoom with `Z` while a file pane or full preview is focused.
 - Text, image, and PDF previews.
+- Full dual-pane image slideshow for the active directory, opened with `S` and navigated with Left, Right, or Space.
+- Aspect-correct image thumbnails with optional per-folder `.thumbnails` cache for image-heavy folders.
 - Full-pane preview in the opposite pane, with Escape to close.
 - Full-pane preview zoom with Ctrl++ / Ctrl+= and Ctrl+-.
 - PDF preview page navigation with buttons and keyboard controls.
@@ -30,6 +32,8 @@ This project is developed with AI assistance. Code, UI behavior, documentation, 
 - Dual Bookmarks dropdown for opening saved left/right folder pairs.
 - Configurable icon layout density: Compact, Normal, Spacious.
 - Per-pane icon zoom persistence.
+- Per-pane status controls with a clickable eye indicator for hidden files and a horizontal icon zoom slider.
+- A single selected file or folder is identified by name in its pane status bar.
 - Theme support: Light, Dark, Very Dark.
 - Custom user toolbar buttons.
 - Open With menu using cached desktop entries and cached application icons.
@@ -255,6 +259,8 @@ Actions are grouped with separators:
 - Copy: copy selected/tagged items to the clipboard.
 - Cut: mark selected/tagged items to move on paste.
 - Paste: paste copied items, or move cut items, into the current pane.
+- Copy Path: copy selected full paths as text, one item per line.
+- Copy Name: copy selected file or folder names as text, one item per line.
 - Rename: rename the selected item.
 - Duplicate: duplicate selected items.
 - New Folder: create a folder in the current pane.
@@ -441,6 +447,8 @@ Panes and selection:
 | Copy to other pane | F5 |
 | Move to other pane | F6 / Ctrl+M |
 | Preview file in other pane | P |
+| Start image slideshow for current folder | S |
+| Previous / next slideshow image | Left / Right or Space |
 | Tag or untag row in detailed view | Space |
 | Swap panes | Toolbar button |
 | Zoom active pane | Z while a file pane or full preview is focused |
@@ -459,7 +467,7 @@ Display and app:
 | Settings | Ctrl+, |
 | Help | F1 |
 | Quit | Q / Ctrl+Q |
-| Close help or manual preview | Escape |
+| Close help, manual preview, or slideshow | Escape |
 
 ## Settings
 
@@ -469,7 +477,7 @@ Settings include:
 - Icon layout
 - Terminal command
 - Terminal arguments
-- Four custom user toolbar buttons
+- Eight custom user toolbar buttons
 - Dual Bookmarks: named left/right folder pairs for the top-center dropdown
 - Confirm quit while copy/move operations are running or queued
 - Diagnostic logging to `fm.log` in the app folder while enabled

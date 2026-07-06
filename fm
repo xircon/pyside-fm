@@ -7,6 +7,7 @@ import subprocess
 import sys
 import argparse
 import configparser
+import hashlib
 import json
 import mimetypes
 import shlex
@@ -16,13 +17,13 @@ import threading
 import time
 import zipfile
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Callable
 from urllib.parse import quote
 
 from PySide6.QtCore import QDir, QEvent, QFile, QFileInfo, QItemSelectionModel, QMimeData, QModelIndex, QObject, QPoint, QRect, QRunnable, QSettings, QSize, Qt, QThread, QThreadPool, QTimer, QUrl, Signal, Slot
-from PySide6.QtGui import QAction, QActionGroup, QBrush, QColor, QCursor, QDesktopServices, QDrag, QFont, QIcon, QImage, QImageReader, QKeySequence, QPainter, QPixmap, QShortcut
+from PySide6.QtGui import QAction, QActionGroup, QBrush, QColor, QCursor, QDesktopServices, QDrag, QFont, QIcon, QImage, QImageReader, QKeySequence, QPainter, QPen, QPixmap, QShortcut
 from PySide6.QtPdf import QPdfDocument
 from PySide6.QtWidgets import (
     QApplication,
@@ -51,6 +52,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSizePolicy,
+    QSlider,
     QSplitter,
     QStackedWidget,
     QStyle,
@@ -69,7 +71,7 @@ from PySide6.QtWidgets import (
 APP_ID = "org.ai.fm"
 APP_ORG = "org.ai"
 APP_NAME = "fm"
-APP_VERSION = "0.96"
+APP_VERSION = "1.10"
 APP_DIR = Path(__file__).resolve().parent
 APP_LOG_PATH = APP_DIR / "fm.log"
 FM_LOGGING_ENABLED = False
@@ -98,7 +100,11 @@ THEMES = ("Light", "Dark", "Very Dark")
 PROGRESS_DIALOG_WIDTH = 533
 DEFAULT_TERMINAL_COMMAND = "kitty"
 DEFAULT_TERMINAL_ARGS = "--app-id=org.ai.floater"
-USER_BUTTON_COUNT = 4
+USER_BUTTON_COUNT = 8
+THUMBNAIL_CACHE_DIR_NAME = ".thumbnails"
+THUMBNAIL_DISK_CACHE_MIN_IMAGES = 100
+THUMBNAIL_MAX_SIZE = QSize(160, 160)
+THUMBNAIL_ICON_SIZE = QSize(112, 112)
 FOLDER_EMBLEMS = [
     ("star", "Star", "★", "#facc15"),
     ("important", "Important", "!", "#ef4444"),
@@ -191,10 +197,10 @@ THEME_STYLES = {
             background: #ffffff;
         }
         FilePane[fsRole="different-left"], FilePane[fsRole="different-left"] QListView, FilePane[fsRole="different-left"] QTreeView {
-            background: #fff1f2;
+            background: #ffe4e6;
         }
         FilePane[fsRole="different-right"], FilePane[fsRole="different-right"] QListView, FilePane[fsRole="different-right"] QTreeView {
-            background: #eff6ff;
+            background: #dbeafe;
         }
         QToolBar { background: #eceff1; border-bottom: 1px solid #c8ccd0; }
         QToolButton, QPushButton { background: #ffffff; border: 1px solid #c8ccd0; padding: 4px 8px; }
@@ -225,10 +231,10 @@ THEME_STYLES = {
             background: #05070a;
         }
         FilePane[fsRole="different-left"], FilePane[fsRole="different-left"] QListView, FilePane[fsRole="different-left"] QTreeView {
-            background: #2d2022;
+            background: #3a2026;
         }
         FilePane[fsRole="different-right"], FilePane[fsRole="different-right"] QListView, FilePane[fsRole="different-right"] QTreeView {
-            background: #1d2634;
+            background: #1f2f4a;
         }
         QToolBar { background: #202328; border-bottom: 1px solid #3f454d; }
         QToolButton, QPushButton { background: #30343a; border: 1px solid #4a515b; padding: 4px 8px; }
@@ -259,10 +265,10 @@ THEME_STYLES = {
             background: #05070a;
         }
         FilePane[fsRole="different-left"], FilePane[fsRole="different-left"] QListView, FilePane[fsRole="different-left"] QTreeView {
-            background: #16090d;
+            background: #260b12;
         }
         FilePane[fsRole="different-right"], FilePane[fsRole="different-right"] QListView, FilePane[fsRole="different-right"] QTreeView {
-            background: #07111f;
+            background: #081b33;
         }
         QToolBar { background: #080b0f; border-bottom: 1px solid #2a3038; }
         QToolButton, QPushButton { background: #151a21; border: 1px solid #303845; padding: 4px 8px; }
@@ -290,6 +296,17 @@ def readable_size(size: int) -> str:
             return f"{value:.0f} {unit}" if unit == "B" else f"{value:.1f} {unit}"
         value /= 1024
     return f"{size} B"
+
+
+def readable_duration(seconds: int) -> str:
+    seconds = max(0, int(seconds))
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    if hours:
+        return f"{hours}h {minutes:02d}m"
+    if minutes:
+        return f"{minutes}m {seconds:02d}s"
+    return f"{seconds}s"
 
 
 def display_path_label(path: Path) -> str:
@@ -398,6 +415,33 @@ def terminal_toolbar_icon(accent: str, size: int = 32) -> QIcon:
     painter.drawLine(17, y + 3, 24, y + 3)
     painter.end()
     return QIcon(pixmap)
+
+
+def eye_status_icon(crossed: bool, size: int = 32) -> QIcon:
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    color = QColor("#e5e7eb")
+    painter.setPen(QPen(color, 2))
+    painter.setBrush(Qt.BrushStyle.NoBrush)
+    painter.drawEllipse(5, 10, size - 10, 12)
+    painter.setBrush(color)
+    painter.drawEllipse(size // 2 - 4, size // 2 - 4, 8, 8)
+    if crossed:
+        painter.setPen(QPen(QColor("#ef4444"), 4))
+        painter.drawLine(6, size - 6, size - 6, 6)
+    painter.end()
+    return QIcon(pixmap)
+
+
+def hidden_toggle_icon(size: int = 32) -> QIcon:
+    icon = QIcon()
+    icon.addPixmap(eye_status_icon(True, size).pixmap(size, size), QIcon.Mode.Normal, QIcon.State.Off)
+    icon.addPixmap(eye_status_icon(False, size).pixmap(size, size), QIcon.Mode.Normal, QIcon.State.On)
+    icon.addPixmap(eye_status_icon(True, size).pixmap(size, size), QIcon.Mode.Active, QIcon.State.Off)
+    icon.addPixmap(eye_status_icon(False, size).pixmap(size, size), QIcon.Mode.Active, QIcon.State.On)
+    return icon
 
 
 def directory_size(path: Path) -> tuple[int, int, int]:
@@ -811,7 +855,7 @@ def copy_path_with_progress(src: Path, dst: Path, progress: QProgressDialog, sta
 
 
 class FileOperationWorker(QObject):
-    progress = Signal(int, int, str, object)
+    progress = Signal(int, int, str, object, object)
     completed = Signal(str, object)
     failed = Signal(str, object)
     canceled = Signal(str, object)
@@ -837,7 +881,7 @@ class FileOperationWorker(QObject):
             total_units = max(1, (total_bytes + (64 * 1024 - 1)) // (64 * 1024))
             state = {"done": 0, "done_bytes": 0, "total": total_units, "total_bytes": total_bytes, "started_at": time.monotonic()}
             fm_log("operation.worker.sized", operation=self.operation, total_bytes=total_bytes, total_units=total_units)
-            self.progress.emit(0, total_units, self._preparing_label(), 0.0)
+            self.progress.emit(0, total_units, self._preparing_label(), 0.0, None)
             for source, target in self.targets:
                 self._check_cancel()
                 fm_log("operation.target.start", operation=self.operation, source=source, target=target)
@@ -850,7 +894,7 @@ class FileOperationWorker(QObject):
                 else:
                     raise ValueError(f"Unsupported operation: {self.operation}")
                 fm_log("operation.target.done", operation=self.operation, source=source, target=target, done_bytes=state["done_bytes"])
-            self.progress.emit(total_units, total_units, self._done_label(), self._speed_bytes_per_second(state))
+            self.progress.emit(total_units, total_units, self._done_label(), self._speed_bytes_per_second(state), 0.0)
             fm_log(
                 "operation.worker.done",
                 operation=self.operation,
@@ -880,12 +924,24 @@ class FileOperationWorker(QObject):
         elapsed = max(0.001, time.monotonic() - float(state["started_at"]))
         return float(state["done_bytes"]) / elapsed
 
+    def _eta_seconds(self, state: dict[str, int | float]) -> float | None:
+        total_bytes = float(state.get("total_bytes", 0))
+        done_bytes = float(state.get("done_bytes", 0))
+        remaining = max(0.0, total_bytes - done_bytes)
+        if remaining <= 0:
+            return 0.0
+        speed = self._speed_bytes_per_second(state)
+        if speed <= 0:
+            return None
+        return remaining / speed
+
     def _emit_progress(self, state: dict[str, int | float], label: str) -> None:
         self.progress.emit(
             min(int(state["total"]), int(state["done"])),
             int(state["total"]),
             label,
             self._speed_bytes_per_second(state),
+            self._eta_seconds(state),
         )
 
     def _copy_file(self, source: Path, target: Path, state: dict[str, int | float], verb: str = "Copying", done_verb: str = "Copied") -> None:
@@ -1586,6 +1642,7 @@ class HelpDialog(QDialog):
                 ("Copy to other pane", "F5"),
                 ("Move to other pane", "F6 / Ctrl+M"),
                 ("Preview file in other pane", "P"),
+                ("Slideshow images in current folder", "S"),
                 ("Tag or untag row in detailed view", "Space"),
                 ("Swap panes", "Toolbar button"),
                 ("Drag copy", "Drag and drop"),
@@ -1625,6 +1682,7 @@ class HelpDialog(QDialog):
             <h3>Selection</h3>
             <ul>
               <li>Normal selection comes from the current file view.</li>
+              <li>The pane status bar shows the item name when exactly one file or folder is selected.</li>
               <li>In Details view, Space tags or untags the current row. Tagged files take priority for copy, move, trash, and delete.</li>
               <li>In Icon view, drag in the empty gap between icon hit areas to rubber-band select.</li>
               <li>Escape clears an active wildcard filter first; otherwise it clears selection when no manual preview is open.</li>
@@ -1643,15 +1701,17 @@ class HelpDialog(QDialog):
               <li><b>Copy Across</b>: copy selected or tagged items to the other pane.</li>
               <li><b>Move Across</b>: move selected or tagged items to the other pane.</li>
               <li><b>Existing targets</b>: copy and move prompt for Overwrite, Rename, or Cancel.</li>
+              <li><b>Copy / Move progress</b>: transfer dialogs show current speed and estimated finish time.</li>
               <li><b>Trash</b>: move selected or tagged items to Trash.</li>
               <li><b>Empty Trash</b>: permanently clear the desktop Trash.</li>
               <li><b>Terminal Here</b>: open the configured terminal at the active pane path.</li>
               <li><b>Terminal Home</b>: open the configured terminal at your home folder.</li>
               <li><b>Properties</b>: open Properties for the selected/current item.</li>
-              <li><b>Hidden</b>: show or hide dotfiles.</li>
+              <li><b>Hidden</b>: show or hide dotfiles in both file panes.</li>
               <li><b>Preview</b>: enable or disable automatic preview.</li>
               <li><b>Dual Bookmarks</b>: open a saved pair of left and right folders from the top-center dropdown.</li>
               <li><b>Pane Sort</b>: each pane has a Sort button beside Icon/List/Details for field, direction, and reversed order.</li>
+              <li><b>Pane status controls</b>: each pane has a clickable eye button for that pane's hidden files and a zoom slider for that pane's icon size.</li>
               <li><b>Swap Panes</b>: swap the left and right pane paths and view modes.</li>
               <li><b>User buttons</b>: optional custom command buttons configured in Settings.</li>
               <li><b>Side Panel</b>: show or hide the sidebar.</li>
@@ -1669,6 +1729,7 @@ class HelpDialog(QDialog):
               <li><b>Open With</b>: choose a matching desktop application, with icons cached after first load.</li>
               <li><b>Other Command</b>: run a manually entered command with selected paths.</li>
               <li><b>Copy / Cut / Paste</b>: clipboard actions grouped near the top of the menu.</li>
+              <li><b>Copy Path / Copy Name</b>: copy selected full paths or file names as text, one item per line.</li>
               <li><b>Rename / Duplicate / New Folder / New File</b>: common item management actions.</li>
               <li><b>Create Archive</b>: create a zip archive from selected items.</li>
               <li><b>Extract Here / Extract To</b>: extract supported archives.</li>
@@ -1702,6 +1763,13 @@ class HelpDialog(QDialog):
               <li>Press <b>P</b> in a file pane to preview the selected supported file in the other pane.</li>
               <li>Press <b>Escape</b> to close a manual preview.</li>
             </ul>
+            <h2>Image Slideshow</h2>
+            <ul>
+              <li>Press <b>S</b> in a file pane to show images from its current folder across both panes.</li>
+              <li>If an image is selected, the slideshow starts with that image.</li>
+              <li>Press <b>Right</b> or <b>Space</b> for the next image and <b>Left</b> for the previous image.</li>
+              <li>Press <b>Escape</b> to close the slideshow.</li>
+            </ul>
             <h2>PDF Preview</h2>
             <ul>
               <li>PDF pages use a light background for readability.</li>
@@ -1726,9 +1794,10 @@ class HelpDialog(QDialog):
             <ul>
               <li><b>Theme</b>: Light, Dark, or Very Dark.</li>
               <li><b>Icon layout</b>: Compact, Normal, or Spacious icon-grid spacing.</li>
+              <li><b>Image thumbnails</b>: preserve image proportions. Image-heavy folders use a local <code>.thumbnails</code> cache for faster repeat loading.</li>
               <li><b>Terminal command</b>: terminal executable used by terminal actions.</li>
               <li><b>Terminal args</b>: arguments passed to the terminal command.</li>
-              <li><b>User buttons</b>: up to four toolbar buttons. Symbols can be theme icon names, image paths, or short glyphs.</li>
+              <li><b>User buttons</b>: up to eight toolbar buttons. Symbols can be theme icon names, image paths, or short glyphs.</li>
               <li><b>Dual Bookmarks</b>: named left/right folder pairs shown in the top-center toolbar dropdown.</li>
               <li><b>Quit confirmation</b>: optionally confirm quit only when copy/move operations are running or queued.</li>
               <li><b>Logging</b>: create <code>fm.log</code> beside the app for detailed diagnostic events while enabled.</li>
@@ -2421,21 +2490,57 @@ class ThumbnailSignals(QObject):
 THUMBNAIL_SIGNALS = ThumbnailSignals()
 
 
+def thumbnail_cache_file(path: Path, mtime_ns: int, size: int) -> Path:
+    try:
+        resolved = path.resolve()
+    except OSError:
+        resolved = path
+    identity = f"{resolved}|{mtime_ns}|{size}"
+    digest = hashlib.sha1(identity.encode("utf-8", errors="replace")).hexdigest()
+    return path.parent / THUMBNAIL_CACHE_DIR_NAME / f"{digest}.png"
+
+
+def read_scaled_image(path: Path, max_size: QSize) -> QImage:
+    reader = QImageReader(str(path))
+    reader.setAutoTransform(True)
+    original_size = reader.size()
+    if original_size.isValid() and not original_size.isEmpty():
+        reader.setScaledSize(original_size.scaled(max_size, Qt.AspectRatioMode.KeepAspectRatio))
+    image = reader.read()
+    if image.isNull():
+        return image
+    if image.width() > max_size.width() or image.height() > max_size.height():
+        image = image.scaled(max_size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+    return image
+
+
+def is_thumbnail_cache_path(path: Path) -> bool:
+    return THUMBNAIL_CACHE_DIR_NAME in path.parts
+
+
 class ThumbnailJob(QRunnable):
-    def __init__(self, path: Path, mtime_ns: int, size: int, signals: ThumbnailSignals) -> None:
+    def __init__(self, path: Path, mtime_ns: int, size: int, use_disk_cache: bool, signals: ThumbnailSignals) -> None:
         super().__init__()
         self.path = path
         self.mtime_ns = mtime_ns
         self.size = size
+        self.use_disk_cache = use_disk_cache
         self.signals = signals
 
     def run(self) -> None:
-        reader = QImageReader(str(self.path))
-        reader.setAutoTransform(True)
-        reader.setScaledSize(QSize(128, 128))
-        image = reader.read()
-        if not image.isNull():
-            self.signals.loaded.emit(str(self.path), self.mtime_ns, self.size, image)
+        cache_file = thumbnail_cache_file(self.path, self.mtime_ns, self.size) if self.use_disk_cache else None
+        image = QImage()
+        if cache_file and cache_file.exists():
+            image = QImage(str(cache_file))
+        if image.isNull():
+            image = read_scaled_image(self.path, THUMBNAIL_MAX_SIZE)
+            if self.use_disk_cache and not image.isNull() and cache_file:
+                try:
+                    cache_file.parent.mkdir(exist_ok=True)
+                    image.save(str(cache_file), "PNG")
+                except OSError:
+                    pass
+        self.signals.loaded.emit(str(self.path), self.mtime_ns, self.size, image)
 
 
 class FileSystemNoDropModel(QFileSystemModel):
@@ -2450,6 +2555,7 @@ class FileSystemNoDropModel(QFileSystemModel):
         self._thumbnail_cache: dict[tuple[str, int, int], QIcon] = {}
         self._thumbnail_pending: set[tuple[str, int, int]] = set()
         self._thumbnail_failed: set[tuple[str, int, int]] = set()
+        self._thumbnail_disk_cache_dirs: dict[str, bool] = {}
         self._folder_emblems: dict[str, str] = {}
         self._folder_notes: dict[str, str] = {}
         self._emblem_icon_cache: dict[tuple[str, str], QIcon] = {}
@@ -2492,7 +2598,7 @@ class FileSystemNoDropModel(QFileSystemModel):
                     if len(self._emblem_icon_cache) > 512:
                         self._emblem_icon_cache.clear()
                     return icon
-            if path.suffix.lower() in IMAGE_EXTENSIONS and path.is_file():
+            if path.suffix.lower() in IMAGE_EXTENSIONS and path.is_file() and not is_thumbnail_cache_path(path):
                 icon = self._thumbnail_icon(path)
                 if icon:
                     return icon
@@ -2547,6 +2653,8 @@ class FileSystemNoDropModel(QFileSystemModel):
                 )
 
     def _thumbnail_icon(self, path: Path) -> QIcon | None:
+        if is_thumbnail_cache_path(path):
+            return None
         try:
             stat = path.stat()
         except OSError:
@@ -2557,8 +2665,34 @@ class FileSystemNoDropModel(QFileSystemModel):
             return cached
         if key not in self._thumbnail_pending and key not in self._thumbnail_failed:
             self._thumbnail_pending.add(key)
-            self._thumbnail_pool.start(ThumbnailJob(path, stat.st_mtime_ns, stat.st_size, self._thumbnail_signals))
+            use_disk_cache = self._directory_uses_thumbnail_disk_cache(path.parent)
+            self._thumbnail_pool.start(ThumbnailJob(path, stat.st_mtime_ns, stat.st_size, use_disk_cache, self._thumbnail_signals))
         return None
+
+    def _directory_uses_thumbnail_disk_cache(self, directory: Path) -> bool:
+        key = str(directory)
+        cached = self._thumbnail_disk_cache_dirs.get(key)
+        if cached is not None:
+            return cached
+        count = 0
+        try:
+            with os.scandir(directory) as entries:
+                for entry in entries:
+                    if entry.name == THUMBNAIL_CACHE_DIR_NAME:
+                        continue
+                    if not entry.is_file():
+                        continue
+                    if Path(entry.name).suffix.lower() not in IMAGE_EXTENSIONS:
+                        continue
+                    count += 1
+                    if count >= THUMBNAIL_DISK_CACHE_MIN_IMAGES:
+                        self._thumbnail_disk_cache_dirs[key] = True
+                        fm_log("thumbnail.disk_cache.enabled", directory=directory, image_count_at_least=count)
+                        return True
+        except OSError:
+            pass
+        self._thumbnail_disk_cache_dirs[key] = False
+        return False
 
     @Slot(str, object, object, QImage)
     def _thumbnail_loaded(self, path: str, mtime_ns: int, size: int, image: QImage) -> None:
@@ -2570,7 +2704,7 @@ class FileSystemNoDropModel(QFileSystemModel):
             self._thumbnail_failed.add(key)
             return
         pixmap = QPixmap.fromImage(image).scaled(
-            QSize(96, 96),
+            THUMBNAIL_ICON_SIZE,
             Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation,
         )
@@ -2767,6 +2901,7 @@ class FilePane(QWidget):
             )
             view.doubleClicked.connect(lambda index, pane=self: pane.open_index(index))
             view.selectionModel().selectionChanged.connect(lambda *_: self._update_status())
+        self.model.rowsInserted.connect(lambda *_args, pane=self: QTimer.singleShot(0, pane._sync_hidden_rows))
         self._configure_detail_columns()
 
         self.stack = QStackedWidget()
@@ -2777,6 +2912,27 @@ class FilePane(QWidget):
 
         self.status_label = QLabel()
         self.status_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.hidden_status_button = QToolButton()
+        self.hidden_status_button.setCheckable(True)
+        self.hidden_status_button.setIcon(hidden_toggle_icon())
+        self.hidden_status_button.setChecked(self.show_hidden)
+        self.hidden_status_button.setIconSize(QSize(20, 20))
+        self.hidden_status_button.toggled.connect(lambda checked, pane=self: pane._hidden_status_toggled(checked))
+        self._sync_hidden_status_button()
+        self.zoom_slider = QSlider(Qt.Orientation.Horizontal)
+        self.zoom_slider.setRange(32, 128)
+        self.zoom_slider.setSingleStep(16)
+        self.zoom_slider.setPageStep(16)
+        self.zoom_slider.setFixedWidth(120)
+        self.zoom_slider.setValue(self.icon_zoom)
+        self.zoom_slider.setToolTip(f"Icon zoom: {self.icon_zoom}")
+        self.zoom_slider.valueChanged.connect(lambda value, pane=self: pane._zoom_slider_changed(value))
+        status_row = QHBoxLayout()
+        status_row.setContentsMargins(0, 0, 0, 0)
+        status_row.setSpacing(6)
+        status_row.addWidget(self.status_label, 1)
+        status_row.addWidget(self.hidden_status_button)
+        status_row.addWidget(self.zoom_slider)
         self.full_preview_label = PreviewLabel()
         self.full_preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.full_preview_label.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -2849,7 +3005,7 @@ class FilePane(QWidget):
         layout.addLayout(top)
         layout.addLayout(self.breadcrumb_layout)
         layout.addWidget(self.preview_splitter, 1)
-        layout.addWidget(self.status_label)
+        layout.addLayout(status_row)
 
         self.set_path(Path.home())
         self._operation_threads: list[QThread] = []
@@ -2979,6 +3135,7 @@ class FilePane(QWidget):
     def set_icon_zoom(self, size: int) -> None:
         self.icon_zoom = max(32, min(128, size))
         self.apply_icon_zoom()
+        self._sync_zoom_slider()
 
     def set_icon_layout(self, layout: str) -> None:
         self.icon_layout = layout if layout in ICON_LAYOUTS else "Normal"
@@ -3016,9 +3173,61 @@ class FilePane(QWidget):
 
     def set_show_hidden(self, show_hidden: bool) -> None:
         self.show_hidden = show_hidden
-        current = self.current_path()
+        self._sync_hidden_status_button()
         self._apply_model_filter()
-        self.set_path(current, add_history=False)
+        self._sync_hidden_rows()
+        QTimer.singleShot(0, self._sync_hidden_rows)
+        self._update_status()
+
+    def _sync_hidden_rows(self) -> None:
+        for view in self.views:
+            root = view.rootIndex()
+            for row in range(self.model.rowCount(root)):
+                index = self.model.index(row, 0, root)
+                hide = not self.show_hidden and self.model.fileName(index).startswith(".")
+                if isinstance(view, QTreeView):
+                    view.setRowHidden(row, root, hide)
+                else:
+                    view.setRowHidden(row, hide)
+
+    def _hidden_status_toggled(self, checked: bool) -> None:
+        self.show_hidden = checked
+        self._sync_hidden_status_button()
+        self.set_show_hidden(checked)
+        window = self.window()
+        if hasattr(window, "pane_hidden_state_changed"):
+            window.pane_hidden_state_changed()
+
+    def _zoom_slider_changed(self, value: int) -> None:
+        snapped = max(32, min(128, round(value / 16) * 16))
+        if snapped != value:
+            self.zoom_slider.blockSignals(True)
+            try:
+                self.zoom_slider.setValue(snapped)
+            finally:
+                self.zoom_slider.blockSignals(False)
+        self.set_icon_zoom(snapped)
+
+    def _sync_zoom_slider(self) -> None:
+        if not hasattr(self, "zoom_slider"):
+            return
+        self.zoom_slider.blockSignals(True)
+        try:
+            self.zoom_slider.setValue(self.icon_zoom)
+            self.zoom_slider.setToolTip(f"Icon zoom: {self.icon_zoom}")
+        finally:
+            self.zoom_slider.blockSignals(False)
+
+    def _sync_hidden_status_button(self) -> None:
+        if not hasattr(self, "hidden_status_button"):
+            return
+        self.hidden_status_button.blockSignals(True)
+        try:
+            self.hidden_status_button.setChecked(self.show_hidden)
+            self.hidden_status_button.setToolTip("Hidden files visible" if self.show_hidden else "Hidden files hidden")
+            self.hidden_status_button.update()
+        finally:
+            self.hidden_status_button.blockSignals(False)
 
     def set_peer(self, peer: "FilePane") -> None:
         self.peer = peer
@@ -3650,8 +3859,8 @@ class FilePane(QWidget):
         thread.start()
         fm_log("operation.thread.started", pane=self.title, operation=operation, targets=len(targets))
 
-    @Slot(int, int, str, object)
-    def _file_operation_progress(self, value: int, maximum: int, label: str, speed: float) -> None:
+    @Slot(int, int, str, object, object)
+    def _file_operation_progress(self, value: int, maximum: int, label: str, speed: float, eta_seconds: float | None) -> None:
         worker = self.sender()
         context = self._operation_contexts.get(worker)
         if not context:
@@ -3662,7 +3871,16 @@ class FilePane(QWidget):
         if progress.maximum() != maximum:
             progress.setRange(0, maximum)
         speed_text = readable_size(int(speed)) + "/s" if speed and speed > 0 else "calculating speed..."
-        progress.setLabelText(f"{label}\n{speed_text}")
+        if eta_seconds is None:
+            eta_text = "ETA: calculating..."
+        else:
+            remaining_seconds = max(0, int(float(eta_seconds)))
+            if remaining_seconds <= 1:
+                eta_text = "ETA: now"
+            else:
+                finish_at = datetime.now() + timedelta(seconds=remaining_seconds)
+                eta_text = f"ETA: {finish_at.strftime('%H:%M:%S')} ({readable_duration(remaining_seconds)})"
+        progress.setLabelText(f"{label}\n{speed_text}\n{eta_text}")
         widen_progress_dialog(progress)
         progress.setValue(min(value, maximum))
 
@@ -3876,6 +4094,23 @@ class FilePane(QWidget):
             window.set_active_pane(self)
             window.paste_copied()
 
+    def copy_path_text_to_clipboard(self) -> None:
+        paths = self.selected_or_current_paths()
+        if not paths:
+            paths = [self.current_path()]
+        text = "\n".join(str(path) for path in paths)
+        QApplication.clipboard().setText(text)
+        fm_log("clipboard.copy_path_text", pane=self.title, count=len(paths), text=text)
+
+    def copy_name_text_to_clipboard(self) -> None:
+        paths = self.selected_or_current_paths()
+        if not paths:
+            paths = [self.current_path()]
+        names = [path.name or str(path) for path in paths]
+        text = "\n".join(names)
+        QApplication.clipboard().setText(text)
+        fm_log("clipboard.copy_name_text", pane=self.title, count=len(paths), text=text)
+
     def calculate_selected_size(self) -> None:
         paths = self.selected_or_current_paths()
         if not paths:
@@ -3945,6 +4180,21 @@ class FilePane(QWidget):
         has_item = bool(paths)
         copy_action.setEnabled(has_item)
         cut_action.setEnabled(has_item)
+
+        menu.addSeparator()
+
+        copy_path_action = menu.addAction(
+            menu_icon(self, "edit-copy", QStyle.StandardPixmap.SP_FileIcon),
+            "Copy Path",
+            self.copy_path_text_to_clipboard,
+        )
+        copy_name_action = menu.addAction(
+            menu_icon(self, "edit-copy", QStyle.StandardPixmap.SP_FileIcon),
+            "Copy Name",
+            self.copy_name_text_to_clipboard,
+        )
+        copy_path_action.setEnabled(bool(paths or self.current_path()))
+        copy_name_action.setEnabled(bool(paths or self.current_path()))
 
         menu.addSeparator()
 
@@ -4074,6 +4324,7 @@ class FilePane(QWidget):
 
     def _on_directory_loaded(self, path: str) -> None:
         if Path(path) == self.current_path():
+            self._sync_hidden_rows()
             self._update_status()
 
     def _update_navigation(self) -> None:
@@ -4091,12 +4342,19 @@ class FilePane(QWidget):
                         total += path.stat().st_size
                 except OSError:
                     pass
-            self.status_label.setText(f"{len(selected)} selected, {readable_size(total)}")
+            if len(selected) == 1:
+                self.status_label.setText(f"{selected[0].name} - 1 selected, {readable_size(total)}")
+            else:
+                self.status_label.setText(f"{len(selected)} selected, {readable_size(total)}")
             return
 
         directory = self.current_path()
         try:
-            entries = [entry for entry in directory.iterdir() if entry.name not in {".", ".."}]
+            entries = [
+                entry
+                for entry in directory.iterdir()
+                if entry.name not in {".", ".."} and (self.show_hidden or not entry.name.startswith("."))
+            ]
         except OSError:
             entries = []
         dirs = sum(1 for entry in entries if entry.is_dir())
@@ -4620,6 +4878,10 @@ class FileManager(QMainWindow):
         self.running_queued_operation = False
         self.zoomed_pane: FilePane | None = None
         self.pre_zoom_splitter_sizes: list[int] = []
+        self.slideshow_images: list[Path] = []
+        self.slideshow_index = -1
+        self.slideshow_source_pane: FilePane | None = None
+        self.slideshow_pixmap = QPixmap()
         self.setWindowTitle("fm")
         self.setMinimumSize(900, 560)
         self.settings = QSettings(APP_ORG, APP_NAME)
@@ -4627,6 +4889,7 @@ class FileManager(QMainWindow):
         self.preview_enabled = str(self.settings.value("previewEnabled", "true")).lower() != "false"
         self.side_panel_width = int(self.settings.value("sidePanel/width", 180))
         self._restoring_side_panel_width = False
+        self._side_panel_restore_pending = True
         self.icon_layout = str(self.settings.value("iconLayout", "Normal"))
         if self.icon_layout not in ICON_LAYOUTS:
             self.icon_layout = "Normal"
@@ -4662,7 +4925,27 @@ class FileManager(QMainWindow):
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
         self.splitter.addWidget(self.left)
         self.splitter.addWidget(self.right)
-        self.setCentralWidget(self.splitter)
+
+        self.slideshow_widget = QWidget()
+        self.slideshow_widget.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.slideshow_widget.setStyleSheet("background: #000000; color: #ffffff;")
+        slideshow_layout = QVBoxLayout(self.slideshow_widget)
+        slideshow_layout.setContentsMargins(0, 0, 0, 0)
+        slideshow_layout.setSpacing(0)
+        self.slideshow_label = PreviewLabel()
+        self.slideshow_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.slideshow_label.setStyleSheet("background: #000000;")
+        self.slideshow_label.resized.connect(self._rescale_slideshow_image)
+        self.slideshow_status = QLabel()
+        self.slideshow_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.slideshow_status.setStyleSheet("background: #000000; color: #ffffff; padding: 6px;")
+        slideshow_layout.addWidget(self.slideshow_label, 1)
+        slideshow_layout.addWidget(self.slideshow_status)
+
+        self.central_stack = QStackedWidget()
+        self.central_stack.addWidget(self.splitter)
+        self.central_stack.addWidget(self.slideshow_widget)
+        self.setCentralWidget(self.central_stack)
 
         self._build_side_panel()
         self._build_toolbar()
@@ -4681,6 +4964,7 @@ class FileManager(QMainWindow):
         self.side_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
         self.side_dock.setWidget(self.side_panel)
         self.side_dock.installEventFilter(self)
+        self.side_dock.visibilityChanged.connect(lambda visible, window=self: window._side_panel_visibility_changed(visible))
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.side_dock)
 
     def _build_toolbar(self) -> None:
@@ -5054,8 +5338,21 @@ class FileManager(QMainWindow):
 
     def eventFilter(self, watched, event) -> bool:
         if watched is getattr(self, "side_dock", None) and event.type() == QEvent.Type.Resize:
-            if self.side_dock.isVisible() and not self._restoring_side_panel_width:
+            if self.side_dock.isVisible() and not self._restoring_side_panel_width and not self._side_panel_restore_pending:
                 self.side_panel_width = max(80, self.side_dock.width())
+                fm_log("side_panel.width.changed", width=self.side_panel_width)
+        if event.type() in {QEvent.Type.ShortcutOverride, QEvent.Type.KeyPress} and self.slideshow_images:
+            if event.modifiers() == Qt.KeyboardModifier.NoModifier:
+                if event.key() in {Qt.Key.Key_Right, Qt.Key.Key_Space, Qt.Key.Key_Left, Qt.Key.Key_Escape}:
+                    if event.type() == QEvent.Type.KeyPress:
+                        if event.key() in {Qt.Key.Key_Right, Qt.Key.Key_Space}:
+                            self.advance_slideshow(1)
+                        elif event.key() == Qt.Key.Key_Left:
+                            self.advance_slideshow(-1)
+                        else:
+                            self.close_slideshow()
+                    event.accept()
+                    return True
         if event.type() == QEvent.Type.KeyPress and self.handle_manual_preview_key(event):
             event.accept()
             return True
@@ -5074,6 +5371,11 @@ class FileManager(QMainWindow):
                 if event.type() == QEvent.Type.KeyPress:
                     self.set_active_pane(zoom_target)
                     self.toggle_pane_zoom()
+                event.accept()
+                return True
+            if self._is_plain_s(event) and self._space_targets_tag(watched):
+                if event.type() == QEvent.Type.KeyPress:
+                    self.start_slideshow()
                 event.accept()
                 return True
             if self._is_plain_space(event) and self._space_targets_tag(watched):
@@ -5147,6 +5449,9 @@ class FileManager(QMainWindow):
 
     def _is_plain_z(self, event) -> bool:
         return event.key() == Qt.Key.Key_Z and event.modifiers() == Qt.KeyboardModifier.NoModifier
+
+    def _is_plain_s(self, event) -> bool:
+        return event.key() == Qt.Key.Key_S and event.modifiers() == Qt.KeyboardModifier.NoModifier
 
     def _is_plain_q(self, event) -> bool:
         return event.key() == Qt.Key.Key_Q and event.modifiers() == Qt.KeyboardModifier.NoModifier
@@ -5306,7 +5611,9 @@ class FileManager(QMainWindow):
             {str(key): str(value) for key, value in favorite_names.items()},
         )
         self.side_panel.set_recent_paths([Path(value) for value in self.settings.value("recentPaths", [], type=list)])
-        self.set_show_hidden(self.show_hidden)
+        self.left.set_show_hidden(str(self.settings.value("left/showHidden", str(self.show_hidden).lower())).lower() == "true")
+        self.right.set_show_hidden(str(self.settings.value("right/showHidden", str(self.show_hidden).lower())).lower() == "true")
+        self.pane_hidden_state_changed()
         self.set_preview_enabled(self.preview_enabled)
         self.left.restore_preview_state(self.settings.value("left/previewSplitter"))
         self.right.restore_preview_state(self.settings.value("right/previewSplitter"))
@@ -5340,8 +5647,6 @@ class FileManager(QMainWindow):
         self.settings.setValue("fileLoggingEnabled", self.file_logging_enabled)
         self.settings.setValue("sidePanel/visible", self.side_dock.isVisible())
         self.settings.setValue("sidePanel/mode", self.side_panel.current_mode())
-        if self.side_dock.isVisible():
-            self.side_panel_width = max(80, self.side_dock.width())
         self.settings.setValue("sidePanel/width", self.side_panel_width)
         for prefix, pane in (("left", self.left), ("right", self.right)):
             state = pane.state()
@@ -5351,13 +5656,17 @@ class FileManager(QMainWindow):
             self.settings.setValue(f"{prefix}/sortDescending", state.sort_descending)
             self.settings.setValue(f"{prefix}/sortReversed", state.sort_reversed)
             self.settings.setValue(f"{prefix}/iconZoom", pane.icon_zoom)
+            self.settings.setValue(f"{prefix}/showHidden", pane.show_hidden)
             self.settings.setValue(f"{prefix}/previewSplitter", pane.preview_state())
         self.settings.sync()
 
     def schedule_side_panel_width_restore(self, width: int) -> None:
         target_width = max(80, width)
-        QTimer.singleShot(0, lambda window=self, saved_width=target_width: window.restore_side_panel_width(saved_width))
-        QTimer.singleShot(100, lambda window=self, saved_width=target_width: window.restore_side_panel_width(saved_width))
+        self.side_panel_width = target_width
+        self._side_panel_restore_pending = True
+        for delay in (0, 50, 150, 400, 900):
+            QTimer.singleShot(delay, lambda window=self, saved_width=target_width: window.restore_side_panel_width(saved_width))
+        QTimer.singleShot(1200, lambda window=self: window._finish_side_panel_width_restore())
 
     def restore_side_panel_width(self, width: int) -> None:
         self.side_panel_width = max(80, width)
@@ -5365,8 +5674,17 @@ class FileManager(QMainWindow):
             self._restoring_side_panel_width = True
             try:
                 self.resizeDocks([self.side_dock], [self.side_panel_width], Qt.Orientation.Horizontal)
+                fm_log("side_panel.width.restore", width=self.side_panel_width, actual=self.side_dock.width())
             finally:
                 QTimer.singleShot(0, lambda window=self: setattr(window, "_restoring_side_panel_width", False))
+
+    def _finish_side_panel_width_restore(self) -> None:
+        self._side_panel_restore_pending = False
+        fm_log("side_panel.width.restore_finished", width=self.side_panel_width, actual=self.side_dock.width())
+
+    def _side_panel_visibility_changed(self, visible: bool) -> None:
+        if visible:
+            self.schedule_side_panel_width_restore(self.side_panel_width)
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -5513,8 +5831,17 @@ class FileManager(QMainWindow):
         self.right.set_show_hidden(show_hidden)
         self.side_panel.set_show_hidden(show_hidden)
 
+    def pane_hidden_state_changed(self) -> None:
+        both_visible = self.left.show_hidden and self.right.show_hidden
+        self.show_hidden = both_visible
+        if hasattr(self, "hidden_action"):
+            self.hidden_action.blockSignals(True)
+            self.hidden_action.setChecked(both_visible)
+            self.hidden_action.blockSignals(False)
+        self.side_panel.set_show_hidden(both_visible)
+
     def toggle_hidden(self) -> None:
-        self.set_show_hidden(not self.show_hidden)
+        self.set_show_hidden(not (self.left.show_hidden and self.right.show_hidden))
 
     def set_preview_enabled(self, enabled: bool) -> None:
         self.preview_enabled = enabled
@@ -5525,6 +5852,84 @@ class FileManager(QMainWindow):
         self.left.set_preview_enabled(enabled)
         self.right.set_preview_enabled(enabled)
         self.settings.setValue("previewEnabled", enabled)
+
+    def start_slideshow(self) -> None:
+        pane = self.active_pane
+        directory = pane.current_path()
+        try:
+            images = sorted(
+                (
+                    path
+                    for path in directory.iterdir()
+                    if path.is_file()
+                    and path.suffix.lower() in IMAGE_EXTENSIONS
+                    and (pane.show_hidden or not path.name.startswith("."))
+                ),
+                key=lambda path: path.name.casefold(),
+            )
+        except OSError as exc:
+            QMessageBox.warning(self, "Slideshow", f"Cannot read folder:\n{directory}\n\n{exc}")
+            return
+        if not images:
+            QMessageBox.information(self, "Slideshow", "There are no images in the active pane's current folder.")
+            return
+
+        selected = pane.current_item_path()
+        self.close_manual_previews()
+        self.slideshow_images = images
+        self.slideshow_source_pane = pane
+        self.slideshow_index = images.index(selected) if selected in images else 0
+        self.central_stack.setCurrentWidget(self.slideshow_widget)
+        self._show_slideshow_image()
+        self.slideshow_widget.setFocus()
+        fm_log("slideshow.open", directory=directory, images=len(images), index=self.slideshow_index)
+
+    def _show_slideshow_image(self) -> None:
+        if not self.slideshow_images or self.slideshow_index < 0:
+            return
+        path = self.slideshow_images[self.slideshow_index]
+        self.slideshow_pixmap = QPixmap(str(path))
+        self.slideshow_label.setToolTip(str(path))
+        self.slideshow_status.setText(f"{path.name} - {self.slideshow_index + 1} / {len(self.slideshow_images)}")
+        if self.slideshow_pixmap.isNull():
+            self.slideshow_label.clear()
+            self.slideshow_label.setText(f"Unable to display {path.name}")
+            return
+        self.slideshow_label.setText("")
+        self._rescale_slideshow_image()
+
+    def _rescale_slideshow_image(self) -> None:
+        if self.slideshow_pixmap.isNull():
+            return
+        available = QSize(max(1, self.slideshow_label.width()), max(1, self.slideshow_label.height()))
+        self.slideshow_label.setPixmap(
+            self.slideshow_pixmap.scaled(
+                available,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+
+    def advance_slideshow(self, step: int) -> None:
+        if not self.slideshow_images:
+            return
+        self.slideshow_index = (self.slideshow_index + step) % len(self.slideshow_images)
+        self._show_slideshow_image()
+
+    def close_slideshow(self) -> bool:
+        if not self.slideshow_images:
+            return False
+        source_pane = self.slideshow_source_pane or self.active_pane
+        fm_log("slideshow.close", index=self.slideshow_index)
+        self.central_stack.setCurrentWidget(self.splitter)
+        self.slideshow_images = []
+        self.slideshow_index = -1
+        self.slideshow_source_pane = None
+        self.slideshow_pixmap = QPixmap()
+        self.slideshow_label.clear()
+        self.slideshow_status.clear()
+        source_pane.current_view().setFocus()
+        return True
 
     def close_manual_previews(self) -> bool:
         closed = False
