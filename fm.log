@@ -2936,3 +2936,89 @@
 2026-07-06T13:44:44.566 thread=140370492091328 event=operation.completed.signal pane='Left' operation='copy' completed=1
 2026-07-06T13:44:44.567 thread=140370492091328 event=operation.end active=0 queued=0
 2026-07-06T13:44:44.567 thread=140370492091328 event=operation.finish pane='Left' operation='copy' completed=1 warning=None
+2026-07-06T16:38:21.419 thread=140370492091328 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-06T16:38:28.594 thread=140370492091328 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb') right=PosixPath('/home/xircon/dmnts/htpc-mech') left_fs=66309 right_fs=108 different=True
+2026-07-06T16:41:21.527 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:41:21.528 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:41:24.634 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:41:24.635 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:41:32.599 thread=140370492091328 event=pane.filesystem_tint left=PosixPath('/home/xircon/Pictures') right=PosixPath('/home/xircon/dmnts/htpc-mech') left_fs=66306 right_fs=108 different=True
+2026-07-06T16:41:41.201 thread=140370492091328 event=pane.filesystem_tint left=PosixPath('/home/xircon/Pictures/Screenshots') right=PosixPath('/home/xircon/dmnts/htpc-mech') left_fs=66306 right_fs=108 different=True
+2026-07-06T16:41:47.551 thread=140370492091328 event=pane.filesystem_tint left=PosixPath('/home/xircon/Pictures') right=PosixPath('/home/xircon/dmnts/htpc-mech') left_fs=66306 right_fs=108 different=True
+2026-07-06T16:42:03.130 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:42:03.130 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:42:09.138 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:42:09.139 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:42:13.577 thread=140370492091328 event=pane.filesystem_tint left=PosixPath('/home/xircon/Pictures/Screenshots') right=PosixPath('/home/xircon/dmnts/htpc-mech') left_fs=66306 right_fs=108 different=True
+2026-07-06T16:42:19.806 thread=140370492091328 event=pane.filesystem_tint left=PosixPath('/home/xircon/Pictures') right=PosixPath('/home/xircon/dmnts/htpc-mech') left_fs=66306 right_fs=108 different=True
+2026-07-06T16:42:22.887 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:42:22.888 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:42:30.858 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:42:30.859 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:42:39.982 thread=140370492091328 event=pane.filesystem_tint left=PosixPath('/home/xircon/Pictures/Screenshots') right=PosixPath('/home/xircon/dmnts/htpc-mech') left_fs=66306 right_fs=108 different=True
+2026-07-06T16:42:43.474 thread=140370492091328 event=pane.filesystem_tint left=PosixPath('/home/xircon/Pictures') right=PosixPath('/home/xircon/dmnts/htpc-mech') left_fs=66306 right_fs=108 different=True
+2026-07-06T16:42:53.901 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:42:53.901 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:43:08.342 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:43:08.343 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:43:16.168 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:43:16.169 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T16:44:23.131 thread=140370492091328 event=pane.filesystem_tint left=PosixPath('/home/xircon/Pictures/flameshot') right=PosixPath('/home/xircon/dmnts/htpc-mech') left_fs=66306 right_fs=108 different=True
+2026-07-06T16:44:47.493 thread=140370492091328 event=pane.filesystem_tint left=PosixPath('/home/xircon/Pictures/flameshot') right=PosixPath('/home/xircon/dmnts/twotb/scripts') left_fs=66306 right_fs=66309 different=True
+2026-07-06T16:45:03.748 thread=140370492091328 event=pane.filesystem_tint left=PosixPath('/home/xircon/Pictures/flameshot') right=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside') left_fs=66306 right_fs=66309 different=True
+2026-07-06T16:45:13.064 thread=140370492091328 event=pane.filesystem_tint left=PosixPath('/home/xircon/Pictures/flameshot') right=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm') left_fs=66306 right_fs=66309 different=True
+2026-07-06T16:45:17.553 thread=140370492091328 event=clipboard.paste pane='Right' source='internal' operation='copy' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/720p']
+2026-07-06T16:45:17.553 thread=140370492091328 event=copy.request pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/720p']
+2026-07-06T16:45:17.553 thread=140370492091328 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p') destination=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p')
+2026-07-06T16:45:17.553 thread=140370492091328 event=copy.start_dialog pane='Right' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/720p', '/home/xircon/dmnts/twotb/scripts/pyside/fm/720p')]
+2026-07-06T16:45:17.553 thread=140370492091328 event=operation.dialog.create pane='Right' operation='copy' targets=1 title='Copying files...'
+2026-07-06T16:45:17.553 thread=140370492091328 event=operation.begin active=1 queued=0
+2026-07-06T16:45:17.557 thread=140370492091328 event=operation.thread.started pane='Right' operation='copy' targets=1
+2026-07-06T16:45:17.557 thread=140369150858944 event=operation.worker.start operation='copy' targets=1
+2026-07-06T16:45:17.560 thread=140369150858944 event=operation.worker.sized operation='copy' total_bytes=40815633763 total_units=622798
+2026-07-06T16:45:17.560 thread=140369150858944 event=operation.target.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p')
+2026-07-06T16:45:17.561 thread=140369150858944 event=copy.directory.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p')
+2026-07-06T16:45:17.563 thread=140369150858944 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E22_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E22_x265_720p_BluRay_30NAMA.mkv')
+2026-07-06T16:45:18.249 thread=140369150858944 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E22_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E22_x265_720p_BluRay_30NAMA.mkv') bytes=278607333 elapsed_seconds=0.686
+2026-07-06T16:45:18.249 thread=140369150858944 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E01_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E01_x265_720p_BluRay_30NAMA.mkv')
+2026-07-06T16:45:19.010 thread=140369150858944 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E01_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E01_x265_720p_BluRay_30NAMA.mkv') bytes=286617254 elapsed_seconds=0.762
+2026-07-06T16:45:19.011 thread=140369150858944 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E09_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E09_x265_720p_BluRay_30NAMA.mkv')
+2026-07-06T16:45:19.726 thread=140369150858944 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E09_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E09_x265_720p_BluRay_30NAMA.mkv') bytes=280042071 elapsed_seconds=0.715
+2026-07-06T16:45:19.726 thread=140369150858944 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E11_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E11_x265_720p_BluRay_30NAMA.mkv')
+2026-07-06T16:45:21.232 thread=140369150858944 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E11_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E11_x265_720p_BluRay_30NAMA.mkv') bytes=279470760 elapsed_seconds=1.506
+2026-07-06T16:45:21.232 thread=140369150858944 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E20_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E20_x265_720p_BluRay_30NAMA.mkv')
+2026-07-06T16:45:21.877 thread=140369150858944 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E20_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E20_x265_720p_BluRay_30NAMA.mkv') bytes=276510746 elapsed_seconds=0.645
+2026-07-06T16:45:21.878 thread=140369150858944 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E18_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E18_x265_720p_BluRay_30NAMA.mkv')
+2026-07-06T16:45:22.410 thread=140369150858944 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E18_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E18_x265_720p_BluRay_30NAMA.mkv') bytes=270888295 elapsed_seconds=0.532
+2026-07-06T16:45:22.410 thread=140369150858944 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E06_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E06_x265_720p_BluRay_30NAMA.mkv')
+2026-07-06T16:45:22.998 thread=140369150858944 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E06_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E06_x265_720p_BluRay_30NAMA.mkv') bytes=279713681 elapsed_seconds=0.588
+2026-07-06T16:45:22.999 thread=140369150858944 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E05_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E05_x265_720p_BluRay_30NAMA.mkv')
+2026-07-06T16:45:23.544 thread=140369150858944 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E05_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E05_x265_720p_BluRay_30NAMA.mkv') bytes=278782312 elapsed_seconds=0.545
+2026-07-06T16:45:23.544 thread=140369150858944 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/720p/s01/The_Mentalist_S01E10_x265_720p_BluRay_30NAMA.mkv') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/720p/s01/The_Mentalist_S01E10_x265_720p_BluRay_30NAMA.mkv')
+2026-07-06T16:45:23.796 thread=140370492091328 event=operation.cancel_requested operation='copy' targets=1
+2026-07-06T16:45:23.798 thread=140369150858944 event=operation.worker.canceled operation='copy' completed=0
+2026-07-06T16:45:23.799 thread=140370492091328 event=operation.canceled.signal pane='Right' operation='copy' completed=0
+2026-07-06T16:45:23.800 thread=140370492091328 event=operation.end active=0 queued=0
+2026-07-06T16:45:23.800 thread=140370492091328 event=operation.finish pane='Right' operation='copy' completed=0 warning=None
+2026-07-06T16:45:32.408 thread=140370492091328 event=clipboard.copy pane='Left' count=1 paths=['/home/xircon/Pictures/flameshot/2026-07-06_16-42.png']
+2026-07-06T16:45:36.400 thread=140370492091328 event=clipboard.paste pane='Right' source='internal' operation='copy' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm') paths=['/home/xircon/Pictures/flameshot/2026-07-06_16-42.png']
+2026-07-06T16:45:36.400 thread=140370492091328 event=copy.request pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm') paths=['/home/xircon/Pictures/flameshot/2026-07-06_16-42.png']
+2026-07-06T16:45:36.401 thread=140370492091328 event=collision.none source=PosixPath('/home/xircon/Pictures/flameshot/2026-07-06_16-42.png') destination=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/2026-07-06_16-42.png')
+2026-07-06T16:45:36.401 thread=140370492091328 event=copy.start_dialog pane='Right' targets=[('/home/xircon/Pictures/flameshot/2026-07-06_16-42.png', '/home/xircon/dmnts/twotb/scripts/pyside/fm/2026-07-06_16-42.png')]
+2026-07-06T16:45:36.401 thread=140370492091328 event=operation.dialog.create pane='Right' operation='copy' targets=1 title='Copying files...'
+2026-07-06T16:45:36.401 thread=140370492091328 event=operation.begin active=1 queued=0
+2026-07-06T16:45:36.404 thread=140370492091328 event=operation.thread.started pane='Right' operation='copy' targets=1
+2026-07-06T16:45:36.404 thread=140369150858944 event=operation.worker.start operation='copy' targets=1
+2026-07-06T16:45:36.404 thread=140369150858944 event=operation.worker.sized operation='copy' total_bytes=301049 total_units=5
+2026-07-06T16:45:36.405 thread=140369150858944 event=operation.target.start operation='copy' source=PosixPath('/home/xircon/Pictures/flameshot/2026-07-06_16-42.png') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/2026-07-06_16-42.png')
+2026-07-06T16:45:36.405 thread=140369150858944 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/Pictures/flameshot/2026-07-06_16-42.png') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/2026-07-06_16-42.png')
+2026-07-06T16:45:36.405 thread=140369150858944 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/Pictures/flameshot/2026-07-06_16-42.png') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/2026-07-06_16-42.png') bytes=301049 elapsed_seconds=0.001
+2026-07-06T16:45:36.406 thread=140369150858944 event=operation.target.done operation='copy' source=PosixPath('/home/xircon/Pictures/flameshot/2026-07-06_16-42.png') target=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/2026-07-06_16-42.png') done_bytes=301049
+2026-07-06T16:45:36.406 thread=140369150858944 event=operation.worker.done operation='copy' completed=1 elapsed_seconds=0.002 done_bytes=301049
+2026-07-06T16:45:36.409 thread=140370492091328 event=operation.completed.signal pane='Right' operation='copy' completed=1
+2026-07-06T16:45:36.409 thread=140370492091328 event=operation.end active=0 queued=0
+2026-07-06T16:45:36.409 thread=140370492091328 event=operation.finish pane='Right' operation='copy' completed=1 warning=None
+2026-07-06T16:45:42.812 thread=140370492091328 event=operation.begin active=1 queued=0
+2026-07-06T16:45:47.610 thread=140370492091328 event=operation.end active=0 queued=0
+2026-07-06T16:45:55.845 thread=140370492091328 event=operation.begin active=1 queued=0
+2026-07-06T16:45:56.515 thread=140370492091328 event=operation.end active=0 queued=0
