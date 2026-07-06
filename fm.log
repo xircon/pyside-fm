@@ -3022,3 +3022,8 @@
 2026-07-06T16:45:47.610 thread=140370492091328 event=operation.end active=0 queued=0
 2026-07-06T16:45:55.845 thread=140370492091328 event=operation.begin active=1 queued=0
 2026-07-06T16:45:56.515 thread=140370492091328 event=operation.end active=0 queued=0
+2026-07-06T21:39:02.586 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T21:39:02.591 thread=140370492091328 event=side_panel.width.changed width=151
+2026-07-06T21:39:06.460 thread=140370492091328 event=slideshow.open directory=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm') images=2 index=0
+2026-07-06T21:39:26.043 thread=140370492091328 event=slideshow.close index=1
+2026-07-06T21:39:30.968 thread=140370492091328 event=slideshow.open directory=PosixPath('/home/xircon/Pictures/flameshot') images=56 index=43
