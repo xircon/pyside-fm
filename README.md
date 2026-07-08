@@ -21,6 +21,7 @@ This project is developed with AI assistance. Code, UI behavior, documentation, 
 - Drag and drop copy/move between panes.
 - Drag hover highlights a folder drop target; no highlight means dropping into the pane's current folder.
 - Wildcard pane filtering with `Ctrl+S`.
+- Recursive search results pane with `Ctrl+Shift+F`; results behave like selectable files for open, copy, archive, properties, and context menu actions.
 - Active pane zoom with `Z` while a file pane or full preview is focused.
 - Text, image, and PDF previews.
 - Full dual-pane image slideshow for the active directory, opened with `S` and navigated with Left, Right, or Space.
@@ -39,6 +40,7 @@ This project is developed with AI assistance. Code, UI behavior, documentation, 
 - Open With menu using cached desktop entries and cached application icons.
 - Default application editing from file Properties using desktop MIME associations.
 - Persistent fm-only folder emblems.
+- Readable TOML settings at `~/.config/fm/settings.toml`, created automatically on first run if missing.
 - Optional diagnostic logging to `fm.log` in the app folder.
 
 ## Requirements
@@ -247,6 +249,20 @@ S01*
 
 Use an empty wildcard pattern to clear the wildcard filter. Typing in the normal search box clears the wildcard filter. When a wildcard filter is active, a small filter chip appears next to the search box; click it to clear the wildcard filter.
 
+## Recursive Search Results
+
+Press `Ctrl+Shift+F` or choose `Recursive Search...` from the file pane context menu.
+
+Search behavior:
+
+- Searches below the active pane's current folder.
+- Accepts plain text or wildcard patterns.
+- Plain text is treated like `*text*`.
+- Wildcards such as `*.jpg`, `S01*`, or `*invoice*pdf` are matched against item names and relative paths.
+- Hidden files are included only when hidden files are visible in that pane.
+
+Results open as a temporary pane view. You can select results and use normal actions such as Open, Copy, Cut, Archive, Properties, Preview in Other Pane, and Copy Path. Press Escape or click the results chip next to the search box to return to the normal folder view.
+
 ## Context Menu
 
 Right-click in a file pane opens the file context menu.
@@ -261,6 +277,7 @@ Actions are grouped with separators:
 - Paste: paste copied items, or move cut items, into the current pane.
 - Copy Path: copy selected full paths as text, one item per line.
 - Copy Name: copy selected file or folder names as text, one item per line.
+- Recursive Search: search below the active folder and show matches in a temporary results pane.
 - Rename: rename the selected item.
 - Duplicate: duplicate selected items.
 - New Folder: create a folder in the current pane.
@@ -272,7 +289,7 @@ Actions are grouped with separators:
 - Add to Favorites: add selected path to the sidebar favorites.
 - Set Emblem: add or clear a persistent fm-only emblem on a selected folder.
 - Set Note: add or clear a persistent fm-only note on a selected folder.
-- Create Archive: create an archive from selected items.
+- Create Archive: create `.zip`, `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, or `.7z` archives from selected items. `.7z` creation requires `7z` or `7zz`.
 - Extract Here: extract selected archive into the current folder.
 - Extract To: extract selected archive into a new chosen folder.
 - Existing copy/move targets: choose Overwrite, Rename, or Cancel.
@@ -419,6 +436,7 @@ Navigation:
 | Go up | Alt+Up |
 | Focus path bar | Ctrl+L |
 | Focus pane search | Ctrl+F |
+| Recursive search results | Ctrl+Shift+F |
 | Wildcard filter active pane | Ctrl+S |
 | Refresh | Ctrl+R |
 
@@ -483,6 +501,14 @@ Settings include:
 - Diagnostic logging to `fm.log` in the app folder while enabled
 - Folder notes and emblems are saved persistently in app settings
 
+Readable settings are stored in:
+
+```text
+~/.config/fm/settings.toml
+```
+
+Qt window geometry and splitter byte state are still kept internally by Qt settings because they are binary values, but normal preferences are created and updated in the TOML file.
+
 Default terminal:
 
 ```text
@@ -527,6 +553,8 @@ Supported archive extensions:
 .tbz2
 .tar.xz
 .txz
+.7z
+.rar
 ```
 
 Archive actions:
@@ -534,6 +562,8 @@ Archive actions:
 - Create Archive
 - Extract Here
 - Extract To
+
+Creation supports zip, tar-family archives, and `.7z` when `7z` or `7zz` is installed. Extraction supports zip, tar-family archives, `.7z`, and `.rar`; 7z/rar extraction requires `7z`, `7zz`, or `unar`.
 
 ## Development Notes
 

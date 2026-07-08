@@ -3027,3 +3027,140 @@
 2026-07-06T21:39:06.460 thread=140370492091328 event=slideshow.open directory=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm') images=2 index=0
 2026-07-06T21:39:26.043 thread=140370492091328 event=slideshow.close index=1
 2026-07-06T21:39:30.968 thread=140370492091328 event=slideshow.open directory=PosixPath('/home/xircon/Pictures/flameshot') images=56 index=43
+2026-07-07T11:49:32.272 thread=140356791511936 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.11'
+2026-07-07T11:49:32.273 thread=140356791511936 event=app.start version='1.11'
+2026-07-07T11:49:32.717 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Bodybuilding.Babes.21.MADJACKTHEPISSEDPIRATE') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-07T11:49:32.930 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Bodybuilding.Babes.21.MADJACKTHEPISSEDPIRATE') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/The Witcher') left_fs=66309 right_fs=106 different=True
+2026-07-07T11:49:33.213 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Bodybuilding.Babes.21.MADJACKTHEPISSEDPIRATE') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/The Witcher') left_fs=66309 right_fs=106 different=True
+2026-07-07T11:49:33.220 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Bodybuilding.Babes.21.MADJACKTHEPISSEDPIRATE') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/The Witcher') left_fs=66309 right_fs=106 different=True
+2026-07-07T11:49:33.781 thread=140356791511936 event=side_panel.width.restore width=151 actual=151
+2026-07-07T11:49:33.794 thread=140356791511936 event=side_panel.width.restore width=151 actual=151
+2026-07-07T11:49:33.795 thread=140356791511936 event=side_panel.width.restore width=151 actual=151
+2026-07-07T11:49:33.803 thread=140356791511936 event=side_panel.width.restore width=151 actual=151
+2026-07-07T11:49:33.803 thread=140356791511936 event=side_panel.width.restore width=151 actual=151
+2026-07-07T11:49:33.803 thread=140356791511936 event=side_panel.width.restore width=151 actual=151
+2026-07-07T11:49:33.803 thread=140356791511936 event=side_panel.width.restore width=151 actual=151
+2026-07-07T11:49:33.809 thread=140356791511936 event=side_panel.width.restore width=151 actual=151
+2026-07-07T11:49:33.809 thread=140356791511936 event=side_panel.width.restore width=151 actual=151
+2026-07-07T11:49:33.810 thread=140356791511936 event=side_panel.width.restore width=151 actual=151
+2026-07-07T11:49:33.810 thread=140356791511936 event=side_panel.width.restore width=151 actual=151
+2026-07-07T11:49:33.810 thread=140356791511936 event=side_panel.width.restore width=151 actual=151
+2026-07-07T11:49:33.935 thread=140356791511936 event=side_panel.width.restore width=151 actual=151
+2026-07-07T11:49:34.106 thread=140356791511936 event=side_panel.width.restore width=151 actual=151
+2026-07-07T11:49:34.106 thread=140356791511936 event=side_panel.width.restore width=151 actual=151
+2026-07-07T11:49:34.206 thread=140356791511936 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-07T11:49:34.406 thread=140356791511936 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-07T11:49:34.407 thread=140356791511936 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-07T11:49:41.097 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/The Witcher') left_fs=66309 right_fs=106 different=True
+2026-07-07T11:50:11.651 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/twotb/scripts') left_fs=66309 right_fs=66309 different=False
+2026-07-07T11:50:26.359 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside') right=PosixPath('/home/xircon/dmnts/twotb/scripts') left_fs=66309 right_fs=66309 different=False
+2026-07-07T11:50:29.839 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm') right=PosixPath('/home/xircon/dmnts/twotb/scripts') left_fs=66309 right_fs=66309 different=False
+2026-07-07T11:50:32.919 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/zips') right=PosixPath('/home/xircon/dmnts/twotb/scripts') left_fs=66309 right_fs=66309 different=False
+2026-07-07T11:50:36.638 thread=140356791511936 event=side_panel.width.changed width=151
+2026-07-07T11:50:36.638 thread=140356791511936 event=side_panel.width.changed width=151
+2026-07-07T11:50:39.943 thread=140356791511936 event=side_panel.width.changed width=151
+2026-07-07T11:50:39.944 thread=140356791511936 event=side_panel.width.changed width=151
+2026-07-07T11:52:04.773 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/zips') right=PosixPath('/home/xircon/dmnts/twotb/scripts/~') left_fs=66309 right_fs=66309 different=False
+2026-07-07T11:52:06.914 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/zips') right=PosixPath('/home/xircon/dmnts/twotb/scripts/~/.config') left_fs=66309 right_fs=66309 different=False
+2026-07-07T11:52:10.705 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/zips') right=PosixPath('/home/xircon/dmnts/twotb/scripts/~') left_fs=66309 right_fs=66309 different=False
+2026-07-07T11:52:11.270 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/zips') right=PosixPath('/home/xircon/dmnts/twotb/scripts') left_fs=66309 right_fs=66309 different=False
+2026-07-07T11:52:14.775 thread=140356791511936 event=operation.begin active=1 queued=0
+2026-07-07T11:52:15.455 thread=140356791511936 event=operation.end active=0 queued=0
+2026-07-07T11:52:17.046 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/zips') right=PosixPath('/home/xircon/dmnts/twotb/scripts/2026') left_fs=66309 right_fs=66309 different=False
+2026-07-07T11:52:19.101 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/zips') right=PosixPath('/home/xircon/dmnts/twotb/scripts/2026/03') left_fs=66309 right_fs=66309 different=False
+2026-07-07T11:52:21.977 thread=140356791511936 event=side_panel.width.changed width=151
+2026-07-07T11:52:21.977 thread=140356791511936 event=side_panel.width.changed width=151
+2026-07-07T11:52:28.363 thread=140356791511936 event=side_panel.width.changed width=151
+2026-07-07T11:52:28.363 thread=140356791511936 event=side_panel.width.changed width=151
+2026-07-07T11:52:29.871 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/zips') right=PosixPath('/home/xircon/dmnts/twotb/scripts/2026') left_fs=66309 right_fs=66309 different=False
+2026-07-07T11:52:33.540 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/zips') right=PosixPath('/home/xircon/dmnts/twotb/scripts/2026/03') left_fs=66309 right_fs=66309 different=False
+2026-07-07T11:52:51.586 thread=140356791511936 event=side_panel.width.changed width=151
+2026-07-07T11:52:51.587 thread=140356791511936 event=side_panel.width.changed width=151
+2026-07-07T11:53:05.356 thread=140356791511936 event=side_panel.width.changed width=151
+2026-07-07T11:53:05.356 thread=140356791511936 event=side_panel.width.changed width=151
+2026-07-07T11:56:19.046 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/zips') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-07T11:57:20.470 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-07T11:57:41.216 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/Movies') left_fs=66309 right_fs=106 different=True
+2026-07-07T11:57:44.997 thread=140356791511936 event=drag.start pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv']
+2026-07-07T11:57:46.435 thread=140356791511936 event=drop.received pane='Left' action='DropAction.CopyAction' paths=['/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv'] destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed')
+2026-07-07T11:57:46.435 thread=140356791511936 event=drop.copy pane='Left' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed')
+2026-07-07T11:57:46.436 thread=140356791511936 event=copy.request pane='Left' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv']
+2026-07-07T11:57:46.436 thread=140356791511936 event=collision.prompt source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv')
+2026-07-07T11:57:49.001 thread=140356791511936 event=collision.cancel source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv')
+2026-07-07T11:57:49.001 thread=140356791511936 event=copy.cancelled_before_start pane='Left' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed')
+2026-07-07T11:57:49.002 thread=140356791511936 event=drag.done pane='Left' count=1
+2026-07-07T11:57:51.591 thread=140356791511936 event=clipboard.move pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv']
+2026-07-07T11:57:53.238 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies') right=PosixPath('/home/xircon/dmnts/htpc-mech/Movies') left_fs=66309 right_fs=106 different=True
+2026-07-07T11:57:54.964 thread=140356791511936 event=clipboard.paste pane='Left' source='internal' operation='move' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv']
+2026-07-07T11:57:54.965 thread=140356791511936 event=move.request pane='Left' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv']
+2026-07-07T11:57:54.965 thread=140356791511936 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv')
+2026-07-07T11:57:54.965 thread=140356791511936 event=move.start_dialog pane='Left' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv')]
+2026-07-07T11:57:54.965 thread=140356791511936 event=operation.dialog.create pane='Left' operation='move' targets=1 title='Moving files...'
+2026-07-07T11:57:54.965 thread=140356791511936 event=operation.begin active=1 queued=0
+2026-07-07T11:57:54.968 thread=140356791511936 event=operation.thread.started pane='Left' operation='move' targets=1
+2026-07-07T11:57:54.968 thread=140355414554304 event=operation.worker.start operation='move' targets=1
+2026-07-07T11:57:54.968 thread=140355414554304 event=operation.worker.sized operation='move' total_bytes=1906036828 total_units=29084
+2026-07-07T11:57:54.969 thread=140355414554304 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv')
+2026-07-07T11:57:54.969 thread=140355414554304 event=move.start source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv')
+2026-07-07T11:57:54.969 thread=140355414554304 event=move.rename.try source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv') source_size=1906036828
+2026-07-07T11:57:54.970 thread=140355414554304 event=move.rename.done source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv') elapsed_seconds=0.001
+2026-07-07T11:57:54.970 thread=140355414554304 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The.Death.Of.Robin.hood.2026.1080p.HC.DCPRip.AAC5.1-NeoNoir.mkv') done_bytes=1906036828
+2026-07-07T11:57:54.970 thread=140355414554304 event=operation.worker.done operation='move' completed=1 elapsed_seconds=0.002 done_bytes=1906036828
+2026-07-07T11:57:54.976 thread=140356791511936 event=operation.completed.signal pane='Left' operation='move' completed=1
+2026-07-07T11:57:54.977 thread=140356791511936 event=operation.end active=0 queued=0
+2026-07-07T11:57:54.977 thread=140356791511936 event=operation.finish pane='Left' operation='move' completed=1 warning=None
+2026-07-07T12:05:16.991 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/Movies') left_fs=66309 right_fs=106 different=True
+2026-07-07T12:05:17.738 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/Movies') left_fs=66309 right_fs=106 different=True
+2026-07-07T12:05:17.821 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/Movies') left_fs=66309 right_fs=106 different=True
+2026-07-07T12:05:17.909 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/Movies') left_fs=66309 right_fs=106 different=True
+2026-07-07T12:10:44.311 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House.of.the.Dragon.S03E03.1080p.x265-ELiTE') right=PosixPath('/home/xircon/dmnts/htpc-mech/Movies') left_fs=66309 right_fs=106 different=True
+2026-07-07T12:10:49.587 thread=140356791511936 event=clipboard.copy pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/House.of.the.Dragon.S03E03.1080p.x265-ELiTE/House.of.the.Dragon.S03E03.1080p.x265-ELiTE.mkv']
+2026-07-07T12:10:51.526 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/Movies') left_fs=66309 right_fs=106 different=True
+2026-07-07T12:10:56.447 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03') right=PosixPath('/home/xircon/dmnts/htpc-mech/Movies') left_fs=66309 right_fs=106 different=True
+2026-07-07T12:10:59.935 thread=140356791511936 event=clipboard.paste pane='Left' source='internal' operation='copy' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/House.of.the.Dragon.S03E03.1080p.x265-ELiTE/House.of.the.Dragon.S03E03.1080p.x265-ELiTE.mkv']
+2026-07-07T12:10:59.935 thread=140356791511936 event=copy.request pane='Left' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/House.of.the.Dragon.S03E03.1080p.x265-ELiTE/House.of.the.Dragon.S03E03.1080p.x265-ELiTE.mkv']
+2026-07-07T12:10:59.935 thread=140356791511936 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House.of.the.Dragon.S03E03.1080p.x265-ELiTE/House.of.the.Dragon.S03E03.1080p.x265-ELiTE.mkv') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03/House.of.the.Dragon.S03E03.1080p.x265-ELiTE.mkv')
+2026-07-07T12:10:59.935 thread=140356791511936 event=copy.start_dialog pane='Left' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/House.of.the.Dragon.S03E03.1080p.x265-ELiTE/House.of.the.Dragon.S03E03.1080p.x265-ELiTE.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03/House.of.the.Dragon.S03E03.1080p.x265-ELiTE.mkv')]
+2026-07-07T12:10:59.935 thread=140356791511936 event=operation.dialog.create pane='Left' operation='copy' targets=1 title='Copying files...'
+2026-07-07T12:10:59.935 thread=140356791511936 event=operation.begin active=1 queued=0
+2026-07-07T12:10:59.938 thread=140356791511936 event=operation.thread.started pane='Left' operation='copy' targets=1
+2026-07-07T12:10:59.938 thread=140355379230400 event=operation.worker.start operation='copy' targets=1
+2026-07-07T12:10:59.938 thread=140355379230400 event=operation.worker.sized operation='copy' total_bytes=780682301 total_units=11913
+2026-07-07T12:10:59.938 thread=140355379230400 event=operation.target.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House.of.the.Dragon.S03E03.1080p.x265-ELiTE/House.of.the.Dragon.S03E03.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03/House.of.the.Dragon.S03E03.1080p.x265-ELiTE.mkv')
+2026-07-07T12:10:59.939 thread=140355379230400 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House.of.the.Dragon.S03E03.1080p.x265-ELiTE/House.of.the.Dragon.S03E03.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03/House.of.the.Dragon.S03E03.1080p.x265-ELiTE.mkv')
+2026-07-07T12:11:00.854 thread=140355379230400 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House.of.the.Dragon.S03E03.1080p.x265-ELiTE/House.of.the.Dragon.S03E03.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03/House.of.the.Dragon.S03E03.1080p.x265-ELiTE.mkv') bytes=780682301 elapsed_seconds=0.915
+2026-07-07T12:11:00.854 thread=140355379230400 event=operation.target.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House.of.the.Dragon.S03E03.1080p.x265-ELiTE/House.of.the.Dragon.S03E03.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03/House.of.the.Dragon.S03E03.1080p.x265-ELiTE.mkv') done_bytes=780682301
+2026-07-07T12:11:00.854 thread=140355379230400 event=operation.worker.done operation='copy' completed=1 elapsed_seconds=0.916 done_bytes=780682301
+2026-07-07T12:11:00.856 thread=140356791511936 event=operation.completed.signal pane='Left' operation='copy' completed=1
+2026-07-07T12:11:00.856 thread=140356791511936 event=operation.end active=0 queued=0
+2026-07-07T12:11:00.856 thread=140356791511936 event=operation.finish pane='Left' operation='copy' completed=1 warning=None
+2026-07-07T15:32:05.249 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03') right=PosixPath('/home/xircon/dmnts') left_fs=66309 right_fs=66306 different=True
+2026-07-07T15:32:05.691 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03') right=PosixPath('/home/xircon/dmnts') left_fs=66309 right_fs=66306 different=True
+2026-07-07T15:32:07.639 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03') right=PosixPath('/home/xircon/dmnts/twotb') left_fs=66309 right_fs=66309 different=False
+2026-07-07T15:32:14.348 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03') right=PosixPath('/home/xircon/dmnts/twotb/Downloads') left_fs=66309 right_fs=66309 different=False
+2026-07-07T15:32:19.392 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads') left_fs=66309 right_fs=66309 different=False
+2026-07-07T15:32:27.229 thread=140356791511936 event=clipboard.move pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]']
+2026-07-07T15:32:28.658 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails') left_fs=66309 right_fs=66309 different=False
+2026-07-07T15:32:31.033 thread=140356791511936 event=clipboard.paste pane='Right' source='internal' operation='move' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]']
+2026-07-07T15:32:31.033 thread=140356791511936 event=move.request pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]']
+2026-07-07T15:32:31.034 thread=140356791511936 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]')
+2026-07-07T15:32:31.034 thread=140356791511936 event=move.start_dialog pane='Right' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]', '/home/xircon/dmnts/twotb/Downloads/.thumbnails/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]')]
+2026-07-07T15:32:31.034 thread=140356791511936 event=operation.dialog.create pane='Right' operation='move' targets=1 title='Moving files...'
+2026-07-07T15:32:31.034 thread=140356791511936 event=operation.begin active=1 queued=0
+2026-07-07T15:32:31.037 thread=140356791511936 event=operation.thread.started pane='Right' operation='move' targets=1
+2026-07-07T15:32:31.037 thread=140355236263616 event=operation.worker.start operation='move' targets=1
+2026-07-07T15:32:31.038 thread=140355236263616 event=operation.worker.sized operation='move' total_bytes=3195577963 total_units=48761
+2026-07-07T15:32:31.038 thread=140355236263616 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]')
+2026-07-07T15:32:31.038 thread=140355236263616 event=move.start source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]')
+2026-07-07T15:32:31.041 thread=140355236263616 event=move.rename.try source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]') source_size=3195577963
+2026-07-07T15:32:31.041 thread=140355236263616 event=move.rename.done source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]') elapsed_seconds=0.003
+2026-07-07T15:32:31.041 thread=140355236263616 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]') done_bytes=3195577963
+2026-07-07T15:32:31.041 thread=140355236263616 event=operation.worker.done operation='move' completed=1 elapsed_seconds=0.004 done_bytes=3195577963
+2026-07-07T15:32:31.044 thread=140356791511936 event=operation.completed.signal pane='Right' operation='move' completed=1
+2026-07-07T15:32:31.045 thread=140356791511936 event=operation.end active=0 queued=0
+2026-07-07T15:32:31.045 thread=140356791511936 event=operation.finish pane='Right' operation='move' completed=1 warning=None
+2026-07-07T15:32:41.131 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]') left_fs=66309 right_fs=66309 different=False
+2026-07-07T15:33:13.810 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts') left_fs=66309 right_fs=66306 different=True
+2026-07-07T15:33:24.787 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts') right=PosixPath('/home/xircon/dmnts') left_fs=66306 right_fs=66306 different=False
+2026-07-07T18:54:10.858 thread=140356791511936 event=side_panel.width.changed width=151
+2026-07-07T18:54:10.863 thread=140356791511936 event=side_panel.width.changed width=151

@@ -7,6 +7,7 @@ import subprocess
 import sys
 import argparse
 import configparser
+import fnmatch
 import hashlib
 import json
 import mimetypes
@@ -15,6 +16,7 @@ import stat
 import tarfile
 import threading
 import time
+import tomllib
 import zipfile
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -71,9 +73,11 @@ from PySide6.QtWidgets import (
 APP_ID = "org.ai.fm"
 APP_ORG = "org.ai"
 APP_NAME = "fm"
-APP_VERSION = "1.10"
+APP_VERSION = "1.11"
 APP_DIR = Path(__file__).resolve().parent
 APP_LOG_PATH = APP_DIR / "fm.log"
+CONFIG_DIR = Path.home() / ".config" / "fm"
+CONFIG_PATH = CONFIG_DIR / "settings.toml"
 FM_LOGGING_ENABLED = False
 FM_LOG_LOCK = threading.Lock()
 GNOME_COPIED_FILES_MIME = "x-special/gnome-copied-files"
@@ -140,6 +144,176 @@ def fm_log(event: str, **details) -> None:
         pass
 
 
+def _toml_escape(text: str) -> str:
+    return json.dumps(text)
+
+
+def _toml_value(value) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, list):
+        return "[" + ", ".join(_toml_value(item) for item in value) + "]"
+    return _toml_escape(str(value))
+
+
+def _toml_table_name(parts: list[str]) -> str:
+    return ".".join(part.replace('"', '\\"') for part in parts)
+
+
+def _write_toml_section(lines: list[str], path: list[str], values: dict) -> None:
+    scalar_items = {key: value for key, value in values.items() if not isinstance(value, (dict, list))}
+    dict_items = {key: value for key, value in values.items() if isinstance(value, dict)}
+    list_items = {key: value for key, value in values.items() if isinstance(value, list)}
+    if path and scalar_items:
+        lines.append(f"[{_toml_table_name(path)}]")
+        for key, value in sorted(scalar_items.items()):
+            lines.append(f"{key} = {_toml_value(value)}")
+        lines.append("")
+    for key, value in sorted(list_items.items()):
+        if value and all(isinstance(item, dict) for item in value):
+            for item in value:
+                lines.append(f"[[{_toml_table_name([*path, key])}]]")
+                for item_key, item_value in sorted(item.items()):
+                    if not isinstance(item_value, (dict, list)):
+                        lines.append(f"{item_key} = {_toml_value(item_value)}")
+                lines.append("")
+        elif path:
+            lines.append(f"[{_toml_table_name(path)}]")
+            lines.append(f"{key} = {_toml_value(value)}")
+            lines.append("")
+    for key, value in sorted(dict_items.items()):
+        _write_toml_section(lines, [*path, key], value)
+
+
+def write_toml(path: Path, data: dict) -> None:
+    lines = [
+        "# fm settings",
+        "# This file is created automatically on first run and updated when settings change.",
+        "",
+    ]
+    root_values = {key: value for key, value in data.items() if not isinstance(value, dict)}
+    for key, value in sorted(root_values.items()):
+        lines.append(f"{key} = {_toml_value(value)}")
+    if root_values:
+        lines.append("")
+    for key, value in sorted(data.items()):
+        if isinstance(value, dict):
+            _write_toml_section(lines, [key], value)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+
+
+class TomlSettings:
+    def __init__(self, fallback: QSettings, path: Path = CONFIG_PATH) -> None:
+        self.fallback = fallback
+        self.path = path
+        self.data: dict = {}
+        self._load_or_create()
+
+    def _load_or_create(self) -> None:
+        if self.path.exists():
+            try:
+                self.data = tomllib.loads(self.path.read_text(encoding="utf-8"))
+                if isinstance(self.data, dict):
+                    return
+            except (OSError, tomllib.TOMLDecodeError):
+                pass
+        self.data = self._migrate_from_qsettings()
+        self.sync()
+
+    def _migrate_from_qsettings(self) -> dict:
+        keys = [
+            "theme",
+            "showHidden",
+            "previewEnabled",
+            "iconLayout",
+            "favorites",
+            "favoriteNamesJson",
+            "recentPaths",
+            "terminal/command",
+            "terminal/args",
+            "userButtonsJson",
+            "dualBookmarksJson",
+            "folderEmblemsJson",
+            "folderNotesJson",
+            "confirmQuitOperations",
+            "fileLoggingEnabled",
+            "sidePanel/visible",
+            "sidePanel/mode",
+            "sidePanel/width",
+            "left/path",
+            "left/view",
+            "left/sortField",
+            "left/sortDescending",
+            "left/sortReversed",
+            "left/iconZoom",
+            "left/showHidden",
+            "right/path",
+            "right/view",
+            "right/sortField",
+            "right/sortDescending",
+            "right/sortReversed",
+            "right/iconZoom",
+            "right/showHidden",
+        ]
+        migrated: dict = {}
+        for key in keys:
+            value = self.fallback.value(key, None)
+            if value is None:
+                continue
+            self._set_nested(migrated, key, self._plain_value(value))
+        return migrated
+
+    def _plain_value(self, value):
+        if isinstance(value, (bool, int, float, str, list)):
+            return value
+        return str(value)
+
+    def _get_nested(self, key: str):
+        current = self.data
+        for part in key.split("/"):
+            if not isinstance(current, dict) or part not in current:
+                return None
+            current = current[part]
+        return current
+
+    def _set_nested(self, data: dict, key: str, value) -> None:
+        parts = key.split("/")
+        current = data
+        for part in parts[:-1]:
+            next_value = current.get(part)
+            if not isinstance(next_value, dict):
+                next_value = {}
+                current[part] = next_value
+            current = next_value
+        current[parts[-1]] = self._plain_value(value)
+
+    def value(self, key: str, default=None, type=None):
+        if key in QT_BINARY_SETTINGS:
+            return self.fallback.value(key, default)
+        value = self._get_nested(key)
+        if value is None:
+            return self.fallback.value(key, default, type=type) if type is not None else self.fallback.value(key, default)
+        if type is list and not isinstance(value, list):
+            return default if default is not None else []
+        return value
+
+    def setValue(self, key: str, value) -> None:
+        if key in QT_BINARY_SETTINGS:
+            self.fallback.setValue(key, value)
+            return
+        self._set_nested(self.data, key, value)
+
+    def sync(self) -> None:
+        try:
+            write_toml(self.path, self.data)
+        except OSError as exc:
+            fm_log("settings.toml.write_failed", path=self.path, error=repr(exc))
+        self.fallback.sync()
+
+
 def filesystem_id(path: Path) -> int | None:
     try:
         return path.stat().st_dev
@@ -181,7 +355,10 @@ ARCHIVE_EXTENSIONS = {
     ".tbz2",
     ".tar.xz",
     ".txz",
+    ".7z",
+    ".rar",
 }
+QT_BINARY_SETTINGS = {"geometry", "windowState", "splitter", "left/previewSplitter", "right/previewSplitter"}
 
 THEME_STYLES = {
     "Light": """
@@ -765,6 +942,50 @@ def create_zip_archive(paths: list[Path], destination: Path) -> None:
             add_to_zip(zip_file, path, Path(path.name))
 
 
+def create_tar_archive(paths: list[Path], destination: Path, mode: str) -> None:
+    with tarfile.open(destination, mode) as archive:
+        for path in paths:
+            archive.add(path, arcname=path.name, recursive=True)
+
+
+def create_external_archive(paths: list[Path], destination: Path) -> None:
+    if destination.suffix.lower() == ".7z":
+        executable = shutil.which("7z") or shutil.which("7zz")
+        if not executable:
+            raise ValueError("7z or 7zz is required to create .7z archives.")
+        result = subprocess.run(
+            [executable, "a", str(destination), *[str(path) for path in paths]],
+            cwd=str(destination.parent),
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            raise ValueError((result.stderr or result.stdout or "7z failed.").strip())
+        return
+    raise ValueError(f"Archive creation is not supported for {destination.name}")
+
+
+def create_archive(paths: list[Path], destination: Path) -> None:
+    suffix = archive_suffix(destination)
+    if suffix == ".zip":
+        create_zip_archive(paths, destination)
+        return
+    tar_modes = {
+        ".tar": "w",
+        ".tar.gz": "w:gz",
+        ".tgz": "w:gz",
+        ".tar.bz2": "w:bz2",
+        ".tbz2": "w:bz2",
+        ".tar.xz": "w:xz",
+        ".txz": "w:xz",
+    }
+    if suffix in tar_modes:
+        create_tar_archive(paths, destination, tar_modes[suffix])
+        return
+    create_external_archive(paths, destination)
+
+
 def extract_archive(path: Path, destination: Path) -> None:
     destination.mkdir(parents=True, exist_ok=True)
     root = destination.resolve()
@@ -781,11 +1002,23 @@ def extract_archive(path: Path, destination: Path) -> None:
                 ensure_safe(member)
             archive.extractall(destination)
         return
-    if suffix:
+    if suffix in {".tar", ".tar.gz", ".tgz", ".tar.bz2", ".tbz2", ".tar.xz", ".txz"}:
         with tarfile.open(path) as archive:
             for member in archive.getmembers():
                 ensure_safe(member.name)
             archive.extractall(destination)
+        return
+    if suffix in {".7z", ".rar"}:
+        executable = shutil.which("7z") or shutil.which("7zz") or shutil.which("unar")
+        if not executable:
+            raise ValueError("7z, 7zz, or unar is required to extract this archive.")
+        if Path(executable).name == "unar":
+            command = [executable, "-o", str(destination), str(path)]
+        else:
+            command = [executable, "x", f"-o{destination}", str(path)]
+        result = subprocess.run(command, check=False, capture_output=True, text=True)
+        if result.returncode != 0:
+            raise ValueError((result.stderr or result.stdout or "Archive extraction failed.").strip())
         return
     raise ValueError(f"Unsupported archive: {path}")
 
@@ -1614,6 +1847,7 @@ class HelpDialog(QDialog):
                 ("Go up", "Alt+Up"),
                 ("Focus path bar", "Ctrl+L"),
                 ("Focus pane search", "Ctrl+F"),
+                ("Recursive search results", "Ctrl+Shift+F"),
                 ("Wildcard filter active pane", "Ctrl+S"),
                 ("Refresh", "Ctrl+R"),
             ],
@@ -1678,6 +1912,7 @@ class HelpDialog(QDialog):
               <li>Use each pane's Sort button beside the view selector to sort by name, size, type, or modification date.</li>
               <li>Right-click files, folders, sidebar entries, or tree rows for context actions.</li>
               <li>Press Ctrl+S to filter the active pane by wildcard patterns such as <code>*.mkv</code> or <code>*.jpg;*.png</code>. Empty input clears the wildcard filter.</li>
+              <li>Press Ctrl+Shift+F to recursively search the active folder. Results open as a temporary pane view and normal file actions work on those results.</li>
             </ul>
             <h3>Selection</h3>
             <ul>
@@ -1731,8 +1966,9 @@ class HelpDialog(QDialog):
               <li><b>Copy / Cut / Paste</b>: clipboard actions grouped near the top of the menu.</li>
               <li><b>Copy Path / Copy Name</b>: copy selected full paths or file names as text, one item per line.</li>
               <li><b>Rename / Duplicate / New Folder / New File</b>: common item management actions.</li>
-              <li><b>Create Archive</b>: create a zip archive from selected items.</li>
-              <li><b>Extract Here / Extract To</b>: extract supported archives.</li>
+              <li><b>Recursive Search</b>: search below the active folder and show matches in a temporary results pane.</li>
+              <li><b>Create Archive</b>: create <code>.zip</code>, <code>.tar</code>, <code>.tar.gz</code>, <code>.tar.bz2</code>, <code>.tar.xz</code>, or <code>.7z</code> archives from selected items. <code>.7z</code> requires 7z or 7zz.</li>
+              <li><b>Extract Here / Extract To</b>: extract zip, tar-family, 7z, and rar archives. 7z/rar extraction requires 7z, 7zz, or unar.</li>
               <li><b>Add to Favorites</b>: add the selected path to the sidebar.</li>
               <li><b>Open in Other Pane</b>: open the selected folder in the opposite pane.</li>
               <li><b>Set Emblem</b>: add or clear an fm-only persistent emblem on a folder.</li>
@@ -1792,6 +2028,7 @@ class HelpDialog(QDialog):
             """
             <h2>Settings</h2>
             <ul>
+              <li>Readable settings are stored in <code>~/.config/fm/settings.toml</code>. The file is created automatically on first run if missing.</li>
               <li><b>Theme</b>: Light, Dark, or Very Dark.</li>
               <li><b>Icon layout</b>: Compact, Normal, or Spacious icon-grid spacing.</li>
               <li><b>Image thumbnails</b>: preserve image proportions. Image-heavy folders use a local <code>.thumbnails</code> cache for faster repeat loading.</li>
@@ -2795,6 +3032,8 @@ class FilePane(QWidget):
         self.sort_reversed = False
         self.search_text = ""
         self.wildcard_filter_text = ""
+        self.search_results: list[Path] = []
+        self.search_results_pattern = ""
         self.preview_enabled = True
         self.last_preview_height = 140
         self.preview_source_path: Path | None = None
@@ -2824,6 +3063,10 @@ class FilePane(QWidget):
         self.wildcard_filter_chip.setVisible(False)
         self.wildcard_filter_chip.setToolTip("Click to clear wildcard filter")
         self.wildcard_filter_chip.clicked.connect(lambda _checked=False, pane=self: pane.set_wildcard_filter(""))
+        self.search_results_chip = QPushButton()
+        self.search_results_chip.setVisible(False)
+        self.search_results_chip.setToolTip("Click to close recursive search results")
+        self.search_results_chip.clicked.connect(lambda _checked=False, pane=self: pane.close_search_results())
 
         self.view_combo = QComboBox()
         self.view_combo.addItems(VIEW_MODES)
@@ -2854,6 +3097,7 @@ class FilePane(QWidget):
         top.addWidget(self.path_edit, 1)
         top.addWidget(self.search_edit)
         top.addWidget(self.wildcard_filter_chip)
+        top.addWidget(self.search_results_chip)
         top.addWidget(self.zoom_out_button)
         top.addWidget(self.zoom_in_button)
         top.addWidget(self.view_combo)
@@ -2882,6 +3126,17 @@ class FilePane(QWidget):
         self.detail_view.setSortingEnabled(True)
         self.detail_view.header().sortIndicatorChanged.connect(lambda column, order, pane=self: pane._header_sort_changed(column, order))
 
+        self.search_results_view = QListWidget()
+        self.search_results_view.setIconSize(QSize(32, 32))
+        self.search_results_view.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.search_results_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.search_results_view.customContextMenuRequested.connect(
+            lambda position, pane=self: pane._show_context_menu_for_view(pane.search_results_view, position)
+        )
+        self.search_results_view.itemActivated.connect(lambda item, pane=self: pane.open_search_result_item(item))
+        self.search_results_view.itemDoubleClicked.connect(lambda item, pane=self: pane.open_search_result_item(item))
+        self.search_results_view.itemSelectionChanged.connect(lambda pane=self: pane._update_status())
+
         self.views: list[QAbstractItemView] = [self.icon_view, self.list_view, self.detail_view]
         for view in self.views:
             view.setModel(self.model)
@@ -2908,6 +3163,7 @@ class FilePane(QWidget):
         self.stack.addWidget(self.icon_view)
         self.stack.addWidget(self.list_view)
         self.stack.addWidget(self.detail_view)
+        self.stack.addWidget(self.search_results_view)
         self.view_stack_count = self.stack.count()
 
         self.status_label = QLabel()
@@ -3059,7 +3315,7 @@ class FilePane(QWidget):
         self.search_text = text
         if text.strip():
             self.wildcard_filter_text = ""
-            self.wildcard_filter_chip.clear()
+            self.wildcard_filter_chip.setText("")
             self.wildcard_filter_chip.setVisible(False)
         self._tagged_paths.clear()
         self._apply_name_filter()
@@ -3077,11 +3333,97 @@ class FilePane(QWidget):
             self.wildcard_filter_chip.setText(f"Filter: {self.wildcard_filter_text}  x")
             self.wildcard_filter_chip.setVisible(True)
         else:
-            self.wildcard_filter_chip.clear()
+            self.wildcard_filter_chip.setText("")
             self.wildcard_filter_chip.setVisible(False)
         self._tagged_paths.clear()
         self._apply_name_filter()
         self._update_status()
+
+    def recursive_search(self) -> None:
+        current = self.search_results_pattern or self.search_text or self.wildcard_filter_text or "*"
+        pattern, ok = get_name(self, "Recursive Search", "Name or wildcard", current)
+        if not ok:
+            return
+        pattern = pattern.strip()
+        if not pattern:
+            return
+        search_pattern = pattern if any(mark in pattern for mark in "*?[]") else f"*{pattern}*"
+        root = self.current_path()
+        progress = QProgressDialog("Searching...", "Cancel", 0, 0, self)
+        widen_progress_dialog(progress)
+        progress.setWindowModality(Qt.WindowModality.WindowModal)
+        progress.setMinimumDuration(0)
+        progress.show()
+        results: list[Path] = []
+        checked = 0
+        try:
+            for dirpath, dirnames, filenames in os.walk(root):
+                QApplication.processEvents()
+                if progress.wasCanceled():
+                    return
+                if not self.show_hidden:
+                    dirnames[:] = [name for name in dirnames if not name.startswith(".")]
+                    filenames = [name for name in filenames if not name.startswith(".")]
+                entries = [(name, True) for name in dirnames] + [(name, False) for name in filenames]
+                for name, _is_dir in entries:
+                    path = Path(dirpath) / name
+                    try:
+                        relative = str(path.relative_to(root))
+                    except ValueError:
+                        relative = name
+                    candidate_name = name.casefold()
+                    candidate_relative = relative.casefold()
+                    wanted = search_pattern.casefold()
+                    if fnmatch.fnmatchcase(candidate_name, wanted) or fnmatch.fnmatchcase(candidate_relative, wanted):
+                        results.append(path)
+                    checked += 1
+                    if checked % 100 == 0:
+                        progress.setLabelText(f"Searching {root}\nChecked {checked} items, found {len(results)}")
+                        QApplication.processEvents()
+                        if progress.wasCanceled():
+                            return
+        finally:
+            progress.close()
+        self.show_search_results(pattern, results)
+
+    def show_search_results(self, pattern: str, results: list[Path]) -> None:
+        self.search_results = results
+        self.search_results_pattern = pattern
+        self.search_results_view.clear()
+        icon_provider = QFileIconProvider()
+        root = self.current_path()
+        for path in results:
+            try:
+                label = str(path.relative_to(root))
+            except ValueError:
+                label = str(path)
+            item = QListWidgetItem(label)
+            item.setIcon(icon_provider.icon(QFileInfo(str(path))))
+            item.setData(Qt.ItemDataRole.UserRole, str(path))
+            item.setToolTip(str(path))
+            self.search_results_view.addItem(item)
+        self.search_results_chip.setText(f"Results: {pattern} ({len(results)})  x")
+        self.search_results_chip.setVisible(True)
+        self.stack.setCurrentWidget(self.search_results_view)
+        self.search_results_view.setFocus()
+        if self.search_results_view.count():
+            self.search_results_view.setCurrentRow(0)
+        self._update_status()
+        fm_log("search.recursive.done", pane=self.title, root=root, pattern=pattern, results=len(results))
+
+    def close_search_results(self, restore_view: bool = True) -> bool:
+        if not self.search_results and self.stack.currentWidget() is not self.search_results_view:
+            return False
+        self.search_results = []
+        self.search_results_pattern = ""
+        self.search_results_view.clear()
+        self.search_results_chip.setText("")
+        self.search_results_chip.setVisible(False)
+        if restore_view and not self.manual_preview_active:
+            self.stack.setCurrentIndex(VIEW_MODES.index(self.view_combo.currentText()))
+            self.current_view().setFocus()
+        self._update_status()
+        return True
 
     def clear_wildcard_filter(self) -> bool:
         if not self.wildcard_filter_text.strip():
@@ -3090,6 +3432,8 @@ class FilePane(QWidget):
         return True
 
     def clear_filter_or_selection(self) -> None:
+        if self.close_search_results():
+            return
         if self.clear_wildcard_filter():
             return
         self.clear_selection()
@@ -3343,11 +3687,20 @@ class FilePane(QWidget):
     def current_view(self) -> QAbstractItemView:
         return self.stack.currentWidget()
 
+    def is_search_results_active(self) -> bool:
+        return self.stack.currentWidget() is self.search_results_view
+
     def current_path(self) -> Path:
         return self.path
 
     def selected_paths(self) -> list[Path]:
         view = self.current_view()
+        if view is self.search_results_view:
+            return [
+                Path(str(item.data(Qt.ItemDataRole.UserRole)))
+                for item in self.search_results_view.selectedItems()
+                if item.data(Qt.ItemDataRole.UserRole)
+            ]
         indexes = view.selectionModel().selectedRows(0)
         return [Path(self.model.filePath(index)) for index in indexes if index.isValid()]
 
@@ -3369,6 +3722,11 @@ class FilePane(QWidget):
         paths = self.selected_paths()
         if paths:
             return paths
+        if self.is_search_results_active():
+            item = self.search_results_view.currentItem()
+            if item and item.data(Qt.ItemDataRole.UserRole):
+                return [Path(str(item.data(Qt.ItemDataRole.UserRole)))]
+            return []
         index = self.current_view().currentIndex()
         if index.isValid():
             return [Path(self.model.filePath(index))]
@@ -3383,6 +3741,11 @@ class FilePane(QWidget):
 
     def toggle_current_tag(self) -> None:
         view = self.current_view()
+        if view is self.search_results_view:
+            item = self.search_results_view.currentItem()
+            if item:
+                item.setSelected(not item.isSelected())
+            return
         index = view.currentIndex()
         if not index.isValid():
             first_index = self.model.index(0, 0, view.rootIndex())
@@ -3445,6 +3808,7 @@ class FilePane(QWidget):
             return
         self._tagged_paths.clear()
         self.model.set_tagged_paths(self._tagged_paths)
+        self.close_search_results(restore_view=False)
         self.path = resolved
 
         index = self.model.setRootPath(str(resolved))
@@ -3475,6 +3839,7 @@ class FilePane(QWidget):
             mode = "Details"
         if self.manual_preview_active:
             self.close_manual_preview()
+        self.close_search_results(restore_view=False)
         self.view_combo.blockSignals(True)
         self.view_combo.setCurrentText(mode)
         self.view_combo.blockSignals(False)
@@ -3608,6 +3973,13 @@ class FilePane(QWidget):
         else:
             self.open_paths([path])
 
+    def open_search_result_item(self, item: QListWidgetItem) -> None:
+        path = Path(str(item.data(Qt.ItemDataRole.UserRole)))
+        if path.is_dir():
+            self.set_path(path)
+        elif path.exists():
+            self.open_paths([path])
+
     def open_selected(self) -> None:
         paths = self.selected_or_current_paths()
         if not paths:
@@ -3708,15 +4080,15 @@ class FilePane(QWidget):
         if not ok or not name.strip():
             return
         archive_path = self.current_path() / name.strip()
-        if archive_path.suffix.lower() != ".zip":
+        if not archive_suffix(archive_path):
             archive_path = archive_path.with_name(f"{archive_path.name}.zip")
         try:
             target = choose_existing_destination(self, paths[0], archive_path)
             if target is None:
                 return
-            create_zip_archive(paths, target)
+            create_archive(paths, target)
             self.record_undo(UndoAction("created", [(target, Path())]))
-        except (OSError, ValueError, zipfile.BadZipFile) as exc:
+        except (OSError, ValueError, tarfile.TarError, zipfile.BadZipFile) as exc:
             QMessageBox.warning(self, "Archive Failed", str(exc))
 
     def extract_archives_here(self) -> None:
@@ -4198,6 +4570,20 @@ class FilePane(QWidget):
 
         menu.addSeparator()
 
+        menu.addAction(
+            menu_icon(self, "edit-find", QStyle.StandardPixmap.SP_FileDialogContentsView),
+            "Recursive Search...",
+            self.recursive_search,
+        )
+        if self.is_search_results_active():
+            menu.addAction(
+                menu_icon(self, "edit-clear", QStyle.StandardPixmap.SP_DialogResetButton),
+                "Close Search Results",
+                self.close_search_results,
+            )
+
+        menu.addSeparator()
+
         menu.addAction(menu_icon(self, "edit-rename", QStyle.StandardPixmap.SP_FileDialogDetailedView), "Rename", self.rename_selected)
         menu.addAction(menu_icon(self, "edit-copy", QStyle.StandardPixmap.SP_FileIcon), "Duplicate", self.duplicate_selected)
         menu.addAction(menu_icon(self, "folder-new", QStyle.StandardPixmap.SP_DirIcon), "New Folder", self.new_folder)
@@ -4333,6 +4719,16 @@ class FilePane(QWidget):
 
     def _update_status(self) -> None:
         self._update_preview()
+        if self.is_search_results_active():
+            selected = self.selected_paths()
+            if selected:
+                if len(selected) == 1:
+                    self.status_label.setText(f"{selected[0].name} - 1 selected from {len(self.search_results)} results")
+                else:
+                    self.status_label.setText(f"{len(selected)} selected from {len(self.search_results)} results")
+            else:
+                self.status_label.setText(f"{len(self.search_results)} search results for '{self.search_results_pattern}'")
+            return
         selected = self.selected_paths()
         if selected:
             total = 0
@@ -4884,7 +5280,8 @@ class FileManager(QMainWindow):
         self.slideshow_pixmap = QPixmap()
         self.setWindowTitle("fm")
         self.setMinimumSize(900, 560)
-        self.settings = QSettings(APP_ORG, APP_NAME)
+        self.qt_settings = QSettings(APP_ORG, APP_NAME)
+        self.settings = TomlSettings(self.qt_settings)
         self.show_hidden = str(self.settings.value("showHidden", "false")).lower() == "true"
         self.preview_enabled = str(self.settings.value("previewEnabled", "true")).lower() != "false"
         self.side_panel_width = int(self.settings.value("sidePanel/width", 180))
@@ -5311,6 +5708,7 @@ class FileManager(QMainWindow):
             (QKeySequence("Alt+Up"), self.go_up),
             (QKeySequence("Ctrl+L"), self.focus_path),
             (QKeySequence("Ctrl+F"), self.focus_search),
+            (QKeySequence("Ctrl+Shift+F"), self.recursive_search),
             (QKeySequence("Ctrl+S"), self.filter_wildcard),
             (QKeySequence("Ctrl+H"), self.toggle_hidden),
             (QKeySequence("Ctrl++"), self.zoom_in),
@@ -5331,9 +5729,9 @@ class FileManager(QMainWindow):
             shortcut.activated.connect(lambda cb=callback: cb())
 
     def _wire_focus(self, pane: FilePane) -> None:
-        for widget in [pane.path_edit, pane.search_edit, pane.icon_view, pane.list_view, pane.detail_view]:
+        for widget in [pane.path_edit, pane.search_edit, pane.icon_view, pane.list_view, pane.detail_view, pane.search_results_view]:
             widget.installEventFilter(self)
-        for view in [pane.icon_view, pane.list_view, pane.detail_view]:
+        for view in [pane.icon_view, pane.list_view, pane.detail_view, pane.search_results_view]:
             view.viewport().installEventFilter(self)
 
     def eventFilter(self, watched, event) -> bool:
@@ -5426,6 +5824,8 @@ class FileManager(QMainWindow):
                 self.left.list_view.viewport(),
                 self.left.detail_view,
                 self.left.detail_view.viewport(),
+                self.left.search_results_view,
+                self.left.search_results_view.viewport(),
             }:
                 self.set_active_pane(self.left)
             elif watched in {
@@ -5437,6 +5837,8 @@ class FileManager(QMainWindow):
                 self.right.list_view.viewport(),
                 self.right.detail_view,
                 self.right.detail_view.viewport(),
+                self.right.search_results_view,
+                self.right.search_results_view.viewport(),
             }:
                 self.set_active_pane(self.right)
         return super().eventFilter(watched, event)
@@ -5471,7 +5873,7 @@ class FileManager(QMainWindow):
     def _space_targets_tag(self, watched) -> bool:
         pane = self.active_pane
         view = pane.current_view()
-        if view not in pane.views:
+        if view not in pane.views and view is not pane.search_results_view:
             return False
         viewport = view.viewport()
         focus = QApplication.focusWidget()
@@ -6141,6 +6543,9 @@ class FileManager(QMainWindow):
         if not ok:
             return
         self.active_pane.set_wildcard_filter(pattern)
+
+    def recursive_search(self) -> None:
+        self.active_pane.recursive_search()
 
     def zoom_in(self) -> None:
         if self.zoom_manual_preview(1):
