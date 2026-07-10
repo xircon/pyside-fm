@@ -73,11 +73,13 @@ from PySide6.QtWidgets import (
 APP_ID = "org.ai.fm"
 APP_ORG = "org.ai"
 APP_NAME = "fm"
-APP_VERSION = "1.11"
+APP_VERSION = "1.17"
 APP_DIR = Path(__file__).resolve().parent
 APP_LOG_PATH = APP_DIR / "fm.log"
 CONFIG_DIR = Path.home() / ".config" / "fm"
 CONFIG_PATH = CONFIG_DIR / "settings.toml"
+CACHE_DIR = Path.home() / ".cache" / "fm"
+ICON_PREVIEW_CACHE_DIR = CACHE_DIR / "icon-theme-previews"
 FM_LOGGING_ENABLED = False
 FM_LOG_LOCK = threading.Lock()
 GNOME_COPIED_FILES_MIME = "x-special/gnome-copied-files"
@@ -105,6 +107,13 @@ PROGRESS_DIALOG_WIDTH = 533
 DEFAULT_TERMINAL_COMMAND = "kitty"
 DEFAULT_TERMINAL_ARGS = "--app-id=org.ai.floater"
 USER_BUTTON_COUNT = 8
+SYSTEM_ICON_THEME_LABEL = "System Default"
+ICON_THEME_PREVIEW_ROLE = Qt.ItemDataRole.UserRole + 1
+ICON_THEME_PREVIEW_NAMES = (
+    (("folder", "inode-directory"), ("places", "mimetypes"), QStyle.StandardPixmap.SP_DirIcon),
+    (("text-x-generic", "document-new"), ("mimetypes", "apps"), QStyle.StandardPixmap.SP_FileIcon),
+    (("user-trash", "user-trash-full", "edit-delete"), ("places", "status", "apps"), QStyle.StandardPixmap.SP_TrashIcon),
+)
 THUMBNAIL_CACHE_DIR_NAME = ".thumbnails"
 THUMBNAIL_DISK_CACHE_MIN_IMAGES = 100
 THUMBNAIL_MAX_SIZE = QSize(160, 160)
@@ -229,6 +238,7 @@ class TomlSettings:
             "showHidden",
             "previewEnabled",
             "iconLayout",
+            "iconTheme",
             "favorites",
             "favoriteNamesJson",
             "recentPaths",
@@ -514,6 +524,196 @@ def menu_icon(widget: QWidget, names: tuple[str, ...] | str, fallback: QStyle.St
         if not icon.isNull():
             return icon
     return widget.style().standardIcon(fallback)
+
+
+def icon_theme_roots() -> list[Path]:
+    roots = [Path(path) for path in QIcon.themeSearchPaths() if path]
+    roots.extend([Path.home() / ".icons", Path.home() / ".local" / "share" / "icons"])
+    data_dirs = os.environ.get("XDG_DATA_DIRS", "/usr/local/share:/usr/share")
+    roots.extend(Path(path) / "icons" for path in data_dirs.split(":") if path)
+    seen: set[Path] = set()
+    unique_roots: list[Path] = []
+    for root in roots:
+        try:
+            resolved = root.expanduser().resolve()
+        except OSError:
+            resolved = root.expanduser()
+        if resolved not in seen:
+            seen.add(resolved)
+            unique_roots.append(resolved)
+    return unique_roots
+
+
+def available_icon_themes(current_theme: str = "") -> list[str]:
+    themes: set[str] = set()
+    current = current_theme.strip()
+    current_dir = icon_theme_directory(current) if current else None
+    if current and current_dir and icon_theme_has_app_icons(current_dir):
+        themes.add(current)
+    for root in icon_theme_roots():
+        if not root.exists():
+            continue
+        try:
+            for child in root.iterdir():
+                if child.is_dir() and (child / "index.theme").exists() and icon_theme_has_app_icons(child):
+                    themes.add(child.name)
+        except OSError:
+            continue
+    return ["", *sorted(theme for theme in themes if theme)]
+
+
+def icon_theme_has_app_icons(directory: Path) -> bool:
+    try:
+        for root, dirnames, filenames in os.walk(directory):
+            dirnames[:] = [name for name in dirnames if not name.lower().startswith("cursor")]
+            if Path(root) == directory:
+                continue
+            if any(Path(filename).suffix.lower() in {".svg", ".png", ".xpm"} for filename in filenames):
+                return True
+    except OSError:
+        return False
+    return False
+
+
+def normalized_icon_theme(theme: str) -> str:
+    cleaned = theme.strip()
+    if not cleaned:
+        return ""
+    directory = icon_theme_directory(cleaned)
+    if directory and icon_theme_has_app_icons(directory):
+        return cleaned
+    return ""
+
+
+def icon_theme_directory(theme: str) -> Path | None:
+    if not theme.strip():
+        return None
+    for root in icon_theme_roots():
+        candidate = root / theme
+        if candidate.is_dir():
+            return candidate
+    return None
+
+
+def _icon_candidate_score(path: Path, names: tuple[str, ...], contexts: tuple[str, ...]) -> tuple[int, int, int, int, int, str]:
+    parts = {part.lower() for part in path.parts}
+    suffix = path.suffix.lower()
+    stem = path.stem.lower()
+    exact = 0 if stem in names else 1
+    context_rank = 9
+    for rank, context in enumerate(contexts):
+        if context.lower() in parts:
+            context_rank = rank
+            break
+    scalable = 0 if "scalable" in parts else 1
+    symbolic = 1 if "symbolic" in stem or "symbolic" in parts else 0
+    suffix_rank = {".svg": 0, ".png": 1, ".xpm": 2}.get(suffix, 3)
+    size_rank = 0
+    for part in parts:
+        if "64" in part or "48" in part or "32" in part:
+            size_rank = -1
+            break
+    return (exact, context_rank, scalable, symbolic, suffix_rank + size_rank, str(path))
+
+
+def icon_file_for_theme(theme: str, names: tuple[str, ...], contexts: tuple[str, ...] = ()) -> Path | None:
+    directory = icon_theme_directory(theme)
+    if not directory:
+        return None
+    wanted = {f"{name}{suffix}" for name in names for suffix in (".svg", ".png", ".xpm")}
+    matches: list[Path] = []
+    try:
+        for root, dirnames, filenames in os.walk(directory):
+            dirnames[:] = [name for name in dirnames if not name.lower().startswith("cursor")]
+            for filename in filenames:
+                if filename.lower() in wanted:
+                    matches.append(Path(root) / filename)
+    except OSError:
+        return None
+    if not matches:
+        return None
+    if contexts:
+        context_matches = [path for path in matches if any(context.lower() in {part.lower() for part in path.parts} for context in contexts)]
+        if context_matches:
+            matches = context_matches
+    return sorted(matches, key=lambda path: _icon_candidate_score(path, names, contexts))[0]
+
+
+def icon_preview_cache_file(theme: str, icon_paths: list[Path | None], size: int) -> Path:
+    parts = [theme or "system-default", str(size), APP_VERSION]
+    for path in icon_paths:
+        if not path:
+            parts.append("fallback")
+            continue
+        try:
+            stat_result = path.stat()
+            parts.append(f"{path}:{stat_result.st_mtime_ns}:{stat_result.st_size}")
+        except OSError:
+            parts.append(str(path))
+    digest = hashlib.sha1("|".join(parts).encode("utf-8", errors="replace")).hexdigest()
+    return ICON_PREVIEW_CACHE_DIR / f"{digest}.png"
+
+
+def icon_from_theme_or_style(names: tuple[str, ...], fallback: QStyle.StandardPixmap) -> QIcon:
+    for name in names:
+        icon = QIcon.fromTheme(name)
+        if not icon.isNull():
+            return icon
+    app = QApplication.instance()
+    if app:
+        return app.style().standardIcon(fallback)
+    return QIcon()
+
+
+def icon_theme_preview_icon(theme: str, size: int = 34) -> QIcon:
+    previous = QIcon.themeName()
+    icon_paths = [icon_file_for_theme(theme, names, contexts) for names, contexts, _fallback in ICON_THEME_PREVIEW_NAMES]
+    cache_file = icon_preview_cache_file(theme, icon_paths, size)
+    if cache_file.exists():
+        cached = QIcon(str(cache_file))
+        if not cached.isNull():
+            return cached
+    icons: list[QIcon] = []
+    for (names, _contexts, fallback), icon_path in zip(ICON_THEME_PREVIEW_NAMES, icon_paths):
+        if icon_path:
+            icon = QIcon(str(icon_path))
+        else:
+            QIcon.setThemeName(theme)
+            icon = icon_from_theme_or_style(names, fallback)
+        icons.append(icon)
+    QIcon.setThemeName(previous)
+    canvas = QPixmap(size * len(icons), size)
+    canvas.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(canvas)
+    for index, icon in enumerate(icons):
+        pixmap = icon.pixmap(size - 4, size - 4)
+        painter.drawPixmap(index * size + 2, 2, pixmap)
+    painter.end()
+    try:
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
+        canvas.save(str(cache_file), "PNG")
+    except OSError:
+        pass
+    return QIcon(canvas)
+
+
+def icon_theme_placeholder_icon(size: int = 34) -> QIcon:
+    canvas = QPixmap(size * len(ICON_THEME_PREVIEW_NAMES), size)
+    canvas.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(canvas)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    pen = QPen(QColor("#64748b"), 1)
+    painter.setPen(pen)
+    painter.setBrush(QColor("#1f2937"))
+    for index in range(len(ICON_THEME_PREVIEW_NAMES)):
+        rect = QRect(index * size + 5, 6, size - 10, size - 12)
+        painter.drawRoundedRect(rect, 4, 4)
+    painter.end()
+    return QIcon(canvas)
+
+
+def apply_icon_theme_name(theme: str) -> None:
+    QIcon.setThemeName(theme.strip())
 
 
 def tinted_icon(icon: QIcon, color: str, size: int = 32) -> QIcon:
@@ -1541,10 +1741,13 @@ def get_name(parent: QWidget, title: str, label: str, text: str = "") -> tuple[s
 
 
 class SettingsDialog(QDialog):
+    icon_theme_apply_requested = Signal(str)
+
     def __init__(
         self,
         current_theme: str,
         icon_layout: str,
+        icon_theme: str,
         terminal_command: str,
         terminal_args: str,
         user_buttons: list[dict[str, str]],
@@ -1563,6 +1766,12 @@ class SettingsDialog(QDialog):
         self.icon_layout_combo = QComboBox()
         self.icon_layout_combo.addItems(ICON_LAYOUTS)
         self.icon_layout_combo.setCurrentText(icon_layout if icon_layout in ICON_LAYOUTS else "Normal")
+        self.icon_theme = normalized_icon_theme(icon_theme)
+        self.icon_theme_list = QListWidget()
+        self.icon_theme_list.setIconSize(QSize(102, 34))
+        self._icon_theme_preview_queue: list[QListWidgetItem] = []
+        self._icon_theme_preview_loading = False
+        self._icon_theme_placeholder = icon_theme_placeholder_icon()
         self.terminal_command_edit = QLineEdit(terminal_command or DEFAULT_TERMINAL_COMMAND)
         self.terminal_args_edit = QLineEdit(terminal_args)
         self.confirm_quit_operations_box = QCheckBox("Confirm quit while copy/move operations are running or queued")
@@ -1579,6 +1788,7 @@ class SettingsDialog(QDialog):
 
         root = QVBoxLayout(self)
         self.tabs = QTabWidget()
+        self.tabs.currentChanged.connect(lambda _index, dialog=self: dialog._maybe_start_icon_theme_preview_loading())
         root.addWidget(self.tabs, 1)
 
         general_tab = QWidget()
@@ -1590,6 +1800,8 @@ class SettingsDialog(QDialog):
         general_layout.addRow("Quit", self.confirm_quit_operations_box)
         general_layout.addRow("Logging", self.file_logging_box)
         self.tabs.addTab(general_tab, "General")
+
+        self.tabs.addTab(self._build_icon_theme_tab(self.icon_theme), "Icon Theme")
 
         buttons_tab = QWidget()
         buttons_layout = QFormLayout(buttons_tab)
@@ -1619,6 +1831,70 @@ class SettingsDialog(QDialog):
         buttons.accepted.connect(lambda dialog=self: dialog.accept())
         buttons.rejected.connect(lambda dialog=self: dialog.reject())
         root.addWidget(buttons)
+        QTimer.singleShot(0, self._maybe_start_icon_theme_preview_loading)
+
+    def _build_icon_theme_tab(self, current_theme: str) -> QWidget:
+        tab = QWidget()
+        self.icon_theme_tab = tab
+        layout = QVBoxLayout(tab)
+        layout.setSpacing(10)
+
+        note = QLabel("Select the icon theme used by fm toolbar, pane, menu, and sidebar icons. System Default leaves Qt to choose the desktop theme.")
+        note.setWordWrap(True)
+        layout.addWidget(note)
+
+        self.icon_theme_list.setMinimumHeight(320)
+        self.icon_theme_list.setAlternatingRowColors(True)
+        themes = available_icon_themes(current_theme)
+        for theme in themes:
+            label = SYSTEM_ICON_THEME_LABEL if not theme else theme
+            item = QListWidgetItem(self._icon_theme_placeholder, label)
+            item.setData(Qt.ItemDataRole.UserRole, theme)
+            item.setData(ICON_THEME_PREVIEW_ROLE, False)
+            item.setToolTip(label if not theme else f"Use icon theme: {theme}")
+            self.icon_theme_list.addItem(item)
+            self._icon_theme_preview_queue.append(item)
+            if theme == current_theme:
+                self.icon_theme_list.setCurrentItem(item)
+        if self.icon_theme_list.currentRow() < 0 and self.icon_theme_list.count():
+            self.icon_theme_list.setCurrentRow(0)
+        layout.addWidget(self.icon_theme_list, 1)
+
+        current_label = current_theme or SYSTEM_ICON_THEME_LABEL
+        self.icon_theme_footer = QLabel(f"Current: {current_label}")
+        self.icon_theme_footer.setWordWrap(True)
+        layout.addWidget(self.icon_theme_footer)
+
+        action_row = QHBoxLayout()
+        apply_button = QPushButton("Apply")
+        apply_button.setToolTip("Apply selected icon theme now")
+        apply_button.clicked.connect(lambda _checked=False, dialog=self: dialog.apply_selected_icon_theme())
+        action_row.addStretch(1)
+        action_row.addWidget(apply_button)
+        layout.addLayout(action_row)
+        return tab
+
+    def _maybe_start_icon_theme_preview_loading(self) -> None:
+        current = self.tabs.currentWidget() if hasattr(self, "tabs") else None
+        if current is not getattr(self, "icon_theme_tab", None):
+            return
+        if self._icon_theme_preview_loading or not self._icon_theme_preview_queue:
+            return
+        self._icon_theme_preview_loading = True
+        QTimer.singleShot(0, self._load_icon_theme_preview_batch)
+
+    def _load_icon_theme_preview_batch(self) -> None:
+        if not self._icon_theme_preview_queue:
+            self._icon_theme_preview_loading = False
+            return
+        for _unused in range(min(4, len(self._icon_theme_preview_queue))):
+            item = self._icon_theme_preview_queue.pop(0)
+            if item.data(ICON_THEME_PREVIEW_ROLE):
+                continue
+            theme = str(item.data(Qt.ItemDataRole.UserRole) or "")
+            item.setIcon(icon_theme_preview_icon(theme))
+            item.setData(ICON_THEME_PREVIEW_ROLE, True)
+        QTimer.singleShot(1, self._load_icon_theme_preview_batch)
 
     def _build_dual_bookmarks_tab(self, dual_bookmarks: list[dict[str, str]]) -> QWidget:
         tab = QWidget()
@@ -1791,6 +2067,19 @@ class SettingsDialog(QDialog):
 
     def icon_layout(self) -> str:
         return self.icon_layout_combo.currentText()
+
+    def selected_icon_theme(self) -> str:
+        item = self.icon_theme_list.currentItem()
+        if not item:
+            return ""
+        return str(item.data(Qt.ItemDataRole.UserRole) or "")
+
+    def apply_selected_icon_theme(self) -> None:
+        theme = self.selected_icon_theme()
+        self.icon_theme = theme
+        current_label = theme or SYSTEM_ICON_THEME_LABEL
+        self.icon_theme_footer.setText(f"Current: {current_label}")
+        self.icon_theme_apply_requested.emit(theme)
 
     def terminal_command(self) -> str:
         return self.terminal_command_edit.text().strip() or DEFAULT_TERMINAL_COMMAND
@@ -2030,6 +2319,7 @@ class HelpDialog(QDialog):
             <ul>
               <li>Readable settings are stored in <code>~/.config/fm/settings.toml</code>. The file is created automatically on first run if missing.</li>
               <li><b>Theme</b>: Light, Dark, or Very Dark.</li>
+              <li><b>Icon Theme</b>: choose a usable Qt/XDG application icon theme from a preview list in its own settings tab. Cursor-only themes are hidden. Choose System Default to let Qt use the desktop default. Use Apply to test and save the selected icon theme without closing Settings. Preview strips load lazily and are cached in <code>~/.cache/fm/icon-theme-previews</code>.</li>
               <li><b>Icon layout</b>: Compact, Normal, or Spacious icon-grid spacing.</li>
               <li><b>Image thumbnails</b>: preserve image proportions. Image-heavy folders use a local <code>.thumbnails</code> cache for faster repeat loading.</li>
               <li><b>Terminal command</b>: terminal executable used by terminal actions.</li>
@@ -3283,6 +3573,18 @@ class FilePane(QWidget):
         button.setToolTip(tooltip)
         button.clicked.connect(lambda _checked=False, cb=callback: cb())
         return button
+
+    def refresh_theme_icons(self) -> None:
+        self.zoom_out_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowDown))
+        self.zoom_in_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowUp))
+        self.back_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowBack))
+        self.forward_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowForward))
+        self.up_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowUp))
+        self.home_button.setIcon(menu_icon(self, "go-home", QStyle.StandardPixmap.SP_DirHomeIcon))
+        self.refresh_button.setIcon(menu_icon(self, "view-refresh", QStyle.StandardPixmap.SP_BrowserReload))
+        self.hidden_status_button.setIcon(hidden_toggle_icon())
+        self.model._emblem_icon_cache.clear()
+        self.refresh()
 
     def _configure_detail_columns(self) -> None:
         header = self.detail_view.header()
@@ -5035,6 +5337,12 @@ class SidePanel(QWidget):
                 self.tabs.setCurrentIndex(index)
                 return
 
+    def refresh_theme_icons(self) -> None:
+        self.icon_provider = QFileIconProvider()
+        self.tabs.setTabIcon(0, menu_icon(self, "user-home", QStyle.StandardPixmap.SP_DirHomeIcon))
+        self.tabs.setTabIcon(1, menu_icon(self, "folder", QStyle.StandardPixmap.SP_DirIcon))
+        self._populate_shortcuts()
+
     def select_home_in_tree(self) -> None:
         index = self.tree_model.index(str(Path.home()))
         if not index.isValid():
@@ -5282,6 +5590,8 @@ class FileManager(QMainWindow):
         self.setMinimumSize(900, 560)
         self.qt_settings = QSettings(APP_ORG, APP_NAME)
         self.settings = TomlSettings(self.qt_settings)
+        self.icon_theme = normalized_icon_theme(str(self.settings.value("iconTheme", "")))
+        apply_icon_theme_name(self.icon_theme)
         self.show_hidden = str(self.settings.value("showHidden", "false")).lower() == "true"
         self.preview_enabled = str(self.settings.value("previewEnabled", "true")).lower() != "false"
         self.side_panel_width = int(self.settings.value("sidePanel/width", 180))
@@ -5452,6 +5762,13 @@ class FileManager(QMainWindow):
         settings_action = QAction(menu_icon(self, "preferences-system", QStyle.StandardPixmap.SP_FileDialogDetailedView), "Settings", self)
         settings_action.triggered.connect(lambda _checked=False, window=self: window.open_settings())
         toolbar.addAction(settings_action)
+
+    def _rebuild_toolbar(self) -> None:
+        old_toolbar = getattr(self, "main_toolbar", None)
+        if isinstance(old_toolbar, QToolBar):
+            self.removeToolBar(old_toolbar)
+            old_toolbar.deleteLater()
+        self._build_toolbar()
 
     def _load_user_buttons(self) -> list[dict[str, str]]:
         try:
@@ -6035,6 +6352,7 @@ class FileManager(QMainWindow):
         self.settings.setValue("theme", self.current_theme)
         self.settings.setValue("showHidden", self.show_hidden)
         self.settings.setValue("iconLayout", self.icon_layout)
+        self.settings.setValue("iconTheme", self.icon_theme)
         self.settings.setValue("favorites", [str(path) for path in self.side_panel.favorites])
         self.settings.setValue("favoriteNamesJson", json.dumps({str(path): name for path, name in self.side_panel.favorite_names.items()}))
         self.settings.setValue("recentPaths", [str(path) for path in self.side_panel.recent_paths])
@@ -6150,10 +6468,27 @@ class FileManager(QMainWindow):
         self.left.set_icon_layout(self.icon_layout)
         self.right.set_icon_layout(self.icon_layout)
 
+    def set_icon_theme(self, theme: str) -> None:
+        cleaned = normalized_icon_theme(theme)
+        if cleaned == self.icon_theme:
+            return
+        self.icon_theme = cleaned
+        apply_icon_theme_name(self.icon_theme)
+        DESKTOP_ICON_CACHE.clear()
+        if hasattr(self, "left"):
+            self.left.refresh_theme_icons()
+            self.right.refresh_theme_icons()
+        if hasattr(self, "side_panel"):
+            self.side_panel.refresh_theme_icons()
+        if hasattr(self, "main_toolbar"):
+            self._rebuild_toolbar()
+        fm_log("settings.icon_theme.changed", icon_theme=self.icon_theme or SYSTEM_ICON_THEME_LABEL)
+
     def open_settings(self, initial_tab: str = "General") -> None:
         dialog = SettingsDialog(
             self.current_theme,
             self.icon_layout,
+            self.icon_theme,
             self.terminal_command,
             self.terminal_args,
             self.user_buttons,
@@ -6163,10 +6498,12 @@ class FileManager(QMainWindow):
             initial_tab,
             self,
         )
+        dialog.icon_theme_apply_requested.connect(self.apply_icon_theme_from_settings_dialog)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         self.apply_theme(dialog.theme())
         self.set_icon_layout(dialog.icon_layout())
+        self.set_icon_theme(dialog.selected_icon_theme())
         self.terminal_command = dialog.terminal_command()
         self.terminal_args = dialog.terminal_args()
         self.user_buttons = dialog.user_buttons()
@@ -6179,12 +6516,19 @@ class FileManager(QMainWindow):
         self._populate_dual_bookmark_combo()
         self.settings.setValue("theme", self.current_theme)
         self.settings.setValue("iconLayout", self.icon_layout)
+        self.settings.setValue("iconTheme", self.icon_theme)
         self.settings.setValue("terminal/command", self.terminal_command)
         self.settings.setValue("terminal/args", self.terminal_args)
         self.settings.setValue("userButtonsJson", json.dumps(self.user_buttons))
         self.settings.setValue("dualBookmarksJson", json.dumps(self.dual_bookmarks))
         self.settings.setValue("confirmQuitOperations", self.confirm_quit_operations)
         self.settings.setValue("fileLoggingEnabled", self.file_logging_enabled)
+        self.settings.sync()
+
+    @Slot(str)
+    def apply_icon_theme_from_settings_dialog(self, theme: str) -> None:
+        self.set_icon_theme(theme)
+        self.settings.setValue("iconTheme", self.icon_theme)
         self.settings.sync()
 
     def open_dual_bookmarks_settings(self) -> None:

@@ -3291,3 +3291,433 @@
 2026-07-08T17:55:18.938 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
 2026-07-08T17:57:42.126 thread=139917065075648 event=app.close.request active_file_operations=0 queued=0
 2026-07-08T17:57:42.139 thread=139917065075648 event=app.close.accepted
+2026-07-10T11:40:26.000 thread=140599886785472 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.12'
+2026-07-10T11:40:26.000 thread=140599886785472 event=app.start version='1.12'
+2026-07-10T11:40:26.736 thread=140599886785472 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-10T11:40:26.783 thread=140599886785472 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:40:27.247 thread=140599886785472 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:40:27.254 thread=140599886785472 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:40:28.068 thread=140599886785472 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:40:28.081 thread=140599886785472 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:40:28.081 thread=140599886785472 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:40:28.174 thread=140599886785472 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:40:28.174 thread=140599886785472 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:40:28.174 thread=140599886785472 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:40:28.174 thread=140599886785472 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:40:28.174 thread=140599886785472 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:40:28.175 thread=140599886785472 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:40:28.175 thread=140599886785472 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:40:28.175 thread=140599886785472 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:40:28.175 thread=140599886785472 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:40:28.175 thread=140599886785472 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:40:28.175 thread=140599886785472 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:40:28.247 thread=140599886785472 event=side_panel.width.changed width=151
+2026-07-10T11:40:28.247 thread=140599886785472 event=side_panel.width.changed width=151
+2026-07-10T11:40:28.324 thread=140599886785472 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:40:28.324 thread=140599886785472 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:40:28.498 thread=140599886785472 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:40:28.498 thread=140599886785472 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:42:14.173 thread=140599886785472 event=side_panel.width.changed width=151
+2026-07-10T11:42:14.173 thread=140599886785472 event=side_panel.width.changed width=151
+2026-07-10T11:48:11.885 thread=140599886785472 event=app.close.request active_file_operations=0 queued=0
+2026-07-10T11:48:11.897 thread=140599886785472 event=app.close.accepted
+2026-07-10T11:48:18.154 thread=139797198052288 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.13'
+2026-07-10T11:48:18.154 thread=139797198052288 event=app.start version='1.13'
+2026-07-10T11:48:18.682 thread=139797198052288 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-10T11:48:18.767 thread=139797198052288 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:48:19.207 thread=139797198052288 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:48:19.213 thread=139797198052288 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:48:19.950 thread=139797198052288 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:48:19.964 thread=139797198052288 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:48:19.964 thread=139797198052288 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:48:20.049 thread=139797198052288 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:48:20.049 thread=139797198052288 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:48:20.049 thread=139797198052288 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:48:20.050 thread=139797198052288 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:48:20.050 thread=139797198052288 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:48:20.050 thread=139797198052288 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:48:20.050 thread=139797198052288 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:48:20.050 thread=139797198052288 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:48:20.050 thread=139797198052288 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:48:20.050 thread=139797198052288 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:48:20.200 thread=139797198052288 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:48:20.200 thread=139797198052288 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:48:20.200 thread=139797198052288 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:48:20.497 thread=139797198052288 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:48:20.498 thread=139797198052288 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:48:47.536 thread=139797198052288 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:48:47.742 thread=139797198052288 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:48:47.790 thread=139797198052288 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:48:47.829 thread=139797198052288 event=settings.icon_theme.changed icon_theme='Abyss-INK-Suru'
+2026-07-10T11:48:47.829 thread=139797198052288 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.13'
+2026-07-10T11:48:47.829 thread=139797198052288 event=settings.accepted file_logging_enabled=True
+2026-07-10T11:48:47.846 thread=139797198052288 event=side_panel.width.changed width=151
+2026-07-10T11:48:47.846 thread=139797198052288 event=side_panel.width.changed width=151
+2026-07-10T11:48:48.391 thread=139797198052288 event=side_panel.width.changed width=151
+2026-07-10T11:48:48.391 thread=139797198052288 event=side_panel.width.changed width=151
+2026-07-10T11:51:16.210 thread=139797198052288 event=app.close.request active_file_operations=0 queued=0
+2026-07-10T11:51:16.221 thread=139797198052288 event=app.close.accepted
+2026-07-10T11:51:45.886 thread=140404208147392 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.14'
+2026-07-10T11:51:45.886 thread=140404208147392 event=app.start version='1.14'
+2026-07-10T11:51:46.429 thread=140404208147392 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-10T11:51:46.475 thread=140404208147392 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:51:46.841 thread=140404208147392 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:51:46.848 thread=140404208147392 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:51:47.494 thread=140404208147392 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:51:47.507 thread=140404208147392 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:51:47.508 thread=140404208147392 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:51:47.582 thread=140404208147392 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:51:47.582 thread=140404208147392 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:51:47.582 thread=140404208147392 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:51:47.582 thread=140404208147392 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:51:47.583 thread=140404208147392 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:51:47.583 thread=140404208147392 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:51:47.583 thread=140404208147392 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:51:47.583 thread=140404208147392 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:51:47.583 thread=140404208147392 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:51:47.583 thread=140404208147392 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:51:47.732 thread=140404208147392 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:51:47.815 thread=140404208147392 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:51:47.816 thread=140404208147392 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:51:48.098 thread=140404208147392 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:51:48.098 thread=140404208147392 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:52:05.193 thread=140404208147392 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:52:05.203 thread=140404208147392 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.14'
+2026-07-10T11:52:05.203 thread=140404208147392 event=settings.accepted file_logging_enabled=True
+2026-07-10T11:52:06.898 thread=140404208147392 event=app.close.request active_file_operations=0 queued=0
+2026-07-10T11:52:06.912 thread=140404208147392 event=app.close.accepted
+2026-07-10T11:52:08.468 thread=140611455376320 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.14'
+2026-07-10T11:52:08.469 thread=140611455376320 event=app.start version='1.14'
+2026-07-10T11:52:09.051 thread=140611455376320 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-10T11:52:09.296 thread=140611455376320 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:52:09.665 thread=140611455376320 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:52:09.671 thread=140611455376320 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:52:10.190 thread=140611455376320 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:52:10.203 thread=140611455376320 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:52:10.203 thread=140611455376320 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:52:10.264 thread=140611455376320 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:52:10.264 thread=140611455376320 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:52:10.265 thread=140611455376320 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:52:10.265 thread=140611455376320 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:52:10.265 thread=140611455376320 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:52:10.265 thread=140611455376320 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:52:10.265 thread=140611455376320 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:52:10.265 thread=140611455376320 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:52:10.265 thread=140611455376320 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:52:10.265 thread=140611455376320 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:52:10.503 thread=140611455376320 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:52:10.598 thread=140611455376320 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:52:10.598 thread=140611455376320 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:52:10.898 thread=140611455376320 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:52:10.898 thread=140611455376320 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:52:26.437 thread=140611455376320 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:52:26.446 thread=140611455376320 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.14'
+2026-07-10T11:52:26.446 thread=140611455376320 event=settings.accepted file_logging_enabled=True
+2026-07-10T11:55:34.550 thread=140611455376320 event=app.close.request active_file_operations=0 queued=0
+2026-07-10T11:55:34.562 thread=140611455376320 event=app.close.accepted
+2026-07-10T11:55:36.642 thread=140395234933696 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.15'
+2026-07-10T11:55:36.642 thread=140395234933696 event=app.start version='1.15'
+2026-07-10T11:55:36.951 thread=140395234933696 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-10T11:55:37.069 thread=140395234933696 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:55:37.418 thread=140395234933696 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:55:37.425 thread=140395234933696 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:55:38.294 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:55:38.307 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:55:38.307 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:55:38.369 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:55:38.370 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:55:38.370 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:55:38.370 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:55:38.370 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:55:38.370 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:55:38.370 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:55:38.370 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:55:38.370 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:55:38.371 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:55:38.371 thread=140395234933696 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:55:38.444 thread=140395234933696 event=side_panel.width.changed width=151
+2026-07-10T11:55:38.444 thread=140395234933696 event=side_panel.width.changed width=151
+2026-07-10T11:55:38.519 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:55:38.519 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:55:38.698 thread=140395234933696 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:55:38.698 thread=140395234933696 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:56:06.838 thread=140395234933696 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:56:07.047 thread=140395234933696 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:56:07.092 thread=140395234933696 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:56:07.141 thread=140395234933696 event=settings.icon_theme.changed icon_theme='Adwaitaru-blue'
+2026-07-10T11:56:07.141 thread=140395234933696 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.15'
+2026-07-10T11:56:07.141 thread=140395234933696 event=settings.accepted file_logging_enabled=True
+2026-07-10T11:56:07.154 thread=140395234933696 event=side_panel.width.changed width=151
+2026-07-10T11:56:07.154 thread=140395234933696 event=side_panel.width.changed width=151
+2026-07-10T11:56:07.495 thread=140395234933696 event=side_panel.width.changed width=151
+2026-07-10T11:56:07.495 thread=140395234933696 event=side_panel.width.changed width=151
+2026-07-10T11:56:16.740 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:56:16.757 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:56:16.839 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:56:17.098 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:56:17.598 thread=140395234933696 event=side_panel.width.restore width=151 actual=151
+2026-07-10T11:56:17.898 thread=140395234933696 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T11:56:40.628 thread=140395234933696 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:56:40.659 thread=140395234933696 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:56:40.757 thread=140395234933696 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:56:40.808 thread=140395234933696 event=settings.icon_theme.changed icon_theme='Desert-Dark-Icons'
+2026-07-10T11:56:40.809 thread=140395234933696 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.15'
+2026-07-10T11:56:40.809 thread=140395234933696 event=settings.accepted file_logging_enabled=True
+2026-07-10T11:56:40.824 thread=140395234933696 event=side_panel.width.changed width=151
+2026-07-10T11:56:40.824 thread=140395234933696 event=side_panel.width.changed width=151
+2026-07-10T11:56:41.307 thread=140395234933696 event=side_panel.width.changed width=151
+2026-07-10T11:56:41.307 thread=140395234933696 event=side_panel.width.changed width=151
+2026-07-10T11:57:19.743 thread=140395234933696 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:57:20.161 thread=140395234933696 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:57:20.201 thread=140395234933696 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T11:57:20.248 thread=140395234933696 event=settings.icon_theme.changed icon_theme='Oxygen_Blue'
+2026-07-10T11:57:20.248 thread=140395234933696 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.15'
+2026-07-10T11:57:20.248 thread=140395234933696 event=settings.accepted file_logging_enabled=True
+2026-07-10T11:57:20.262 thread=140395234933696 event=side_panel.width.changed width=151
+2026-07-10T11:57:20.262 thread=140395234933696 event=side_panel.width.changed width=151
+2026-07-10T11:57:20.420 thread=140395234933696 event=side_panel.width.changed width=151
+2026-07-10T11:57:20.421 thread=140395234933696 event=side_panel.width.changed width=151
+2026-07-10T12:04:21.966 thread=140395234933696 event=app.close.request active_file_operations=0 queued=0
+2026-07-10T12:04:21.978 thread=140395234933696 event=app.close.accepted
+2026-07-10T12:04:26.544 thread=140649541987264 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.16'
+2026-07-10T12:04:26.544 thread=140649541987264 event=app.start version='1.16'
+2026-07-10T12:04:27.064 thread=140649541987264 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-10T12:04:27.186 thread=140649541987264 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:04:27.574 thread=140649541987264 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:04:27.581 thread=140649541987264 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:04:28.424 thread=140649541987264 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:04:28.437 thread=140649541987264 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:04:28.437 thread=140649541987264 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:04:28.522 thread=140649541987264 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:04:28.523 thread=140649541987264 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:04:28.523 thread=140649541987264 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:04:28.523 thread=140649541987264 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:04:28.523 thread=140649541987264 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:04:28.523 thread=140649541987264 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:04:28.523 thread=140649541987264 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:04:28.523 thread=140649541987264 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:04:28.523 thread=140649541987264 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:04:28.523 thread=140649541987264 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:04:28.524 thread=140649541987264 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T12:04:28.524 thread=140649541987264 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:04:28.524 thread=140649541987264 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:04:28.595 thread=140649541987264 event=side_panel.width.changed width=151
+2026-07-10T12:04:28.595 thread=140649541987264 event=side_panel.width.changed width=151
+2026-07-10T12:04:28.869 thread=140649541987264 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T12:04:28.869 thread=140649541987264 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T12:04:43.771 thread=140649541987264 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:04:43.951 thread=140649541987264 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:04:43.966 thread=140649541987264 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:04:44.004 thread=140649541987264 event=settings.icon_theme.changed icon_theme='Abyss-INK-Suru-GLOW'
+2026-07-10T12:04:44.004 thread=140649541987264 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.16'
+2026-07-10T12:04:44.004 thread=140649541987264 event=settings.accepted file_logging_enabled=True
+2026-07-10T12:04:44.019 thread=140649541987264 event=side_panel.width.changed width=151
+2026-07-10T12:04:44.019 thread=140649541987264 event=side_panel.width.changed width=151
+2026-07-10T12:04:44.411 thread=140649541987264 event=side_panel.width.changed width=151
+2026-07-10T12:04:44.411 thread=140649541987264 event=side_panel.width.changed width=151
+2026-07-10T12:07:22.632 thread=140649541987264 event=app.close.request active_file_operations=0 queued=0
+2026-07-10T12:07:22.650 thread=140649541987264 event=app.close.accepted
+2026-07-10T12:07:47.709 thread=140153384844224 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.17'
+2026-07-10T12:07:47.709 thread=140153384844224 event=app.start version='1.17'
+2026-07-10T12:07:48.253 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-10T12:07:48.304 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:07:48.668 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:07:48.674 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:07:49.331 thread=140153384844224 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:07:49.345 thread=140153384844224 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:07:49.345 thread=140153384844224 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:07:49.416 thread=140153384844224 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:07:49.416 thread=140153384844224 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:07:49.416 thread=140153384844224 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:07:49.416 thread=140153384844224 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:07:49.416 thread=140153384844224 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:07:49.416 thread=140153384844224 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:07:49.416 thread=140153384844224 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:07:49.416 thread=140153384844224 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:07:49.417 thread=140153384844224 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:07:49.417 thread=140153384844224 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:07:49.565 thread=140153384844224 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T12:07:49.652 thread=140153384844224 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:07:49.652 thread=140153384844224 event=side_panel.width.restore width=151 actual=151
+2026-07-10T12:07:49.898 thread=140153384844224 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T12:07:49.898 thread=140153384844224 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-10T12:08:27.387 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:08:27.518 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:08:27.572 thread=140153384844224 event=settings.icon_theme.changed icon_theme='schoolmaterial'
+2026-07-10T12:08:27.832 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:08:27.832 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:08:27.860 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:08:27.860 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:08:33.326 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:08:33.343 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:08:33.370 thread=140153384844224 event=settings.icon_theme.changed icon_theme='suru-4all-dark'
+2026-07-10T12:08:33.758 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:08:33.758 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:08:33.782 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:08:33.782 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:09:02.574 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:09:02.636 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:09:02.672 thread=140153384844224 event=settings.icon_theme.changed icon_theme='Tokyonight-Dark-Cyan'
+2026-07-10T12:09:02.852 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:09:02.852 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:09:02.879 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:09:02.880 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:09:21.352 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:09:21.369 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:09:21.419 thread=140153384844224 event=settings.icon_theme.changed icon_theme='Vortex-Dark-Icons'
+2026-07-10T12:09:21.780 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:09:21.780 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:09:21.808 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:09:21.808 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:09:51.762 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:09:51.806 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:09:51.857 thread=140153384844224 event=settings.icon_theme.changed icon_theme='Adwaitaru-purple'
+2026-07-10T12:09:52.038 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:09:52.038 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:09:52.066 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:09:52.067 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:09:56.207 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:09:56.217 thread=140153384844224 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.17'
+2026-07-10T12:09:56.217 thread=140153384844224 event=settings.accepted file_logging_enabled=True
+2026-07-10T12:11:35.391 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:11:35.392 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:11:35.490 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:11:35.491 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:12:36.012 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:12:36.066 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:12:36.117 thread=140153384844224 event=settings.icon_theme.changed icon_theme='Avalon-Icons'
+2026-07-10T12:12:36.442 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:12:36.442 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:12:36.471 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:12:36.471 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:13:17.800 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:13:18.025 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:13:18.078 thread=140153384844224 event=settings.icon_theme.changed icon_theme='Iceglass-4.12'
+2026-07-10T12:13:18.454 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:13:18.454 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:13:18.477 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:13:18.478 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:13:32.906 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:13:32.924 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:13:32.976 thread=140153384844224 event=settings.icon_theme.changed icon_theme='Infinity-Lavender-Dark-Icons'
+2026-07-10T12:13:33.360 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:13:33.361 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:13:33.384 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:13:33.384 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:00.923 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:14:00.972 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:14:01.009 thread=140153384844224 event=settings.icon_theme.changed icon_theme='Palenight'
+2026-07-10T12:14:01.530 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:01.530 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:01.553 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:01.554 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:25.685 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:14:25.752 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:14:25.803 thread=140153384844224 event=settings.icon_theme.changed icon_theme='Shadows-Light-Icons'
+2026-07-10T12:14:26.121 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:26.121 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:26.149 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:26.149 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:37.772 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:14:37.790 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:14:37.840 thread=140153384844224 event=settings.icon_theme.changed icon_theme='Shadows-Dark-Icons'
+2026-07-10T12:14:38.199 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:38.199 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:38.223 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:38.223 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:46.085 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:14:46.138 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:14:46.187 thread=140153384844224 event=settings.icon_theme.changed icon_theme='Slot-Dark-Icons'
+2026-07-10T12:14:46.329 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:46.329 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:46.353 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:14:46.353 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:15:29.796 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:15:29.839 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:15:29.929 thread=140153384844224 event=settings.icon_theme.changed icon_theme='hicolor'
+2026-07-10T12:15:30.416 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:15:30.417 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:15:30.448 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:15:30.448 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:15:35.165 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:15:35.182 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:15:35.235 thread=140153384844224 event=settings.icon_theme.changed icon_theme='klassy'
+2026-07-10T12:15:35.389 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:15:35.389 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:15:35.412 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:15:35.413 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:16:03.176 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:16:03.215 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:16:03.260 thread=140153384844224 event=settings.icon_theme.changed icon_theme='plasma-monochrome-icons'
+2026-07-10T12:16:03.597 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:16:03.598 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:16:03.625 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:16:03.625 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:16:18.119 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:16:18.136 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:16:18.190 thread=140153384844224 event=settings.icon_theme.changed icon_theme='System Default'
+2026-07-10T12:16:18.552 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:16:18.552 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:16:18.575 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:16:18.575 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:16:27.963 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:16:28.010 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:16:28.042 thread=140153384844224 event=settings.icon_theme.changed icon_theme='Abyss-INK-Suru-GLOW'
+2026-07-10T12:16:28.386 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:16:28.386 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:16:28.413 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:16:28.413 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T12:16:31.289 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:16:31.302 thread=140153384844224 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.17'
+2026-07-10T12:16:31.302 thread=140153384844224 event=settings.accepted file_logging_enabled=True
+2026-07-10T12:17:30.412 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:17:30.430 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') left_fs=66309 right_fs=66309 different=False
+2026-07-10T12:17:35.429 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') left_fs=66309 right_fs=66309 different=False
+2026-07-10T12:17:35.499 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:17:58.982 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads') left_fs=66309 right_fs=66309 different=False
+2026-07-10T12:18:02.255 thread=140153384844224 event=drag.start pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/MILF.Lessons.From.The.Bedroom.2.2020.MYLF.mp4']
+2026-07-10T12:18:05.178 thread=140153384844224 event=drop.received pane='Right' action='DropAction.CopyAction' paths=['/home/xircon/dmnts/twotb/Downloads/Completed/MILF.Lessons.From.The.Bedroom.2.2020.MYLF.mp4'] destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails')
+2026-07-10T12:18:05.179 thread=140153384844224 event=drop.copy pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails')
+2026-07-10T12:18:05.179 thread=140153384844224 event=copy.request pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/MILF.Lessons.From.The.Bedroom.2.2020.MYLF.mp4']
+2026-07-10T12:18:05.179 thread=140153384844224 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/MILF.Lessons.From.The.Bedroom.2.2020.MYLF.mp4') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/MILF.Lessons.From.The.Bedroom.2.2020.MYLF.mp4')
+2026-07-10T12:18:05.179 thread=140153384844224 event=copy.start_dialog pane='Right' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/MILF.Lessons.From.The.Bedroom.2.2020.MYLF.mp4', '/home/xircon/dmnts/twotb/Downloads/.thumbnails/MILF.Lessons.From.The.Bedroom.2.2020.MYLF.mp4')]
+2026-07-10T12:18:05.179 thread=140153384844224 event=operation.dialog.create pane='Right' operation='copy' targets=1 title='Copying files...'
+2026-07-10T12:18:05.179 thread=140153384844224 event=operation.begin active=1 queued=0
+2026-07-10T12:18:05.191 thread=140153384844224 event=operation.thread.started pane='Right' operation='copy' targets=1
+2026-07-10T12:18:05.191 thread=140152072566464 event=operation.worker.start operation='copy' targets=1
+2026-07-10T12:18:05.192 thread=140152072566464 event=operation.worker.sized operation='copy' total_bytes=722551402 total_units=11026
+2026-07-10T12:18:05.192 thread=140152072566464 event=operation.target.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/MILF.Lessons.From.The.Bedroom.2.2020.MYLF.mp4') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/MILF.Lessons.From.The.Bedroom.2.2020.MYLF.mp4')
+2026-07-10T12:18:05.192 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/MILF.Lessons.From.The.Bedroom.2.2020.MYLF.mp4') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/MILF.Lessons.From.The.Bedroom.2.2020.MYLF.mp4')
+2026-07-10T12:18:05.193 thread=140153384844224 event=drag.done pane='Left' count=1
+2026-07-10T12:18:09.178 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/MILF.Lessons.From.The.Bedroom.2.2020.MYLF.mp4') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/MILF.Lessons.From.The.Bedroom.2.2020.MYLF.mp4') bytes=722551402 elapsed_seconds=3.986
+2026-07-10T12:18:09.178 thread=140152072566464 event=operation.target.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/MILF.Lessons.From.The.Bedroom.2.2020.MYLF.mp4') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/MILF.Lessons.From.The.Bedroom.2.2020.MYLF.mp4') done_bytes=722551402
+2026-07-10T12:18:09.178 thread=140152072566464 event=operation.worker.done operation='copy' completed=1 elapsed_seconds=3.987 done_bytes=722551402
+2026-07-10T12:18:09.179 thread=140153384844224 event=operation.completed.signal pane='Right' operation='copy' completed=1
+2026-07-10T12:18:09.179 thread=140153384844224 event=operation.end active=0 queued=0
+2026-07-10T12:18:09.179 thread=140153384844224 event=operation.finish pane='Right' operation='copy' completed=1 warning=None
+2026-07-10T12:18:12.973 thread=140153384844224 event=operation.begin active=1 queued=0
+2026-07-10T12:18:13.656 thread=140153384844224 event=operation.end active=0 queued=0
+2026-07-10T12:18:19.472 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts') left_fs=66309 right_fs=66306 different=True
+2026-07-10T12:18:19.562 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts') left_fs=66309 right_fs=66306 different=True
+2026-07-10T12:18:21.719 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:18:26.629 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/Movies') left_fs=66309 right_fs=104 different=True
+2026-07-10T12:18:29.481 thread=140153384844224 event=drag.start pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv']
+2026-07-10T12:18:32.164 thread=140153384844224 event=drop.received pane='Right' action='DropAction.CopyAction' paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv'] destination=PosixPath('/home/xircon/dmnts/htpc-mech/Movies')
+2026-07-10T12:18:32.164 thread=140153384844224 event=drop.copy pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/htpc-mech/Movies')
+2026-07-10T12:18:32.164 thread=140153384844224 event=copy.request pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/htpc-mech/Movies') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv']
+2026-07-10T12:18:32.370 thread=140153384844224 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') destination=PosixPath('/home/xircon/dmnts/htpc-mech/Movies/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-10T12:18:32.370 thread=140153384844224 event=copy.start_dialog pane='Right' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv', '/home/xircon/dmnts/htpc-mech/Movies/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')]
+2026-07-10T12:18:32.370 thread=140153384844224 event=operation.dialog.create pane='Right' operation='copy' targets=1 title='Copying files...'
+2026-07-10T12:18:32.370 thread=140153384844224 event=operation.begin active=1 queued=0
+2026-07-10T12:18:32.374 thread=140153384844224 event=operation.thread.started pane='Right' operation='copy' targets=1
+2026-07-10T12:18:32.374 thread=140152072566464 event=operation.worker.start operation='copy' targets=1
+2026-07-10T12:18:32.374 thread=140152072566464 event=operation.worker.sized operation='copy' total_bytes=2018240563 total_units=30796
+2026-07-10T12:18:32.374 thread=140152072566464 event=operation.target.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/htpc-mech/Movies/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-10T12:18:32.375 thread=140153384844224 event=drag.done pane='Left' count=1
+2026-07-10T12:18:32.397 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/htpc-mech/Movies/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-10T12:25:33.340 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/htpc-mech/Movies/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') bytes=2018240563 elapsed_seconds=420.943
+2026-07-10T12:25:33.341 thread=140152072566464 event=operation.target.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/htpc-mech/Movies/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') done_bytes=2018240563
+2026-07-10T12:25:33.341 thread=140152072566464 event=operation.worker.done operation='copy' completed=1 elapsed_seconds=420.967 done_bytes=2018240563
+2026-07-10T12:25:33.342 thread=140153384844224 event=operation.completed.signal pane='Right' operation='copy' completed=1
+2026-07-10T12:25:33.342 thread=140153384844224 event=operation.end active=0 queued=0
+2026-07-10T12:25:33.342 thread=140153384844224 event=operation.finish pane='Right' operation='copy' completed=1 warning=None

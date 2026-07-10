@@ -36,6 +36,7 @@ This project is developed with AI assistance. Code, UI behavior, documentation, 
 - Per-pane status controls with a clickable eye indicator for hidden files and a horizontal icon zoom slider.
 - A single selected file or folder is identified by name in its pane status bar.
 - Theme support: Light, Dark, Very Dark.
+- Icon Theme settings tab with installed theme list and preview icons.
 - Custom user toolbar buttons.
 - Open With menu using cached desktop entries and cached application icons.
 - Default application editing from file Properties using desktop MIME associations.
@@ -493,6 +494,7 @@ Settings include:
 
 - Theme
 - Icon layout
+- Icon Theme: installed usable Qt/XDG application icon themes with preview icons, plus System Default
 - Terminal command
 - Terminal arguments
 - Eight custom user toolbar buttons
@@ -526,6 +528,17 @@ Icon layout presets:
 - Compact
 - Normal
 - Spacious
+
+Icon Theme:
+
+- Open Settings.
+- Go to the Icon Theme tab.
+- Select a theme from the preview list.
+- Cursor-only themes are hidden because they are not usable as file-manager icon themes.
+- Use Apply to test and save the selected icon theme without closing Settings.
+- Choose System Default to let Qt use the desktop default icon theme.
+- The selected theme is saved as `iconTheme` in `~/.config/fm/settings.toml`.
+- Preview strips load lazily when the Icon Theme tab is shown and are cached in `~/.cache/fm/icon-theme-previews/` for faster repeat loading.
 
 ## Trash
 
