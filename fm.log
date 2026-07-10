@@ -3164,3 +3164,130 @@
 2026-07-07T15:33:24.787 thread=140356791511936 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts') right=PosixPath('/home/xircon/dmnts') left_fs=66306 right_fs=66306 different=False
 2026-07-07T18:54:10.858 thread=140356791511936 event=side_panel.width.changed width=151
 2026-07-07T18:54:10.863 thread=140356791511936 event=side_panel.width.changed width=151
+2026-07-08T16:39:07.096 thread=140114406964160 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.11'
+2026-07-08T16:39:07.097 thread=140114406964160 event=app.start version='1.11'
+2026-07-08T16:39:07.561 thread=140114406964160 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Bodybuilding.Babes.21.MADJACKTHEPISSEDPIRATE') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-08T16:39:11.581 thread=140114406964160 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Bodybuilding.Babes.21.MADJACKTHEPISSEDPIRATE') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-08T16:39:11.589 thread=140114406964160 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Bodybuilding.Babes.21.MADJACKTHEPISSEDPIRATE') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-08T16:39:11.720 thread=140114406964160 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:39:11.733 thread=140114406964160 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:39:11.734 thread=140114406964160 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:39:11.767 thread=140114406964160 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:39:11.772 thread=140114406964160 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:39:11.773 thread=140114406964160 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:39:11.773 thread=140114406964160 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:39:11.773 thread=140114406964160 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:39:11.891 thread=140114406964160 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:39:11.891 thread=140114406964160 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:39:12.004 thread=140114406964160 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:39:12.004 thread=140114406964160 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:39:12.078 thread=140114406964160 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:39:12.378 thread=140114406964160 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-08T16:39:12.478 thread=140114406964160 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:39:12.478 thread=140114406964160 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:39:12.778 thread=140114406964160 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-08T16:39:12.779 thread=140114406964160 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-08T16:39:22.246 thread=140114406964160 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-08T16:40:25.171 thread=139917065075648 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.11'
+2026-07-08T16:40:25.172 thread=139917065075648 event=app.start version='1.11'
+2026-07-08T16:40:25.621 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Bodybuilding.Babes.21.MADJACKTHEPISSEDPIRATE') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-08T16:40:25.769 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Bodybuilding.Babes.21.MADJACKTHEPISSEDPIRATE') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/The Witcher') left_fs=66309 right_fs=108 different=True
+2026-07-08T16:40:26.172 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Bodybuilding.Babes.21.MADJACKTHEPISSEDPIRATE') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/The Witcher') left_fs=66309 right_fs=108 different=True
+2026-07-08T16:40:26.183 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Bodybuilding.Babes.21.MADJACKTHEPISSEDPIRATE') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/The Witcher') left_fs=66309 right_fs=108 different=True
+2026-07-08T16:40:27.318 thread=139917065075648 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:40:27.347 thread=139917065075648 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:40:27.347 thread=139917065075648 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:40:27.367 thread=139917065075648 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:40:27.367 thread=139917065075648 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:40:27.368 thread=139917065075648 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:40:27.368 thread=139917065075648 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:40:27.368 thread=139917065075648 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:40:27.378 thread=139917065075648 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:40:27.379 thread=139917065075648 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:40:27.379 thread=139917065075648 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:40:27.379 thread=139917065075648 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:40:27.379 thread=139917065075648 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:40:27.380 thread=139917065075648 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-08T16:40:27.380 thread=139917065075648 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:40:27.380 thread=139917065075648 event=side_panel.width.restore width=151 actual=151
+2026-07-08T16:40:27.696 thread=139917065075648 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-08T16:40:27.696 thread=139917065075648 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-08T16:40:27.842 thread=139917065075648 event=side_panel.width.changed width=151
+2026-07-08T16:40:27.842 thread=139917065075648 event=side_panel.width.changed width=151
+2026-07-08T16:40:37.729 thread=139917065075648 event=slideshow.open directory=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Bodybuilding.Babes.21.MADJACKTHEPISSEDPIRATE') images=45 index=8
+2026-07-08T16:43:46.602 thread=139917065075648 event=slideshow.close index=10
+2026-07-08T16:43:51.159 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/The Witcher') left_fs=66309 right_fs=108 different=True
+2026-07-08T16:43:51.244 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T16:43:59.695 thread=139917065075648 event=clipboard.move pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265']
+2026-07-08T16:44:03.442 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T16:44:04.985 thread=139917065075648 event=clipboard.paste pane='Left' source='internal' operation='move' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265']
+2026-07-08T16:44:04.985 thread=139917065075648 event=move.request pane='Left' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265']
+2026-07-08T16:44:04.987 thread=139917065075648 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265')
+2026-07-08T16:44:04.987 thread=139917065075648 event=move.start_dialog pane='Left' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265', '/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265')]
+2026-07-08T16:44:04.987 thread=139917065075648 event=operation.dialog.create pane='Left' operation='move' targets=1 title='Moving files...'
+2026-07-08T16:44:04.987 thread=139917065075648 event=operation.begin active=1 queued=0
+2026-07-08T16:44:04.993 thread=139917065075648 event=operation.thread.started pane='Left' operation='move' targets=1
+2026-07-08T16:44:04.994 thread=139915773867712 event=operation.worker.start operation='move' targets=1
+2026-07-08T16:44:04.997 thread=139915773867712 event=operation.worker.sized operation='move' total_bytes=10723438421 total_units=163627
+2026-07-08T16:44:04.998 thread=139915773867712 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265')
+2026-07-08T16:44:04.999 thread=139915773867712 event=move.start source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265')
+2026-07-08T16:44:05.000 thread=139915773867712 event=move.rename.try source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265') source_size=10723438421
+2026-07-08T16:44:05.001 thread=139915773867712 event=move.rename.done source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265') elapsed_seconds=0.002
+2026-07-08T16:44:05.001 thread=139915773867712 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Broadchurch 2013 S01-S03 COMPLETE 1080p AMZN WEB-DL EAC3 H265') done_bytes=10723438421
+2026-07-08T16:44:05.001 thread=139915773867712 event=operation.worker.done operation='move' completed=1 elapsed_seconds=0.007 done_bytes=10723438421
+2026-07-08T16:44:05.003 thread=139917065075648 event=operation.completed.signal pane='Left' operation='move' completed=1
+2026-07-08T16:44:05.003 thread=139917065075648 event=operation.end active=0 queued=0
+2026-07-08T16:44:05.003 thread=139917065075648 event=operation.finish pane='Left' operation='move' completed=1 warning=None
+2026-07-08T16:44:07.696 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T16:44:15.946 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T16:44:19.213 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T16:44:19.286 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T16:44:20.126 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T16:44:28.691 thread=139917065075648 event=operation.begin active=1 queued=0
+2026-07-08T16:44:31.109 thread=139917065075648 event=operation.end active=0 queued=0
+2026-07-08T17:11:31.453 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:12:38.098 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:12:38.289 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:12:49.136 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:12:57.207 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/WowGirls.23.07.29.Diana.Heaven.Dianas.Wetness.XXX.1080p.MP4-NBQ[XC]') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:14:53.505 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:14:55.665 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:14:58.032 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:15:00.367 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:37:39.328 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:37:42.870 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:37:42.884 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:37:55.047 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Cream.Pie.for.the.Straight.Girl.8.2009') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:42:54.829 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:42:58.051 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:43:02.450 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:43:02.901 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Game.of.Thrones.Complete.Series.Season.1.2.3.4.5.6.7.8.x264.720p') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:43:06.010 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:43:09.964 thread=139917065075648 event=clipboard.move pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Cream.Pie.for.the.Straight.Girl.8.2009']
+2026-07-08T17:43:12.502 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:43:15.974 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:43:16.271 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/BangBus.26.03.04.Gigi.Star.XXX.480p.MP4-XXX[XC]') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:43:21.082 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:43:24.997 thread=139917065075648 event=clipboard.paste pane='Left' source='internal' operation='move' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Cream.Pie.for.the.Straight.Girl.8.2009']
+2026-07-08T17:43:24.997 thread=139917065075648 event=move.request pane='Left' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Cream.Pie.for.the.Straight.Girl.8.2009']
+2026-07-08T17:43:24.998 thread=139917065075648 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Cream.Pie.for.the.Straight.Girl.8.2009') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Cream.Pie.for.the.Straight.Girl.8.2009')
+2026-07-08T17:43:24.998 thread=139917065075648 event=move.start_dialog pane='Left' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/Cream.Pie.for.the.Straight.Girl.8.2009', '/home/xircon/dmnts/twotb/Downloads/.thumbnails/Cream.Pie.for.the.Straight.Girl.8.2009')]
+2026-07-08T17:43:24.998 thread=139917065075648 event=operation.dialog.create pane='Left' operation='move' targets=1 title='Moving files...'
+2026-07-08T17:43:24.998 thread=139917065075648 event=operation.begin active=1 queued=0
+2026-07-08T17:43:25.003 thread=139917065075648 event=operation.thread.started pane='Left' operation='move' targets=1
+2026-07-08T17:43:25.004 thread=139915446712000 event=operation.worker.start operation='move' targets=1
+2026-07-08T17:43:25.005 thread=139915446712000 event=operation.worker.sized operation='move' total_bytes=599114404 total_units=9142
+2026-07-08T17:43:25.005 thread=139915446712000 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Cream.Pie.for.the.Straight.Girl.8.2009') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Cream.Pie.for.the.Straight.Girl.8.2009')
+2026-07-08T17:43:25.005 thread=139915446712000 event=move.start source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Cream.Pie.for.the.Straight.Girl.8.2009') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Cream.Pie.for.the.Straight.Girl.8.2009')
+2026-07-08T17:43:25.005 thread=139915446712000 event=move.rename.try source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Cream.Pie.for.the.Straight.Girl.8.2009') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Cream.Pie.for.the.Straight.Girl.8.2009') source_size=599114404
+2026-07-08T17:43:25.006 thread=139915446712000 event=move.rename.done source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Cream.Pie.for.the.Straight.Girl.8.2009') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Cream.Pie.for.the.Straight.Girl.8.2009') elapsed_seconds=0.001
+2026-07-08T17:43:25.006 thread=139915446712000 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Cream.Pie.for.the.Straight.Girl.8.2009') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/.thumbnails/Cream.Pie.for.the.Straight.Girl.8.2009') done_bytes=599114404
+2026-07-08T17:43:25.006 thread=139915446712000 event=operation.worker.done operation='move' completed=1 elapsed_seconds=0.002 done_bytes=599114404
+2026-07-08T17:43:25.009 thread=139917065075648 event=operation.completed.signal pane='Left' operation='move' completed=1
+2026-07-08T17:43:25.010 thread=139917065075648 event=operation.end active=0 queued=0
+2026-07-08T17:43:25.010 thread=139917065075648 event=operation.finish pane='Left' operation='move' completed=1 warning=None
+2026-07-08T17:55:16.174 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:55:16.280 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:55:18.938 thread=139917065075648 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-08T17:57:42.126 thread=139917065075648 event=app.close.request active_file_operations=0 queued=0
+2026-07-08T17:57:42.139 thread=139917065075648 event=app.close.accepted
