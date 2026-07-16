@@ -3721,3 +3721,447 @@
 2026-07-10T12:25:33.342 thread=140153384844224 event=operation.completed.signal pane='Right' operation='copy' completed=1
 2026-07-10T12:25:33.342 thread=140153384844224 event=operation.end active=0 queued=0
 2026-07-10T12:25:33.342 thread=140153384844224 event=operation.finish pane='Right' operation='copy' completed=1 warning=None
+2026-07-10T20:25:52.413 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/Movies') left_fs=66309 right_fs=104 different=True
+2026-07-10T20:25:52.432 thread=140153384844224 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.17'
+2026-07-10T20:25:52.432 thread=140153384844224 event=settings.accepted file_logging_enabled=True
+2026-07-10T20:25:56.369 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T20:25:56.369 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T20:25:59.126 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T20:25:59.126 thread=140153384844224 event=side_panel.width.changed width=151
+2026-07-10T20:56:31.605 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:56:35.344 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:56:58.808 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX/Converted') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:57:00.354 thread=140153384844224 event=drag.start pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX/Converted/Sugar.2024.S02E01.720p.x264-FENiX.mkv']
+2026-07-10T20:57:01.196 thread=140153384844224 event=drop.received pane='Right' action='DropAction.CopyAction' paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX/Converted/Sugar.2024.S02E01.720p.x264-FENiX.mkv'] destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02')
+2026-07-10T20:57:01.196 thread=140153384844224 event=drop.copy pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02')
+2026-07-10T20:57:01.196 thread=140153384844224 event=copy.request pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX/Converted/Sugar.2024.S02E01.720p.x264-FENiX.mkv']
+2026-07-10T20:57:01.197 thread=140153384844224 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX/Converted/Sugar.2024.S02E01.720p.x264-FENiX.mkv') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E01.720p.x264-FENiX.mkv')
+2026-07-10T20:57:01.197 thread=140153384844224 event=copy.start_dialog pane='Right' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX/Converted/Sugar.2024.S02E01.720p.x264-FENiX.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E01.720p.x264-FENiX.mkv')]
+2026-07-10T20:57:01.197 thread=140153384844224 event=operation.dialog.create pane='Right' operation='copy' targets=1 title='Copying files...'
+2026-07-10T20:57:01.197 thread=140153384844224 event=operation.begin active=1 queued=0
+2026-07-10T20:57:01.201 thread=140153384844224 event=operation.thread.started pane='Right' operation='copy' targets=1
+2026-07-10T20:57:01.201 thread=140152072566464 event=operation.worker.start operation='copy' targets=1
+2026-07-10T20:57:01.202 thread=140152072566464 event=operation.worker.sized operation='copy' total_bytes=438989085 total_units=6699
+2026-07-10T20:57:01.202 thread=140152072566464 event=operation.target.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX/Converted/Sugar.2024.S02E01.720p.x264-FENiX.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E01.720p.x264-FENiX.mkv')
+2026-07-10T20:57:01.203 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX/Converted/Sugar.2024.S02E01.720p.x264-FENiX.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E01.720p.x264-FENiX.mkv')
+2026-07-10T20:57:01.203 thread=140153384844224 event=drag.done pane='Left' count=1
+2026-07-10T20:57:02.105 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX/Converted/Sugar.2024.S02E01.720p.x264-FENiX.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E01.720p.x264-FENiX.mkv') bytes=438989085 elapsed_seconds=0.903
+2026-07-10T20:57:02.106 thread=140152072566464 event=operation.target.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX/Converted/Sugar.2024.S02E01.720p.x264-FENiX.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E01.720p.x264-FENiX.mkv') done_bytes=438989085
+2026-07-10T20:57:02.106 thread=140152072566464 event=operation.worker.done operation='copy' completed=1 elapsed_seconds=0.905 done_bytes=438989085
+2026-07-10T20:57:02.107 thread=140153384844224 event=operation.completed.signal pane='Right' operation='copy' completed=1
+2026-07-10T20:57:02.107 thread=140153384844224 event=operation.end active=0 queued=0
+2026-07-10T20:57:02.107 thread=140153384844224 event=operation.finish pane='Right' operation='copy' completed=1 warning=None
+2026-07-10T20:57:08.863 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:57:14.070 thread=140153384844224 event=operation.begin active=1 queued=0
+2026-07-10T20:57:14.978 thread=140153384844224 event=operation.end active=0 queued=0
+2026-07-10T20:57:17.184 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:57:17.355 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:57:32.517 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E02.720p.x264-FENiX') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:57:53.063 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E02.720p.x264-FENiX/Converted') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:57:54.268 thread=140153384844224 event=drag.start pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E02.720p.x264-FENiX/Converted/Sugar.2024.S02E02.720p.x264-FENiX.mkv']
+2026-07-10T20:57:55.430 thread=140153384844224 event=drop.received pane='Right' action='DropAction.CopyAction' paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E02.720p.x264-FENiX/Converted/Sugar.2024.S02E02.720p.x264-FENiX.mkv'] destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02')
+2026-07-10T20:57:55.430 thread=140153384844224 event=drop.copy pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02')
+2026-07-10T20:57:55.430 thread=140153384844224 event=copy.request pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E02.720p.x264-FENiX/Converted/Sugar.2024.S02E02.720p.x264-FENiX.mkv']
+2026-07-10T20:57:55.430 thread=140153384844224 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E02.720p.x264-FENiX/Converted/Sugar.2024.S02E02.720p.x264-FENiX.mkv') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E02.720p.x264-FENiX.mkv')
+2026-07-10T20:57:55.430 thread=140153384844224 event=copy.start_dialog pane='Right' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E02.720p.x264-FENiX/Converted/Sugar.2024.S02E02.720p.x264-FENiX.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E02.720p.x264-FENiX.mkv')]
+2026-07-10T20:57:55.430 thread=140153384844224 event=operation.dialog.create pane='Right' operation='copy' targets=1 title='Copying files...'
+2026-07-10T20:57:55.430 thread=140153384844224 event=operation.begin active=1 queued=0
+2026-07-10T20:57:55.443 thread=140153384844224 event=operation.thread.started pane='Right' operation='copy' targets=1
+2026-07-10T20:57:55.443 thread=140152072566464 event=operation.worker.start operation='copy' targets=1
+2026-07-10T20:57:55.443 thread=140152072566464 event=operation.worker.sized operation='copy' total_bytes=492975177 total_units=7523
+2026-07-10T20:57:55.443 thread=140152072566464 event=operation.target.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E02.720p.x264-FENiX/Converted/Sugar.2024.S02E02.720p.x264-FENiX.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E02.720p.x264-FENiX.mkv')
+2026-07-10T20:57:55.444 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E02.720p.x264-FENiX/Converted/Sugar.2024.S02E02.720p.x264-FENiX.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E02.720p.x264-FENiX.mkv')
+2026-07-10T20:57:55.444 thread=140153384844224 event=drag.done pane='Left' count=1
+2026-07-10T20:57:55.862 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E02.720p.x264-FENiX/Converted/Sugar.2024.S02E02.720p.x264-FENiX.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E02.720p.x264-FENiX.mkv') bytes=492975177 elapsed_seconds=0.418
+2026-07-10T20:57:55.862 thread=140152072566464 event=operation.target.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E02.720p.x264-FENiX/Converted/Sugar.2024.S02E02.720p.x264-FENiX.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E02.720p.x264-FENiX.mkv') done_bytes=492975177
+2026-07-10T20:57:55.862 thread=140152072566464 event=operation.worker.done operation='copy' completed=1 elapsed_seconds=0.419 done_bytes=492975177
+2026-07-10T20:57:59.008 thread=140153384844224 event=operation.completed.signal pane='Right' operation='copy' completed=1
+2026-07-10T20:57:59.008 thread=140153384844224 event=operation.end active=0 queued=0
+2026-07-10T20:57:59.008 thread=140153384844224 event=operation.finish pane='Right' operation='copy' completed=1 warning=None
+2026-07-10T20:58:02.240 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E02.720p.x264-FENiX') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:58:05.119 thread=140153384844224 event=operation.begin active=1 queued=0
+2026-07-10T20:58:05.960 thread=140153384844224 event=operation.end active=0 queued=0
+2026-07-10T20:58:08.473 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:58:08.647 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:58:12.861 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E03.720p.x264-FENiX') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:58:20.264 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E03.720p.x264-FENiX/Converted') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:58:21.457 thread=140153384844224 event=drag.start pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E03.720p.x264-FENiX/Converted/Sugar.2024.S02E03.720p.x264-FENiX.mkv']
+2026-07-10T20:58:22.655 thread=140153384844224 event=drop.received pane='Right' action='DropAction.CopyAction' paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E03.720p.x264-FENiX/Converted/Sugar.2024.S02E03.720p.x264-FENiX.mkv'] destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02')
+2026-07-10T20:58:22.655 thread=140153384844224 event=drop.copy pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02')
+2026-07-10T20:58:22.656 thread=140153384844224 event=copy.request pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E03.720p.x264-FENiX/Converted/Sugar.2024.S02E03.720p.x264-FENiX.mkv']
+2026-07-10T20:58:22.656 thread=140153384844224 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E03.720p.x264-FENiX/Converted/Sugar.2024.S02E03.720p.x264-FENiX.mkv') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E03.720p.x264-FENiX.mkv')
+2026-07-10T20:58:22.656 thread=140153384844224 event=copy.start_dialog pane='Right' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E03.720p.x264-FENiX/Converted/Sugar.2024.S02E03.720p.x264-FENiX.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E03.720p.x264-FENiX.mkv')]
+2026-07-10T20:58:22.656 thread=140153384844224 event=operation.dialog.create pane='Right' operation='copy' targets=1 title='Copying files...'
+2026-07-10T20:58:22.656 thread=140153384844224 event=operation.begin active=1 queued=0
+2026-07-10T20:58:22.659 thread=140153384844224 event=operation.thread.started pane='Right' operation='copy' targets=1
+2026-07-10T20:58:22.659 thread=140152072566464 event=operation.worker.start operation='copy' targets=1
+2026-07-10T20:58:22.660 thread=140152072566464 event=operation.worker.sized operation='copy' total_bytes=495556943 total_units=7562
+2026-07-10T20:58:22.660 thread=140152072566464 event=operation.target.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E03.720p.x264-FENiX/Converted/Sugar.2024.S02E03.720p.x264-FENiX.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E03.720p.x264-FENiX.mkv')
+2026-07-10T20:58:22.660 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E03.720p.x264-FENiX/Converted/Sugar.2024.S02E03.720p.x264-FENiX.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E03.720p.x264-FENiX.mkv')
+2026-07-10T20:58:22.661 thread=140153384844224 event=drag.done pane='Left' count=1
+2026-07-10T20:58:23.632 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E03.720p.x264-FENiX/Converted/Sugar.2024.S02E03.720p.x264-FENiX.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E03.720p.x264-FENiX.mkv') bytes=495556943 elapsed_seconds=0.972
+2026-07-10T20:58:23.632 thread=140152072566464 event=operation.target.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E03.720p.x264-FENiX/Converted/Sugar.2024.S02E03.720p.x264-FENiX.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E03.720p.x264-FENiX.mkv') done_bytes=495556943
+2026-07-10T20:58:23.632 thread=140152072566464 event=operation.worker.done operation='copy' completed=1 elapsed_seconds=0.973 done_bytes=495556943
+2026-07-10T20:58:23.634 thread=140153384844224 event=operation.completed.signal pane='Right' operation='copy' completed=1
+2026-07-10T20:58:23.634 thread=140153384844224 event=operation.end active=0 queued=0
+2026-07-10T20:58:23.634 thread=140153384844224 event=operation.finish pane='Right' operation='copy' completed=1 warning=None
+2026-07-10T20:58:29.410 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:58:33.896 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E04.1080p.x265-ELiTE') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:58:52.879 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E04.1080p.x265-ELiTE/Converted') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:58:54.426 thread=140153384844224 event=drag.start pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E04.1080p.x265-ELiTE/Converted/Sugar.2024.S02E04.1080p.x265-ELiTE.mkv']
+2026-07-10T20:58:55.290 thread=140153384844224 event=drop.received pane='Right' action='DropAction.CopyAction' paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E04.1080p.x265-ELiTE/Converted/Sugar.2024.S02E04.1080p.x265-ELiTE.mkv'] destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02')
+2026-07-10T20:58:55.290 thread=140153384844224 event=drop.copy pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02')
+2026-07-10T20:58:55.290 thread=140153384844224 event=copy.request pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E04.1080p.x265-ELiTE/Converted/Sugar.2024.S02E04.1080p.x265-ELiTE.mkv']
+2026-07-10T20:58:55.290 thread=140153384844224 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E04.1080p.x265-ELiTE/Converted/Sugar.2024.S02E04.1080p.x265-ELiTE.mkv') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E04.1080p.x265-ELiTE.mkv')
+2026-07-10T20:58:55.290 thread=140153384844224 event=copy.start_dialog pane='Right' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E04.1080p.x265-ELiTE/Converted/Sugar.2024.S02E04.1080p.x265-ELiTE.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E04.1080p.x265-ELiTE.mkv')]
+2026-07-10T20:58:55.290 thread=140153384844224 event=operation.dialog.create pane='Right' operation='copy' targets=1 title='Copying files...'
+2026-07-10T20:58:55.290 thread=140153384844224 event=operation.begin active=1 queued=0
+2026-07-10T20:58:55.294 thread=140153384844224 event=operation.thread.started pane='Right' operation='copy' targets=1
+2026-07-10T20:58:55.294 thread=140152072566464 event=operation.worker.start operation='copy' targets=1
+2026-07-10T20:58:55.295 thread=140152072566464 event=operation.worker.sized operation='copy' total_bytes=521542868 total_units=7959
+2026-07-10T20:58:55.295 thread=140152072566464 event=operation.target.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E04.1080p.x265-ELiTE/Converted/Sugar.2024.S02E04.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E04.1080p.x265-ELiTE.mkv')
+2026-07-10T20:58:55.296 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E04.1080p.x265-ELiTE/Converted/Sugar.2024.S02E04.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E04.1080p.x265-ELiTE.mkv')
+2026-07-10T20:58:55.296 thread=140153384844224 event=drag.done pane='Left' count=1
+2026-07-10T20:58:55.930 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E04.1080p.x265-ELiTE/Converted/Sugar.2024.S02E04.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E04.1080p.x265-ELiTE.mkv') bytes=521542868 elapsed_seconds=0.634
+2026-07-10T20:58:55.930 thread=140152072566464 event=operation.target.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E04.1080p.x265-ELiTE/Converted/Sugar.2024.S02E04.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02/Sugar.2024.S02E04.1080p.x265-ELiTE.mkv') done_bytes=521542868
+2026-07-10T20:58:55.930 thread=140152072566464 event=operation.worker.done operation='copy' completed=1 elapsed_seconds=0.636 done_bytes=521542868
+2026-07-10T20:58:55.931 thread=140153384844224 event=operation.completed.signal pane='Right' operation='copy' completed=1
+2026-07-10T20:58:55.931 thread=140153384844224 event=operation.end active=0 queued=0
+2026-07-10T20:58:55.931 thread=140153384844224 event=operation.finish pane='Right' operation='copy' completed=1 warning=None
+2026-07-10T20:59:09.357 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T20:59:18.442 thread=140153384844224 event=drag.start pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX']
+2026-07-10T20:59:20.337 thread=140153384844224 event=drop.received pane='Left' action='DropAction.CopyAction' paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX'] destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX')
+2026-07-10T20:59:20.338 thread=140153384844224 event=drop.filtered.same_destination pane='Left' path=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX')
+2026-07-10T20:59:20.338 thread=140153384844224 event=drop.ignored.filtered_all pane='Left' destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX')
+2026-07-10T20:59:20.338 thread=140153384844224 event=drag.done pane='Left' count=1
+2026-07-10T20:59:22.623 thread=140153384844224 event=drag.start pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX']
+2026-07-10T20:59:24.225 thread=140153384844224 event=drop.received pane='Left' action='DropAction.CopyAction' paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX'] destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX')
+2026-07-10T20:59:24.225 thread=140153384844224 event=drop.filtered.same_destination pane='Left' path=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX')
+2026-07-10T20:59:24.225 thread=140153384844224 event=drop.ignored.filtered_all pane='Left' destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02E01.720p.x264-FENiX')
+2026-07-10T20:59:24.226 thread=140153384844224 event=drag.done pane='Left' count=1
+2026-07-10T20:59:45.481 thread=140153384844224 event=operation.begin active=1 queued=0
+2026-07-10T21:00:04.727 thread=140153384844224 event=operation.end active=0 queued=0
+2026-07-10T21:01:29.666 thread=140153384844224 event=operation.begin active=1 queued=0
+2026-07-10T21:01:30.339 thread=140153384844224 event=operation.end active=0 queued=0
+2026-07-10T21:02:16.049 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E01.1080p.x265-ELiTE') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:02:17.539 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Sugar.2024.S02') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:02:24.448 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:02:26.467 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E01.1080p.x265-ELiTE') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:02:47.626 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E01.1080p.x265-ELiTE/Converted') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:02:50.255 thread=140153384844224 event=drag.start pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E01.1080p.x265-ELiTE/Converted/Silo.S03E01.1080p.x265-ELiTE.mkv']
+2026-07-10T21:02:51.322 thread=140153384844224 event=drop.received pane='Right' action='DropAction.CopyAction' paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E01.1080p.x265-ELiTE/Converted/Silo.S03E01.1080p.x265-ELiTE.mkv'] destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03')
+2026-07-10T21:02:51.322 thread=140153384844224 event=drop.copy pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03')
+2026-07-10T21:02:51.322 thread=140153384844224 event=copy.request pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E01.1080p.x265-ELiTE/Converted/Silo.S03E01.1080p.x265-ELiTE.mkv']
+2026-07-10T21:02:51.322 thread=140153384844224 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E01.1080p.x265-ELiTE/Converted/Silo.S03E01.1080p.x265-ELiTE.mkv') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03/Silo.S03E01.1080p.x265-ELiTE.mkv')
+2026-07-10T21:02:51.323 thread=140153384844224 event=copy.start_dialog pane='Right' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E01.1080p.x265-ELiTE/Converted/Silo.S03E01.1080p.x265-ELiTE.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03/Silo.S03E01.1080p.x265-ELiTE.mkv')]
+2026-07-10T21:02:51.323 thread=140153384844224 event=operation.dialog.create pane='Right' operation='copy' targets=1 title='Copying files...'
+2026-07-10T21:02:51.323 thread=140153384844224 event=operation.begin active=1 queued=0
+2026-07-10T21:02:51.326 thread=140153384844224 event=operation.thread.started pane='Right' operation='copy' targets=1
+2026-07-10T21:02:51.326 thread=140152072566464 event=operation.worker.start operation='copy' targets=1
+2026-07-10T21:02:51.326 thread=140152072566464 event=operation.worker.sized operation='copy' total_bytes=540006341 total_units=8240
+2026-07-10T21:02:51.327 thread=140152072566464 event=operation.target.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E01.1080p.x265-ELiTE/Converted/Silo.S03E01.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03/Silo.S03E01.1080p.x265-ELiTE.mkv')
+2026-07-10T21:02:51.327 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E01.1080p.x265-ELiTE/Converted/Silo.S03E01.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03/Silo.S03E01.1080p.x265-ELiTE.mkv')
+2026-07-10T21:02:51.327 thread=140153384844224 event=drag.done pane='Left' count=1
+2026-07-10T21:02:52.377 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E01.1080p.x265-ELiTE/Converted/Silo.S03E01.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03/Silo.S03E01.1080p.x265-ELiTE.mkv') bytes=540006341 elapsed_seconds=1.05
+2026-07-10T21:02:52.378 thread=140152072566464 event=operation.target.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E01.1080p.x265-ELiTE/Converted/Silo.S03E01.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03/Silo.S03E01.1080p.x265-ELiTE.mkv') done_bytes=540006341
+2026-07-10T21:02:52.378 thread=140152072566464 event=operation.worker.done operation='copy' completed=1 elapsed_seconds=1.052 done_bytes=540006341
+2026-07-10T21:02:52.379 thread=140153384844224 event=operation.completed.signal pane='Right' operation='copy' completed=1
+2026-07-10T21:02:52.380 thread=140153384844224 event=operation.end active=0 queued=0
+2026-07-10T21:02:52.380 thread=140153384844224 event=operation.finish pane='Right' operation='copy' completed=1 warning=None
+2026-07-10T21:03:00.343 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:03:11.872 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E02.1080p.x265-ELiTE') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:03:11.910 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E02.1080p.x265-ELiTE') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:03:30.388 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E02.1080p.x265-ELiTE/Converted') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:03:31.617 thread=140153384844224 event=drag.start pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E02.1080p.x265-ELiTE/Converted/Silo.S03E02.1080p.x265-ELiTE.mkv']
+2026-07-10T21:03:35.117 thread=140153384844224 event=drop.received pane='Right' action='DropAction.CopyAction' paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E02.1080p.x265-ELiTE/Converted/Silo.S03E02.1080p.x265-ELiTE.mkv'] destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03')
+2026-07-10T21:03:35.118 thread=140153384844224 event=drop.copy pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03')
+2026-07-10T21:03:35.118 thread=140153384844224 event=copy.request pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E02.1080p.x265-ELiTE/Converted/Silo.S03E02.1080p.x265-ELiTE.mkv']
+2026-07-10T21:03:35.118 thread=140153384844224 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E02.1080p.x265-ELiTE/Converted/Silo.S03E02.1080p.x265-ELiTE.mkv') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03/Silo.S03E02.1080p.x265-ELiTE.mkv')
+2026-07-10T21:03:35.118 thread=140153384844224 event=copy.start_dialog pane='Right' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E02.1080p.x265-ELiTE/Converted/Silo.S03E02.1080p.x265-ELiTE.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03/Silo.S03E02.1080p.x265-ELiTE.mkv')]
+2026-07-10T21:03:35.118 thread=140153384844224 event=operation.dialog.create pane='Right' operation='copy' targets=1 title='Copying files...'
+2026-07-10T21:03:35.118 thread=140153384844224 event=operation.begin active=1 queued=0
+2026-07-10T21:03:35.121 thread=140153384844224 event=operation.thread.started pane='Right' operation='copy' targets=1
+2026-07-10T21:03:35.121 thread=140152072566464 event=operation.worker.start operation='copy' targets=1
+2026-07-10T21:03:35.121 thread=140152072566464 event=operation.worker.sized operation='copy' total_bytes=515152340 total_units=7861
+2026-07-10T21:03:35.121 thread=140152072566464 event=operation.target.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E02.1080p.x265-ELiTE/Converted/Silo.S03E02.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03/Silo.S03E02.1080p.x265-ELiTE.mkv')
+2026-07-10T21:03:35.122 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E02.1080p.x265-ELiTE/Converted/Silo.S03E02.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03/Silo.S03E02.1080p.x265-ELiTE.mkv')
+2026-07-10T21:03:35.122 thread=140153384844224 event=drag.done pane='Left' count=1
+2026-07-10T21:03:35.661 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E02.1080p.x265-ELiTE/Converted/Silo.S03E02.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03/Silo.S03E02.1080p.x265-ELiTE.mkv') bytes=515152340 elapsed_seconds=0.54
+2026-07-10T21:03:35.662 thread=140152072566464 event=operation.target.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03E02.1080p.x265-ELiTE/Converted/Silo.S03E02.1080p.x265-ELiTE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03/Silo.S03E02.1080p.x265-ELiTE.mkv') done_bytes=515152340
+2026-07-10T21:03:35.662 thread=140152072566464 event=operation.worker.done operation='copy' completed=1 elapsed_seconds=0.541 done_bytes=515152340
+2026-07-10T21:03:35.662 thread=140153384844224 event=operation.completed.signal pane='Right' operation='copy' completed=1
+2026-07-10T21:03:35.663 thread=140153384844224 event=operation.end active=0 queued=0
+2026-07-10T21:03:35.663 thread=140153384844224 event=operation.finish pane='Right' operation='copy' completed=1 warning=None
+2026-07-10T21:03:43.901 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:03:43.957 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:03:43.998 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:03:53.764 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:03:53.894 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House of the Dragon.S03') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:03:55.683 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:04:11.016 thread=140153384844224 event=operation.begin active=1 queued=0
+2026-07-10T21:04:14.602 thread=140153384844224 event=operation.end active=0 queued=0
+2026-07-10T21:07:00.481 thread=140153384844224 event=clipboard.copy pane='Left' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir']
+2026-07-10T21:07:03.806 thread=140153384844224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV') right=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Silo.S03') left_fs=66309 right_fs=66309 different=False
+2026-07-10T21:07:05.541 thread=140153384844224 event=clipboard.paste pane='Left' source='internal' operation='copy' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir']
+2026-07-10T21:07:05.541 thread=140153384844224 event=copy.request pane='Left' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir']
+2026-07-10T21:07:05.542 thread=140153384844224 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir')
+2026-07-10T21:07:05.542 thread=140153384844224 event=copy.start_dialog pane='Left' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir', '/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir')]
+2026-07-10T21:07:05.542 thread=140153384844224 event=operation.dialog.create pane='Left' operation='copy' targets=1 title='Copying files...'
+2026-07-10T21:07:05.542 thread=140153384844224 event=operation.begin active=1 queued=0
+2026-07-10T21:07:05.545 thread=140153384844224 event=operation.thread.started pane='Left' operation='copy' targets=1
+2026-07-10T21:07:05.545 thread=140152072566464 event=operation.worker.start operation='copy' targets=1
+2026-07-10T21:07:05.546 thread=140152072566464 event=operation.worker.sized operation='copy' total_bytes=9596487464 total_units=146431
+2026-07-10T21:07:05.546 thread=140152072566464 event=operation.target.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir')
+2026-07-10T21:07:05.546 thread=140152072566464 event=copy.directory.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir')
+2026-07-10T21:07:05.549 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E07.Plow.Deep.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E07.Plow.Deep.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-10T21:07:07.464 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E07.Plow.Deep.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E07.Plow.Deep.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') bytes=1237693733 elapsed_seconds=1.916
+2026-07-10T21:07:07.467 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E03.Bad.Dancer.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E03.Bad.Dancer.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-10T21:07:09.581 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E03.Bad.Dancer.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E03.Bad.Dancer.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') bytes=1379628529 elapsed_seconds=2.114
+2026-07-10T21:07:09.582 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E05.Bite.Your.Elbow.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E05.Bite.Your.Elbow.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-10T21:07:10.915 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E05.Bite.Your.Elbow.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E05.Bite.Your.Elbow.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') bytes=878120348 elapsed_seconds=1.333
+2026-07-10T21:07:10.915 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E01.The.Eyes.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E01.The.Eyes.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-10T21:07:12.493 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E01.The.Eyes.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E01.The.Eyes.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') bytes=1023155384 elapsed_seconds=1.578
+2026-07-10T21:07:12.493 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E04.Dark.Forest.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E04.Dark.Forest.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-10T21:07:14.204 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E04.Dark.Forest.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E04.Dark.Forest.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') bytes=1121116460 elapsed_seconds=1.711
+2026-07-10T21:07:14.205 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E02.A.Bear.on.a.Chain.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E02.A.Bear.on.a.Chain.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-10T21:07:16.010 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E02.A.Bear.on.a.Chain.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E02.A.Bear.on.a.Chain.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') bytes=1180174758 elapsed_seconds=1.806
+2026-07-10T21:07:16.016 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E06.Awl.in.a.Sack.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E06.Awl.in.a.Sack.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-10T21:07:18.114 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E06.Awl.in.a.Sack.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E06.Awl.in.a.Sack.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') bytes=1379935469 elapsed_seconds=2.098
+2026-07-10T21:07:18.114 thread=140152072566464 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E08.The.Wolves.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E08.The.Wolves.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-10T21:07:20.226 thread=140152072566464 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E08.The.Wolves.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir/Star.City.S01E08.The.Wolves.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') bytes=1396662783 elapsed_seconds=2.111
+2026-07-10T21:07:20.226 thread=140152072566464 event=copy.directory.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir') elapsed_seconds=14.68
+2026-07-10T21:07:20.226 thread=140152072566464 event=operation.target.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV/Star.City.S01.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir') done_bytes=9596487464
+2026-07-10T21:07:20.226 thread=140152072566464 event=operation.worker.done operation='copy' completed=1 elapsed_seconds=14.681 done_bytes=9596487464
+2026-07-10T21:07:20.227 thread=140153384844224 event=operation.completed.signal pane='Left' operation='copy' completed=1
+2026-07-10T21:07:20.227 thread=140153384844224 event=operation.end active=0 queued=0
+2026-07-10T21:07:20.227 thread=140153384844224 event=operation.finish pane='Left' operation='copy' completed=1 warning=None
+2026-07-11T12:24:57.182 thread=140141147605952 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.17'
+2026-07-11T12:24:57.183 thread=140141147605952 event=app.start version='1.17'
+2026-07-11T12:24:57.700 thread=140141147605952 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-11T12:24:57.907 thread=140141147605952 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-11T12:24:58.258 thread=140141147605952 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-11T12:24:58.264 thread=140141147605952 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-11T12:24:58.970 thread=140141147605952 event=side_panel.width.restore width=151 actual=151
+2026-07-11T12:24:58.982 thread=140141147605952 event=side_panel.width.restore width=151 actual=151
+2026-07-11T12:24:58.983 thread=140141147605952 event=side_panel.width.restore width=151 actual=151
+2026-07-11T12:24:59.046 thread=140141147605952 event=side_panel.width.restore width=151 actual=151
+2026-07-11T12:24:59.046 thread=140141147605952 event=side_panel.width.restore width=151 actual=151
+2026-07-11T12:24:59.047 thread=140141147605952 event=side_panel.width.restore width=151 actual=151
+2026-07-11T12:24:59.047 thread=140141147605952 event=side_panel.width.restore width=151 actual=151
+2026-07-11T12:24:59.047 thread=140141147605952 event=side_panel.width.restore width=151 actual=151
+2026-07-11T12:24:59.047 thread=140141147605952 event=side_panel.width.restore width=151 actual=151
+2026-07-11T12:24:59.047 thread=140141147605952 event=side_panel.width.restore width=151 actual=151
+2026-07-11T12:24:59.047 thread=140141147605952 event=side_panel.width.restore width=151 actual=151
+2026-07-11T12:24:59.048 thread=140141147605952 event=side_panel.width.restore width=151 actual=151
+2026-07-11T12:24:59.048 thread=140141147605952 event=side_panel.width.restore width=151 actual=151
+2026-07-11T12:24:59.190 thread=140141147605952 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-11T12:24:59.293 thread=140141147605952 event=side_panel.width.restore width=151 actual=151
+2026-07-11T12:24:59.293 thread=140141147605952 event=side_panel.width.restore width=151 actual=151
+2026-07-11T12:24:59.504 thread=140141147605952 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-11T12:24:59.505 thread=140141147605952 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-11T12:25:54.801 thread=140141147605952 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-TV') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=104 different=True
+2026-07-13T14:09:49.653 thread=140521983863744 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.17'
+2026-07-13T14:09:49.654 thread=140521983863744 event=app.start version='1.17'
+2026-07-13T14:09:50.443 thread=140521983863744 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-13T14:09:50.492 thread=140521983863744 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=120 different=True
+2026-07-13T14:09:50.839 thread=140521983863744 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=120 different=True
+2026-07-13T14:09:50.845 thread=140521983863744 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=120 different=True
+2026-07-13T14:09:51.346 thread=140521983863744 event=side_panel.width.restore width=151 actual=151
+2026-07-13T14:09:51.358 thread=140521983863744 event=side_panel.width.restore width=151 actual=151
+2026-07-13T14:09:51.358 thread=140521983863744 event=side_panel.width.restore width=151 actual=151
+2026-07-13T14:09:51.370 thread=140521983863744 event=side_panel.width.restore width=151 actual=151
+2026-07-13T14:09:51.370 thread=140521983863744 event=side_panel.width.restore width=151 actual=151
+2026-07-13T14:09:51.371 thread=140521983863744 event=side_panel.width.restore width=151 actual=151
+2026-07-13T14:09:51.371 thread=140521983863744 event=side_panel.width.restore width=151 actual=151
+2026-07-13T14:09:51.371 thread=140521983863744 event=side_panel.width.restore width=151 actual=151
+2026-07-13T14:09:51.374 thread=140521983863744 event=side_panel.width.restore width=151 actual=151
+2026-07-13T14:09:51.374 thread=140521983863744 event=side_panel.width.restore width=151 actual=151
+2026-07-13T14:09:51.399 thread=140521983863744 event=side_panel.width.restore width=151 actual=151
+2026-07-13T14:09:51.400 thread=140521983863744 event=side_panel.width.restore width=151 actual=151
+2026-07-13T14:09:51.480 thread=140521983863744 event=side_panel.width.restore width=151 actual=151
+2026-07-13T14:09:51.698 thread=140521983863744 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-13T14:09:51.798 thread=140521983863744 event=side_panel.width.restore width=151 actual=151
+2026-07-13T14:09:51.798 thread=140521983863744 event=side_panel.width.restore width=151 actual=151
+2026-07-13T14:09:52.099 thread=140521983863744 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-13T14:09:52.099 thread=140521983863744 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-13T14:09:59.100 thread=140521983863744 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/House.of.the.Dragon.S03E03.1080p.x265-ELiTE') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=120 different=True
+2026-07-14T13:30:45.841 thread=140142370708416 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.17'
+2026-07-14T13:30:45.842 thread=140142370708416 event=app.start version='1.17'
+2026-07-14T13:30:46.684 thread=140142370708416 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-14T13:30:46.862 thread=140142370708416 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=114 different=True
+2026-07-14T13:30:47.210 thread=140142370708416 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=114 different=True
+2026-07-14T13:30:47.217 thread=140142370708416 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=114 different=True
+2026-07-14T13:30:47.812 thread=140142370708416 event=side_panel.width.restore width=151 actual=151
+2026-07-14T13:30:47.825 thread=140142370708416 event=side_panel.width.restore width=151 actual=151
+2026-07-14T13:30:47.826 thread=140142370708416 event=side_panel.width.restore width=151 actual=151
+2026-07-14T13:30:47.893 thread=140142370708416 event=side_panel.width.restore width=151 actual=151
+2026-07-14T13:30:47.893 thread=140142370708416 event=side_panel.width.restore width=151 actual=151
+2026-07-14T13:30:47.893 thread=140142370708416 event=side_panel.width.restore width=151 actual=151
+2026-07-14T13:30:47.893 thread=140142370708416 event=side_panel.width.restore width=151 actual=151
+2026-07-14T13:30:47.893 thread=140142370708416 event=side_panel.width.restore width=151 actual=151
+2026-07-14T13:30:47.893 thread=140142370708416 event=side_panel.width.restore width=151 actual=151
+2026-07-14T13:30:47.894 thread=140142370708416 event=side_panel.width.restore width=151 actual=151
+2026-07-14T13:30:47.894 thread=140142370708416 event=side_panel.width.restore width=151 actual=151
+2026-07-14T13:30:47.894 thread=140142370708416 event=side_panel.width.restore width=151 actual=151
+2026-07-14T13:30:47.894 thread=140142370708416 event=side_panel.width.restore width=151 actual=151
+2026-07-14T13:30:48.162 thread=140142370708416 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-14T13:30:48.163 thread=140142370708416 event=side_panel.width.restore width=151 actual=151
+2026-07-14T13:30:48.163 thread=140142370708416 event=side_panel.width.restore width=151 actual=151
+2026-07-14T13:30:48.502 thread=140142370708416 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-14T13:30:48.502 thread=140142370708416 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-14T13:30:56.326 thread=140142370708416 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/Game.of.Thrones.Complete.Series.Season.1.2.3.4.5.6.7.8.x264.720p') left_fs=66309 right_fs=114 different=True
+2026-07-14T13:30:59.525 thread=140142370708416 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV/Game.of.Thrones.Complete.Series.Season.1.2.3.4.5.6.7.8.x264.720p/Season 1') left_fs=66309 right_fs=114 different=True
+2026-07-15T00:37:45.965 thread=140374061452224 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.17'
+2026-07-15T00:37:45.965 thread=140374061452224 event=app.start version='1.17'
+2026-07-15T00:37:46.541 thread=140374061452224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-15T00:37:46.611 thread=140374061452224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=127 different=True
+2026-07-15T00:37:46.954 thread=140374061452224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=127 different=True
+2026-07-15T00:37:46.960 thread=140374061452224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=127 different=True
+2026-07-15T00:37:47.969 thread=140374061452224 event=side_panel.width.restore width=151 actual=151
+2026-07-15T00:37:47.982 thread=140374061452224 event=side_panel.width.restore width=151 actual=151
+2026-07-15T00:37:47.982 thread=140374061452224 event=side_panel.width.restore width=151 actual=151
+2026-07-15T00:37:48.046 thread=140374061452224 event=side_panel.width.restore width=151 actual=151
+2026-07-15T00:37:48.046 thread=140374061452224 event=side_panel.width.restore width=151 actual=151
+2026-07-15T00:37:48.046 thread=140374061452224 event=side_panel.width.restore width=151 actual=151
+2026-07-15T00:37:48.046 thread=140374061452224 event=side_panel.width.restore width=151 actual=151
+2026-07-15T00:37:48.046 thread=140374061452224 event=side_panel.width.restore width=151 actual=151
+2026-07-15T00:37:48.046 thread=140374061452224 event=side_panel.width.restore width=151 actual=151
+2026-07-15T00:37:48.046 thread=140374061452224 event=side_panel.width.restore width=151 actual=151
+2026-07-15T00:37:48.046 thread=140374061452224 event=side_panel.width.restore width=151 actual=151
+2026-07-15T00:37:48.046 thread=140374061452224 event=side_panel.width.restore width=151 actual=151
+2026-07-15T00:37:48.047 thread=140374061452224 event=side_panel.width.restore width=151 actual=151
+2026-07-15T00:37:48.047 thread=140374061452224 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-15T00:37:48.048 thread=140374061452224 event=side_panel.width.restore width=151 actual=151
+2026-07-15T00:37:48.048 thread=140374061452224 event=side_panel.width.restore width=151 actual=151
+2026-07-15T00:37:48.115 thread=140374061452224 event=side_panel.width.changed width=151
+2026-07-15T00:37:48.115 thread=140374061452224 event=side_panel.width.changed width=151
+2026-07-15T00:37:48.192 thread=140374061452224 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-15T00:37:48.192 thread=140374061452224 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-15T00:37:51.712 thread=140374061452224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Diablo.II.v1.14d.And.Diablo.II.Lord.Of.Destruction.v1.14d.Pack-Classic') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=127 different=True
+2026-07-15T00:37:58.977 thread=140374061452224 event=side_panel.width.changed width=151
+2026-07-15T00:37:58.977 thread=140374061452224 event=side_panel.width.changed width=151
+2026-07-15T00:38:06.383 thread=140374061452224 event=side_panel.width.changed width=151
+2026-07-15T00:38:06.383 thread=140374061452224 event=side_panel.width.changed width=151
+2026-07-15T00:38:08.607 thread=140374061452224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Diablo.II.v1.14d.And.Diablo.II.Lord.Of.Destruction.v1.14d.Pack-Classic/Diablo.II.v1.14b') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=127 different=True
+2026-07-15T00:39:08.467 thread=140374061452224 event=side_panel.width.changed width=151
+2026-07-15T00:39:08.469 thread=140374061452224 event=side_panel.width.changed width=151
+2026-07-15T00:45:26.359 thread=140374061452224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Diablo.II.v1.14d.And.Diablo.II.Lord.Of.Destruction.v1.14d.Pack-Classic/Diablo.II.v1.14b') right=PosixPath('/home/xircon/dmnts/twotb/Downloads') left_fs=66309 right_fs=66309 different=False
+2026-07-15T00:45:41.395 thread=140374061452224 event=clipboard.copy pane='Right' count=1 paths=['/home/xircon/dmnts/twotb/Downloads/gl32ogl14e.zip']
+2026-07-15T00:45:52.488 thread=140374061452224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Diablo.II.v1.14d.And.Diablo.II.Lord.Of.Destruction.v1.14d.Pack-Classic/Diablo.II.v1.14b') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-15T00:46:01.914 thread=140374061452224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Diablo.II.v1.14d.And.Diablo.II.Lord.Of.Destruction.v1.14d.Pack-Classic/Diablo.II.v1.14b') right=PosixPath('/home/xircon/dmnts/twotb/Games') left_fs=66309 right_fs=66309 different=False
+2026-07-15T00:46:06.642 thread=140374061452224 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Diablo.II.v1.14d.And.Diablo.II.Lord.Of.Destruction.v1.14d.Pack-Classic/Diablo.II.v1.14b') right=PosixPath('/home/xircon/dmnts/twotb/Games/Diablo II') left_fs=66309 right_fs=66309 different=False
+2026-07-15T00:46:11.084 thread=140374061452224 event=side_panel.width.changed width=151
+2026-07-15T00:46:11.084 thread=140374061452224 event=side_panel.width.changed width=151
+2026-07-15T00:46:18.175 thread=140374061452224 event=clipboard.paste pane='Right' source='internal' operation='copy' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Games/Diablo II') paths=['/home/xircon/dmnts/twotb/Downloads/gl32ogl14e.zip']
+2026-07-15T00:46:18.175 thread=140374061452224 event=copy.request pane='Right' count=1 destination=PosixPath('/home/xircon/dmnts/twotb/Games/Diablo II') paths=['/home/xircon/dmnts/twotb/Downloads/gl32ogl14e.zip']
+2026-07-15T00:46:18.175 thread=140374061452224 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/gl32ogl14e.zip') destination=PosixPath('/home/xircon/dmnts/twotb/Games/Diablo II/gl32ogl14e.zip')
+2026-07-15T00:46:18.175 thread=140374061452224 event=copy.start_dialog pane='Right' targets=[('/home/xircon/dmnts/twotb/Downloads/gl32ogl14e.zip', '/home/xircon/dmnts/twotb/Games/Diablo II/gl32ogl14e.zip')]
+2026-07-15T00:46:18.175 thread=140374061452224 event=operation.dialog.create pane='Right' operation='copy' targets=1 title='Copying files...'
+2026-07-15T00:46:18.176 thread=140374061452224 event=operation.begin active=1 queued=0
+2026-07-15T00:46:18.187 thread=140374061452224 event=operation.thread.started pane='Right' operation='copy' targets=1
+2026-07-15T00:46:18.187 thread=140372864923328 event=operation.worker.start operation='copy' targets=1
+2026-07-15T00:46:18.187 thread=140372864923328 event=operation.worker.sized operation='copy' total_bytes=157116 total_units=3
+2026-07-15T00:46:18.188 thread=140372864923328 event=operation.target.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/gl32ogl14e.zip') target=PosixPath('/home/xircon/dmnts/twotb/Games/Diablo II/gl32ogl14e.zip')
+2026-07-15T00:46:18.188 thread=140372864923328 event=copy.file.start operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/gl32ogl14e.zip') target=PosixPath('/home/xircon/dmnts/twotb/Games/Diablo II/gl32ogl14e.zip')
+2026-07-15T00:46:18.188 thread=140372864923328 event=copy.file.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/gl32ogl14e.zip') target=PosixPath('/home/xircon/dmnts/twotb/Games/Diablo II/gl32ogl14e.zip') bytes=157116 elapsed_seconds=0.0
+2026-07-15T00:46:18.188 thread=140372864923328 event=operation.target.done operation='copy' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/gl32ogl14e.zip') target=PosixPath('/home/xircon/dmnts/twotb/Games/Diablo II/gl32ogl14e.zip') done_bytes=157116
+2026-07-15T00:46:18.189 thread=140372864923328 event=operation.worker.done operation='copy' completed=1 elapsed_seconds=0.001 done_bytes=157116
+2026-07-15T00:46:18.192 thread=140374061452224 event=operation.completed.signal pane='Right' operation='copy' completed=1
+2026-07-15T00:46:18.193 thread=140374061452224 event=operation.end active=0 queued=0
+2026-07-15T00:46:18.193 thread=140374061452224 event=operation.finish pane='Right' operation='copy' completed=1 warning=None
+2026-07-15T15:50:45.891 thread=140265171368896 event=logging.enabled path=PosixPath('/home/xircon/dmnts/twotb/scripts/pyside/fm/fm.log') version='1.17'
+2026-07-15T15:50:45.891 thread=140265171368896 event=app.start version='1.17'
+2026-07-15T15:50:46.553 thread=140265171368896 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon') left_fs=66309 right_fs=66306 different=True
+2026-07-15T15:50:46.664 thread=140265171368896 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-15T15:50:47.017 thread=140265171368896 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-15T15:50:47.023 thread=140265171368896 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-15T15:50:47.718 thread=140265171368896 event=side_panel.width.restore width=151 actual=151
+2026-07-15T15:50:47.730 thread=140265171368896 event=side_panel.width.restore width=151 actual=151
+2026-07-15T15:50:47.731 thread=140265171368896 event=side_panel.width.restore width=151 actual=151
+2026-07-15T15:50:47.795 thread=140265171368896 event=side_panel.width.restore width=151 actual=151
+2026-07-15T15:50:47.795 thread=140265171368896 event=side_panel.width.restore width=151 actual=151
+2026-07-15T15:50:47.795 thread=140265171368896 event=side_panel.width.restore width=151 actual=151
+2026-07-15T15:50:47.795 thread=140265171368896 event=side_panel.width.restore width=151 actual=151
+2026-07-15T15:50:47.795 thread=140265171368896 event=side_panel.width.restore width=151 actual=151
+2026-07-15T15:50:47.795 thread=140265171368896 event=side_panel.width.restore width=151 actual=151
+2026-07-15T15:50:47.796 thread=140265171368896 event=side_panel.width.restore width=151 actual=151
+2026-07-15T15:50:47.796 thread=140265171368896 event=side_panel.width.restore width=151 actual=151
+2026-07-15T15:50:47.796 thread=140265171368896 event=side_panel.width.restore width=151 actual=151
+2026-07-15T15:50:47.796 thread=140265171368896 event=side_panel.width.restore width=151 actual=151
+2026-07-15T15:50:47.943 thread=140265171368896 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-15T15:50:47.943 thread=140265171368896 event=side_panel.width.restore width=151 actual=151
+2026-07-15T15:50:47.943 thread=140265171368896 event=side_panel.width.restore width=151 actual=151
+2026-07-15T15:50:48.311 thread=140265171368896 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-15T15:50:48.311 thread=140265171368896 event=side_panel.width.restore_finished width=151 actual=151
+2026-07-15T15:51:23.817 thread=140265171368896 event=clipboard.move pane='Left' count=4 paths=['/home/xircon/dmnts/twotb/Downloads/Completed/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv']
+2026-07-15T15:51:26.459 thread=140265171368896 event=pane.filesystem_tint left=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies') right=PosixPath('/home/xircon/dmnts/htpc-mech/TV') left_fs=66309 right_fs=108 different=True
+2026-07-15T15:51:28.929 thread=140265171368896 event=clipboard.paste pane='Left' source='internal' operation='move' count=4 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv']
+2026-07-15T15:51:28.929 thread=140265171368896 event=move.request pane='Left' count=4 destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies') paths=['/home/xircon/dmnts/twotb/Downloads/Completed/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv']
+2026-07-15T15:51:28.929 thread=140265171368896 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-15T15:51:28.929 thread=140265171368896 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv')
+2026-07-15T15:51:28.929 thread=140265171368896 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv')
+2026-07-15T15:51:28.929 thread=140265171368896 event=collision.none source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') destination=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-15T15:51:28.929 thread=140265171368896 event=move.start_dialog pane='Left' targets=[('/home/xircon/dmnts/twotb/Downloads/Completed/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv'), ('/home/xircon/dmnts/twotb/Downloads/Completed/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv'), ('/home/xircon/dmnts/twotb/Downloads/Completed/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv'), ('/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv', '/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')]
+2026-07-15T15:51:28.929 thread=140265171368896 event=operation.dialog.create pane='Left' operation='move' targets=4 title='Moving files...'
+2026-07-15T15:51:28.930 thread=140265171368896 event=operation.begin active=1 queued=0
+2026-07-15T15:51:28.942 thread=140265171368896 event=operation.thread.started pane='Left' operation='move' targets=4
+2026-07-15T15:51:28.942 thread=140264018540224 event=operation.worker.start operation='move' targets=4
+2026-07-15T15:51:28.943 thread=140264018540224 event=operation.worker.sized operation='move' total_bytes=6655083262 total_units=101549
+2026-07-15T15:51:28.943 thread=140264018540224 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-15T15:51:28.943 thread=140264018540224 event=move.start source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-15T15:51:28.943 thread=140264018540224 event=move.rename.try source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') source_size=1570875492
+2026-07-15T15:51:28.946 thread=140264018540224 event=move.rename.done source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') elapsed_seconds=0.003
+2026-07-15T15:51:28.946 thread=140264018540224 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The.Outer.Threat.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') done_bytes=1570875492
+2026-07-15T15:51:28.946 thread=140264018540224 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv')
+2026-07-15T15:51:28.946 thread=140264018540224 event=move.start source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv')
+2026-07-15T15:51:28.946 thread=140264018540224 event=move.rename.try source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv') source_size=1086833998
+2026-07-15T15:51:28.947 thread=140264018540224 event=move.rename.done source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv') elapsed_seconds=0.0
+2026-07-15T15:51:28.947 thread=140264018540224 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/The Man with Two Brains 1983 1080p BluRay HEVC x265 BONE.mkv') done_bytes=2657709490
+2026-07-15T15:51:28.947 thread=140264018540224 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv')
+2026-07-15T15:51:28.947 thread=140264018540224 event=move.start source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv')
+2026-07-15T15:51:28.947 thread=140264018540224 event=move.rename.try source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv') source_size=1979133209
+2026-07-15T15:51:28.948 thread=140264018540224 event=move.rename.done source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv') elapsed_seconds=0.002
+2026-07-15T15:51:28.948 thread=140264018540224 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/Backrooms 2026 1080p WEB-DL HEVC x265 5.1 BONE.mkv') done_bytes=4636842699
+2026-07-15T15:51:28.948 thread=140264018540224 event=operation.target.start operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-15T15:51:28.949 thread=140264018540224 event=move.start source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv')
+2026-07-15T15:51:28.949 thread=140264018540224 event=move.rename.try source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') source_size=2018240563
+2026-07-15T15:51:28.949 thread=140264018540224 event=move.rename.done source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') elapsed_seconds=0.0
+2026-07-15T15:51:28.949 thread=140264018540224 event=operation.target.done operation='move' source=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') target=PosixPath('/home/xircon/dmnts/twotb/Downloads/Completed/zz-Movies/Enola.Holmes.3.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv') done_bytes=6655083262
+2026-07-15T15:51:28.949 thread=140264018540224 event=operation.worker.done operation='move' completed=4 elapsed_seconds=0.007 done_bytes=6655083262
+2026-07-15T15:51:28.957 thread=140265171368896 event=operation.completed.signal pane='Left' operation='move' completed=4
+2026-07-15T15:51:28.958 thread=140265171368896 event=operation.end active=0 queued=0
+2026-07-15T15:51:28.958 thread=140265171368896 event=operation.finish pane='Left' operation='move' completed=4 warning=None
+2026-07-15T16:03:39.631 thread=140265171368896 event=side_panel.width.changed width=153
+2026-07-15T16:03:39.632 thread=140265171368896 event=side_panel.width.changed width=153
+2026-07-15T16:03:39.713 thread=140265171368896 event=side_panel.width.changed width=182
+2026-07-15T16:03:39.714 thread=140265171368896 event=side_panel.width.changed width=182
+2026-07-15T16:03:39.768 thread=140265171368896 event=side_panel.width.changed width=188
+2026-07-15T16:03:39.768 thread=140265171368896 event=side_panel.width.changed width=188
+2026-07-15T16:03:39.842 thread=140265171368896 event=side_panel.width.changed width=204
+2026-07-15T16:03:39.843 thread=140265171368896 event=side_panel.width.changed width=204
+2026-07-15T16:03:39.899 thread=140265171368896 event=side_panel.width.changed width=216
+2026-07-15T16:03:39.899 thread=140265171368896 event=side_panel.width.changed width=216
+2026-07-15T16:03:39.958 thread=140265171368896 event=side_panel.width.changed width=220
+2026-07-15T16:03:39.958 thread=140265171368896 event=side_panel.width.changed width=220
+2026-07-15T16:03:40.017 thread=140265171368896 event=side_panel.width.changed width=229
+2026-07-15T16:03:40.017 thread=140265171368896 event=side_panel.width.changed width=229
+2026-07-15T16:03:40.076 thread=140265171368896 event=side_panel.width.changed width=233
+2026-07-15T16:03:40.076 thread=140265171368896 event=side_panel.width.changed width=233
+2026-07-15T16:03:40.531 thread=140265171368896 event=side_panel.width.changed width=232
+2026-07-15T16:03:40.531 thread=140265171368896 event=side_panel.width.changed width=232
+2026-07-15T16:03:40.587 thread=140265171368896 event=side_panel.width.changed width=231
+2026-07-15T16:03:40.587 thread=140265171368896 event=side_panel.width.changed width=231
+2026-07-15T16:03:40.624 thread=140265171368896 event=side_panel.width.changed width=230
+2026-07-15T16:03:40.625 thread=140265171368896 event=side_panel.width.changed width=230
+2026-07-15T21:00:34.325 thread=140265171368896 event=side_panel.width.changed width=230
+2026-07-15T21:00:34.351 thread=140265171368896 event=side_panel.width.changed width=230
+2026-07-15T21:00:35.610 thread=140265171368896 event=side_panel.width.changed width=230
+2026-07-15T21:00:35.611 thread=140265171368896 event=side_panel.width.changed width=230
+2026-07-15T21:00:37.534 thread=140265171368896 event=side_panel.width.changed width=230
+2026-07-15T21:00:37.535 thread=140265171368896 event=side_panel.width.changed width=230
+2026-07-15T21:01:01.512 thread=140265171368896 event=side_panel.width.changed width=230
+2026-07-15T21:01:01.513 thread=140265171368896 event=side_panel.width.changed width=230
+2026-07-15T21:01:01.553 thread=140265171368896 event=side_panel.width.changed width=230
+2026-07-15T21:01:01.553 thread=140265171368896 event=side_panel.width.changed width=230
+2026-07-15T21:01:52.687 thread=140265171368896 event=side_panel.width.changed width=230
+2026-07-15T21:01:52.688 thread=140265171368896 event=side_panel.width.changed width=230
