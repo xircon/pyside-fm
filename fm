@@ -2163,8 +2163,8 @@ class HelpDialog(QDialog):
         (
             "Panes And Selection",
             [
-                ("Copy to other pane", "F5"),
-                ("Move to other pane", "F6 / Ctrl+M"),
+                ("Copy to other pane", "C / F5"),
+                ("Move to other pane", "M / F6 / Ctrl+M"),
                 ("Preview file in other pane", "P"),
                 ("Slideshow images in current folder", "S"),
                 ("Tag or untag row in detailed view", "Space"),
@@ -6185,6 +6185,18 @@ class FileManager(QMainWindow):
                         self.active_pane.open_selected()
                     event.accept()
                     return True
+            if self._is_plain_c(event) and self._space_targets_tag(watched):
+                if self.active_pane.current_item_path():
+                    if event.type() == QEvent.Type.KeyPress:
+                        self.copy_across()
+                    event.accept()
+                    return True
+            if self._is_plain_m(event) and self._space_targets_tag(watched):
+                if self.active_pane.current_item_path():
+                    if event.type() == QEvent.Type.KeyPress:
+                        self.move_across()
+                    event.accept()
+                    return True
             if self._is_plain_r(event) and self._space_targets_tag(watched):
                 if event.type() == QEvent.Type.KeyPress:
                     self.active_pane.show_properties()
@@ -6254,6 +6266,12 @@ class FileManager(QMainWindow):
 
     def _is_plain_o(self, event) -> bool:
         return event.key() == Qt.Key.Key_O and event.modifiers() == Qt.KeyboardModifier.NoModifier
+
+    def _is_plain_c(self, event) -> bool:
+        return event.key() == Qt.Key.Key_C and event.modifiers() == Qt.KeyboardModifier.NoModifier
+
+    def _is_plain_m(self, event) -> bool:
+        return event.key() == Qt.Key.Key_M and event.modifiers() == Qt.KeyboardModifier.NoModifier
 
     def _is_plain_r(self, event) -> bool:
         return event.key() == Qt.Key.Key_R and event.modifiers() == Qt.KeyboardModifier.NoModifier

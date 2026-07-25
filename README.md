@@ -218,6 +218,8 @@ Normal selection uses the current file view selection.
 File pane single-key actions:
 
 - `O`: open the selected/current item. Files open with the desktop default app; folders open in the pane.
+- `C`: copy the selected/current item to the other pane.
+- `M`: move the selected/current item to the other pane.
 - `P`: preview the selected supported file in the other pane.
 - `R`: open Properties for the selected/current item.
 - `E`: open the emblem menu for the selected folder.
@@ -464,8 +466,8 @@ Panes and selection:
 
 | Action | Shortcut |
 | --- | --- |
-| Copy to other pane | F5 |
-| Move to other pane | F6 / Ctrl+M |
+| Copy to other pane | C / F5 |
+| Move to other pane | M / F6 / Ctrl+M |
 | Preview file in other pane | P |
 | Start image slideshow for current folder | S |
 | Previous / next slideshow image | Left / Right or Space |
