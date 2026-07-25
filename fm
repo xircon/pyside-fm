@@ -42,6 +42,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QHeaderView,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -73,7 +74,7 @@ from PySide6.QtWidgets import (
 APP_ID = "org.ai.fm"
 APP_ORG = "org.ai"
 APP_NAME = "fm"
-APP_VERSION = "1.17"
+APP_VERSION = "1.18"
 APP_DIR = Path(__file__).resolve().parent
 APP_LOG_PATH = APP_DIR / "fm.log"
 CONFIG_DIR = Path.home() / ".config" / "fm"
@@ -2254,6 +2255,7 @@ class HelpDialog(QDialog):
               <li><b>Other Command</b>: run a manually entered command with selected paths.</li>
               <li><b>Copy / Cut / Paste</b>: clipboard actions grouped near the top of the menu.</li>
               <li><b>Copy Path / Copy Name</b>: copy selected full paths or file names as text, one item per line.</li>
+              <li><b>Share via KDE Connect</b>: send selected paths to a paired, reachable KDE Connect device.</li>
               <li><b>Rename / Duplicate / New Folder / New File</b>: common item management actions.</li>
               <li><b>Recursive Search</b>: search below the active folder and show matches in a temporary results pane.</li>
               <li><b>Create Archive</b>: create <code>.zip</code>, <code>.tar</code>, <code>.tar.gz</code>, <code>.tar.bz2</code>, <code>.tar.xz</code>, or <code>.7z</code> archives from selected items. <code>.7z</code> requires 7z or 7zz.</li>
@@ -4324,6 +4326,71 @@ class FilePane(QWidget):
         except OSError as exc:
             QMessageBox.warning(self, "Open With Failed", str(exc))
 
+    def share_via_kdeconnect(self) -> None:
+        paths = self.selected_or_current_paths()
+        if not paths:
+            return
+        executable = shutil.which("kdeconnect-cli")
+        if not executable:
+            QMessageBox.warning(
+                self,
+                "KDE Connect",
+                "kdeconnect-cli is not installed.",
+            )
+            return
+        try:
+            result = subprocess.run(
+                [executable, "--list-available", "--id-name-only"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            QMessageBox.warning(self, "KDE Connect", f"Could not list devices:\n{exc}")
+            return
+        if result.returncode != 0:
+            message = result.stderr.strip() or result.stdout.strip() or "Could not list available devices."
+            QMessageBox.warning(self, "KDE Connect", message)
+            return
+
+        devices: list[tuple[str, str]] = []
+        for line in result.stdout.splitlines():
+            parts = line.strip().split(maxsplit=1)
+            if parts:
+                device_id = parts[0]
+                device_name = parts[1] if len(parts) > 1 else device_id
+                devices.append((device_id, device_name))
+        if not devices:
+            QMessageBox.information(
+                self,
+                "KDE Connect",
+                "No paired and reachable KDE Connect devices were found.",
+            )
+            return
+
+        labels = [name if name != device_id else device_id for device_id, name in devices]
+        label, accepted = QInputDialog.getItem(
+            self,
+            "Share via KDE Connect",
+            "Device:",
+            labels,
+            0,
+            False,
+        )
+        if not accepted:
+            return
+        device_id = devices[labels.index(label)][0]
+        try:
+            for path in paths:
+                process = subprocess.Popen(
+                    [executable, "--device", device_id, "--share", str(path)],
+                    cwd=str(self.current_path()),
+                )
+                reap_when_finished(process)
+        except OSError as exc:
+            QMessageBox.warning(self, "KDE Connect", f"Could not share the selection:\n{exc}")
+
     def new_folder(self) -> None:
         name, ok = get_name(self, "New Folder", "Name")
         if not ok or not name.strip():
@@ -4869,6 +4936,13 @@ class FilePane(QWidget):
         )
         copy_path_action.setEnabled(bool(paths or self.current_path()))
         copy_name_action.setEnabled(bool(paths or self.current_path()))
+
+        share_action = menu.addAction(
+            menu_icon(self, ("kdeconnect", "send-to"), QStyle.StandardPixmap.SP_ArrowForward),
+            "Share via KDE Connect...",
+            self.share_via_kdeconnect,
+        )
+        share_action.setEnabled(bool(paths))
 
         menu.addSeparator()
 

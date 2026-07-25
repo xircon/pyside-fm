@@ -278,6 +278,7 @@ Actions are grouped with separators:
 - Paste: paste copied items, or move cut items, into the current pane.
 - Copy Path: copy selected full paths as text, one item per line.
 - Copy Name: copy selected file or folder names as text, one item per line.
+- Share via KDE Connect: send the selected files or folders to a paired, reachable KDE Connect device.
 - Recursive Search: search below the active folder and show matches in a temporary results pane.
 - Rename: rename the selected item.
 - Duplicate: duplicate selected items.
