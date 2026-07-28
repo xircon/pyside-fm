@@ -3306,6 +3306,9 @@ class IconViewDelegate(QStyledItemDelegate):
 class FilePane(QWidget):
     def __init__(self, title: str, add_favorite_callback=None, trash_callback=None, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        # Folder-dependent controls (most notably the breadcrumbs) must not
+        # change the pane's minimum width and push the main splitter around.
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.title = title
         self.add_favorite_callback = add_favorite_callback
@@ -3566,6 +3569,10 @@ class FilePane(QWidget):
     def resizeEvent(self, event) -> None:
         super().resizeEvent(event)
         self._update_breadcrumbs()
+
+    def minimumSizeHint(self) -> QSize:
+        hint = super().minimumSizeHint()
+        return QSize(240, hint.height())
 
     def _tool_button(self, tooltip: str, icon, callback) -> QToolButton:
         button = QToolButton()
