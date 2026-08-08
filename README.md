@@ -16,6 +16,7 @@ This project is developed with AI assistance. Code, UI behavior, documentation, 
 - Breadcrumb navigation and compact `~/...` path display.
 - Sidebar with favorites, places, recent folders, tree view, and Trash shortcut.
 - Copy, move, duplicate, rename, archive, extract, trash, delete, and undo support.
+- ISO images can be mounted from their right-click menu using UDisks.
 - Copy/move collision prompts with Overwrite, Rename, and Cancel.
 - Copy/move progress dialogs show current speed and estimated finish time, and reserve enough height for buttons on tiling/window-managed desktops such as MangoWM.
 - Drag and drop copy/move between panes.

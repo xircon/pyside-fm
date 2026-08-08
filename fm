@@ -11,6 +11,7 @@ import fnmatch
 import hashlib
 import json
 import mimetypes
+import re
 import shlex
 import stat
 import tarfile
@@ -74,7 +75,7 @@ from PySide6.QtWidgets import (
 APP_ID = "org.ai.fm"
 APP_ORG = "org.ai"
 APP_NAME = "fm"
-APP_VERSION = "1.18"
+APP_VERSION = "1.19"
 APP_DIR = Path(__file__).resolve().parent
 APP_LOG_PATH = APP_DIR / "fm.log"
 CONFIG_DIR = Path.home() / ".config" / "fm"
@@ -261,6 +262,7 @@ class TomlSettings:
             "left/sortReversed",
             "left/iconZoom",
             "left/showHidden",
+            "left/cursorPath",
             "right/path",
             "right/view",
             "right/sortField",
@@ -268,6 +270,7 @@ class TomlSettings:
             "right/sortReversed",
             "right/iconZoom",
             "right/showHidden",
+            "right/cursorPath",
         ]
         migrated: dict = {}
         for key in keys:
@@ -850,6 +853,19 @@ def file_mime_type(path: Path) -> str:
     return mime or "application/octet-stream"
 
 
+def file_icon(path: Path, fallback: QIcon | None = None) -> QIcon:
+    """Return an icon for a file, correcting MIME mappings known to be misleading."""
+    if path.is_file() and path.suffix.lower() == ".zst":
+        # application-zip is the same themed icon QFileIconProvider uses for .zip.
+        for name in ("application-zip", "application-x-archive", "archive-insert"):
+            icon = QIcon.fromTheme(name)
+            if not icon.isNull():
+                return icon
+    if fallback is not None:
+        return fallback
+    return QFileIconProvider().icon(QFileInfo(str(path)))
+
+
 def is_previewable_file(path: Path) -> bool:
     suffix = path.suffix.lower()
     if suffix in IMAGE_EXTENSIONS or suffix in PDF_EXTENSIONS or suffix in TEXT_EXTENSIONS:
@@ -1045,9 +1061,30 @@ def remove_existing(path: Path) -> None:
         path.unlink()
 
 
-def choose_existing_destination(parent: QWidget, source: Path, destination: Path) -> Path | None:
+def choose_existing_destination(
+    parent: QWidget,
+    source: Path,
+    destination: Path,
+    apply_state: dict[str, object] | None = None,
+) -> Path | None:
     if not path_exists_for_collision(destination):
         fm_log("collision.none", source=source, destination=destination)
+        return destination
+
+    remembered_action = apply_state.get("action") if apply_state is not None else None
+    if remembered_action == "skip":
+        fm_log("collision.skip.remembered", source=source, destination=destination)
+        return None
+    if remembered_action == "rename":
+        renamed_destination = unique_destination(destination.parent, source.name)
+        fm_log("collision.rename.remembered", source=source, destination=renamed_destination)
+        return renamed_destination
+    if remembered_action == "overwrite":
+        if same_path(source, destination):
+            fm_log("collision.overwrite.same_path_skipped", source=source, destination=destination)
+            return None
+        fm_log("collision.overwrite.remembered", source=source, destination=destination)
+        remove_existing(destination)
         return destination
 
     fm_log("collision.prompt", source=source, destination=destination)
@@ -1055,10 +1092,14 @@ def choose_existing_destination(parent: QWidget, source: Path, destination: Path
     box.setIcon(QMessageBox.Icon.Warning)
     box.setWindowTitle("File Already Exists")
     box.setText(f'"{destination.name}" already exists.')
-    box.setInformativeText(f"Destination:\n{destination}\n\nOverwrite the existing item, rename the incoming item, or cancel.")
-    overwrite_button = box.addButton("Overwrite", QMessageBox.ButtonRole.DestructiveRole)
-    rename_button = box.addButton("Rename", QMessageBox.ButtonRole.AcceptRole)
+    box.setInformativeText(f"Destination:\n{destination}\n\nReplace the existing item with the incoming item?")
+    apply_checkbox = QCheckBox("Apply the action to all files and folders")
+    apply_checkbox.setVisible(apply_state is not None)
+    box.setCheckBox(apply_checkbox)
     cancel_button = box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+    skip_button = box.addButton("Skip", QMessageBox.ButtonRole.NoRole)
+    rename_button = box.addButton("Rename", QMessageBox.ButtonRole.AcceptRole)
+    overwrite_button = box.addButton("Replace", QMessageBox.ButtonRole.DestructiveRole)
     if same_path(source, destination):
         overwrite_button.setEnabled(False)
     box.setDefaultButton(rename_button)
@@ -1067,11 +1108,20 @@ def choose_existing_destination(parent: QWidget, source: Path, destination: Path
     clicked = box.clickedButton()
     if clicked == cancel_button:
         fm_log("collision.cancel", source=source, destination=destination)
+        if apply_state is not None:
+            apply_state["cancelled"] = True
+        return None
+    if clicked == skip_button:
+        fm_log("collision.skip", source=source, destination=destination)
+        if apply_state is not None and apply_checkbox.isChecked():
+            apply_state["action"] = "skip"
         return None
     if clicked == overwrite_button:
         if same_path(source, destination):
             fm_log("collision.overwrite.same_path_blocked", source=source, destination=destination)
             return None
+        if apply_state is not None and apply_checkbox.isChecked():
+            apply_state["action"] = "overwrite"
         fm_log("collision.overwrite", source=source, destination=destination)
         remove_existing(destination)
         return destination
@@ -1098,10 +1148,14 @@ def choose_existing_destination(parent: QWidget, source: Path, destination: Path
             box.setIcon(QMessageBox.Icon.Warning)
             box.setWindowTitle("File Already Exists")
             box.setText(f'"{destination.name}" already exists.')
-            box.setInformativeText(f"Destination:\n{destination}\n\nOverwrite the existing item, rename the incoming item, or cancel.")
-            overwrite_button = box.addButton("Overwrite", QMessageBox.ButtonRole.DestructiveRole)
-            rename_button = box.addButton("Rename", QMessageBox.ButtonRole.AcceptRole)
+            box.setInformativeText(f"Destination:\n{destination}\n\nReplace the existing item with the incoming item?")
+            apply_checkbox = QCheckBox("Apply the action to all files and folders")
+            apply_checkbox.setVisible(apply_state is not None)
+            box.setCheckBox(apply_checkbox)
             cancel_button = box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+            skip_button = box.addButton("Skip", QMessageBox.ButtonRole.NoRole)
+            rename_button = box.addButton("Rename", QMessageBox.ButtonRole.AcceptRole)
+            overwrite_button = box.addButton("Replace", QMessageBox.ButtonRole.DestructiveRole)
             if same_path(source, destination):
                 overwrite_button.setEnabled(False)
             box.setDefaultButton(rename_button)
@@ -1109,15 +1163,26 @@ def choose_existing_destination(parent: QWidget, source: Path, destination: Path
             clicked = box.clickedButton()
             if clicked == cancel_button:
                 fm_log("collision.rename.cancel", source=source, destination=destination)
+                if apply_state is not None:
+                    apply_state["cancelled"] = True
+                return None
+            if clicked == skip_button:
+                fm_log("collision.rename.skip", source=source, destination=destination)
+                if apply_state is not None and apply_checkbox.isChecked():
+                    apply_state["action"] = "skip"
                 return None
             if clicked == overwrite_button:
                 if same_path(source, destination):
                     fm_log("collision.rename.overwrite.same_path_blocked", source=source, destination=destination)
                     return None
+                if apply_state is not None and apply_checkbox.isChecked():
+                    apply_state["action"] = "overwrite"
                 fm_log("collision.rename.overwrite", source=source, destination=destination)
                 remove_existing(destination)
                 return destination
             continue
+        if apply_state is not None and apply_checkbox.isChecked():
+            apply_state["action"] = "rename"
         fm_log("collision.rename", source=source, destination=renamed_destination)
         return renamed_destination
 
@@ -2225,7 +2290,7 @@ class HelpDialog(QDialog):
               <li><b>Rename</b>: rename the selected/current item.</li>
               <li><b>Copy Across</b>: copy selected or tagged items to the other pane.</li>
               <li><b>Move Across</b>: move selected or tagged items to the other pane.</li>
-              <li><b>Existing targets</b>: copy and move prompt for Overwrite, Rename, or Cancel.</li>
+              <li><b>Existing targets</b>: choose Replace, Rename, Skip, or Cancel. Tick “Apply the action to all files and folders” to reuse Replace, Skip, or automatic Rename for the remaining conflicts in that batch.</li>
               <li><b>Copy / Move progress</b>: transfer dialogs show current speed and estimated finish time.</li>
               <li><b>Trash</b>: move selected or tagged items to Trash.</li>
               <li><b>Empty Trash</b>: permanently clear the desktop Trash.</li>
@@ -2260,6 +2325,7 @@ class HelpDialog(QDialog):
               <li><b>Recursive Search</b>: search below the active folder and show matches in a temporary results pane.</li>
               <li><b>Create Archive</b>: create <code>.zip</code>, <code>.tar</code>, <code>.tar.gz</code>, <code>.tar.bz2</code>, <code>.tar.xz</code>, or <code>.7z</code> archives from selected items. <code>.7z</code> requires 7z or 7zz.</li>
               <li><b>Extract Here / Extract To</b>: extract zip, tar-family, 7z, and rar archives. 7z/rar extraction requires 7z, 7zz, or unar.</li>
+              <li><b>Mount ISO Image</b>: attach and mount a selected <code>.iso</code> file through UDisks, then open its mount point in the pane.</li>
               <li><b>Add to Favorites</b>: add the selected path to the sidebar.</li>
               <li><b>Open in Other Pane</b>: open the selected folder in the opposite pane.</li>
               <li><b>Set Emblem</b>: add or clear an fm-only persistent emblem on a folder.</li>
@@ -3127,6 +3193,9 @@ class FileSystemNoDropModel(QFileSystemModel):
                     if len(self._emblem_icon_cache) > 512:
                         self._emblem_icon_cache.clear()
                     return icon
+            if path.suffix.lower() == ".zst" and path.is_file():
+                base_icon = super().data(index, role)
+                return file_icon(path, base_icon if isinstance(base_icon, QIcon) else None)
             if path.suffix.lower() in IMAGE_EXTENSIONS and path.is_file() and not is_thumbnail_cache_path(path):
                 icon = self._thumbnail_icon(path)
                 if icon:
@@ -3318,6 +3387,7 @@ class FilePane(QWidget):
         self._history: list[Path] = []
         self._history_index = -1
         self._changing_history = False
+        self._directory_cursor_paths: dict[Path, Path] = {}
         self._tagged_paths: set[Path] = set()
         self.show_hidden = False
         self.icon_zoom = 64
@@ -3339,6 +3409,7 @@ class FilePane(QWidget):
         self.full_preview_zoom = 1.0
         self.preview_pdf_page = 0
         self.preview_pdf_page_count = 0
+        self._pending_cursor_path: Path | None = None
 
         self.model = FileSystemNoDropModel(self)
         self.model.setNameFilterDisables(False)
@@ -3615,12 +3686,30 @@ class FilePane(QWidget):
 
     def _apply_name_filter(self) -> None:
         wildcard = self.wildcard_filter_text.strip()
+        flags = QDir.Filter.AllEntries | QDir.Filter.NoDotAndDotDot
+        if not wildcard:
+            flags |= QDir.Filter.AllDirs
+        if self.show_hidden:
+            flags |= QDir.Filter.Hidden
+        self.model.setFilter(flags)
         if wildcard:
-            patterns = [part.strip() for chunk in wildcard.split(";") for part in chunk.split(",")]
-            self.model.setNameFilters([pattern for pattern in patterns if pattern])
+            self.model.setNameFilters(self._wildcard_patterns())
             return
         text = self.search_text.strip()
         self.model.setNameFilters([f"*{text}*"] if text else [])
+
+    def _wildcard_patterns(self) -> list[str]:
+        wildcard = self.wildcard_filter_text.strip()
+        return [
+            pattern
+            for chunk in wildcard.split(";")
+            for pattern in (part.strip() for part in chunk.split(","))
+            if pattern
+        ]
+
+    def _matches_wildcard(self, name: str) -> bool:
+        patterns = self._wildcard_patterns()
+        return not patterns or any(fnmatch.fnmatchcase(name, pattern) for pattern in patterns)
 
     def set_search(self, text: str) -> None:
         self.search_text = text
@@ -3630,6 +3719,8 @@ class FilePane(QWidget):
             self.wildcard_filter_chip.setVisible(False)
         self._tagged_paths.clear()
         self._apply_name_filter()
+        self._sync_hidden_rows()
+        QTimer.singleShot(0, self._sync_hidden_rows)
         self._update_status()
 
     def set_wildcard_filter(self, pattern: str) -> None:
@@ -3648,6 +3739,8 @@ class FilePane(QWidget):
             self.wildcard_filter_chip.setVisible(False)
         self._tagged_paths.clear()
         self._apply_name_filter()
+        self._sync_hidden_rows()
+        QTimer.singleShot(0, self._sync_hidden_rows)
         self._update_status()
 
     def recursive_search(self) -> None:
@@ -3709,7 +3802,7 @@ class FilePane(QWidget):
             except ValueError:
                 label = str(path)
             item = QListWidgetItem(label)
-            item.setIcon(icon_provider.icon(QFileInfo(str(path))))
+            item.setIcon(file_icon(path, icon_provider.icon(QFileInfo(str(path)))))
             item.setData(Qt.ItemDataRole.UserRole, str(path))
             item.setToolTip(str(path))
             self.search_results_view.addItem(item)
@@ -3835,11 +3928,15 @@ class FilePane(QWidget):
         self._update_status()
 
     def _sync_hidden_rows(self) -> None:
+        wildcard_active = bool(self.wildcard_filter_text.strip())
         for view in self.views:
             root = view.rootIndex()
             for row in range(self.model.rowCount(root)):
                 index = self.model.index(row, 0, root)
-                hide = not self.show_hidden and self.model.fileName(index).startswith(".")
+                name = self.model.fileName(index)
+                hide = (not self.show_hidden and name.startswith(".")) or (
+                    wildcard_active and not self._matches_wildcard(name)
+                )
                 if isinstance(view, QTreeView):
                     view.setRowHidden(row, root, hide)
                 else:
@@ -4047,6 +4144,42 @@ class FilePane(QWidget):
         paths = self.selected_or_current_paths()
         return paths[0] if paths else None
 
+    def cursor_path(self) -> Path | None:
+        view = self.current_view()
+        if view not in self.views:
+            view = self.views[VIEW_MODES.index(self.view_combo.currentText())]
+        index = view.currentIndex()
+        if not index.isValid():
+            return None
+        path = Path(self.model.filePath(index.siblingAtColumn(0)))
+        return path if path.parent == self.current_path() else None
+
+    def restore_cursor_path(self, path: Path | None) -> None:
+        self._pending_cursor_path = path
+        for delay in (0, 50, 200, 600):
+            QTimer.singleShot(delay, lambda pane=self: pane._restore_pending_cursor())
+        QTimer.singleShot(1000, lambda pane=self, target=path: pane._finish_cursor_restore(target))
+
+    def _finish_cursor_restore(self, target: Path | None) -> None:
+        if self._pending_cursor_path == target:
+            self._restore_pending_cursor()
+            self._pending_cursor_path = None
+
+    def _restore_pending_cursor(self) -> None:
+        path = self._pending_cursor_path
+        if not path or path.parent != self.current_path() or not path.exists():
+            return
+        index = self.model.index(str(path)).siblingAtColumn(0)
+        if not index.isValid():
+            return
+        view = self.current_view()
+        selection_model = view.selectionModel()
+        selection_model.setCurrentIndex(
+            index,
+            QItemSelectionModel.SelectionFlag.ClearAndSelect | QItemSelectionModel.SelectionFlag.Rows,
+        )
+        view.scrollTo(index, QAbstractItemView.ScrollHint.PositionAtCenter)
+
     def toggle_detail_tag(self) -> None:
         self.toggle_current_tag()
 
@@ -4117,6 +4250,11 @@ class FilePane(QWidget):
         if not resolved.exists() or not resolved.is_dir():
             QMessageBox.warning(self, "Folder Not Found", f"Cannot open:\n{resolved}")
             return
+        previous_directory = self.current_path()
+        if previous_directory != resolved:
+            previous_cursor = self.cursor_path()
+            if previous_cursor:
+                self._directory_cursor_paths[previous_directory] = previous_cursor
         self._tagged_paths.clear()
         self.model.set_tagged_paths(self._tagged_paths)
         self.close_search_results(restore_view=False)
@@ -4144,6 +4282,9 @@ class FilePane(QWidget):
             window.record_recent_path(resolved)
         if hasattr(window, "update_filesystem_tints"):
             window.update_filesystem_tints()
+        remembered_cursor = self._directory_cursor_paths.get(resolved)
+        if remembered_cursor:
+            self.restore_cursor_path(remembered_cursor)
 
     def set_view_mode(self, mode: str) -> None:
         if mode not in VIEW_MODES:
@@ -4503,6 +4644,66 @@ class FilePane(QWidget):
         except (OSError, ValueError, tarfile.TarError, zipfile.BadZipFile) as exc:
             QMessageBox.warning(self, "Extract Failed", str(exc))
 
+    def mount_iso_image(self) -> None:
+        paths = self.selected_or_current_paths()
+        if len(paths) != 1 or not paths[0].is_file() or paths[0].suffix.lower() != ".iso":
+            QMessageBox.information(self, "Mount ISO Image", "Select one ISO image to mount.")
+            return
+        udisksctl = shutil.which("udisksctl")
+        if not udisksctl:
+            QMessageBox.warning(
+                self,
+                "Mount ISO Failed",
+                "udisksctl is not installed. Install the udisks2 package to mount ISO images.",
+            )
+            return
+
+        iso_path = paths[0]
+        loop_device = ""
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            setup = subprocess.run(
+                [udisksctl, "loop-setup", "--file", str(iso_path), "--no-user-interaction"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            if setup.returncode != 0:
+                raise OSError((setup.stderr or setup.stdout or "Could not create a loop device.").strip())
+            match = re.search(r"/dev/loop\d+", setup.stdout)
+            if not match:
+                raise OSError(f"Could not determine the loop device from:\n{setup.stdout.strip()}")
+            loop_device = match.group(0)
+
+            mounted = subprocess.run(
+                [udisksctl, "mount", "--block-device", loop_device, "--no-user-interaction"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            if mounted.returncode != 0:
+                raise OSError((mounted.stderr or mounted.stdout or "Could not mount the ISO image.").strip())
+
+            mount_match = re.search(r"\bat (/.+?)(?:\.|\s*)$", mounted.stdout.strip())
+            mount_point = Path(mount_match.group(1)) if mount_match else None
+            if mount_point and mount_point.is_dir():
+                self.set_path(mount_point)
+            else:
+                QMessageBox.information(self, "ISO Mounted", mounted.stdout.strip() or f"Mounted {iso_path.name}.")
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            if loop_device:
+                subprocess.run(
+                    [udisksctl, "loop-delete", "--block-device", loop_device, "--no-user-interaction"],
+                    capture_output=True,
+                    timeout=15,
+                    check=False,
+                )
+            QMessageBox.warning(self, "Mount ISO Failed", str(exc))
+        finally:
+            QApplication.restoreOverrideCursor()
+
     def copy_selected_to_peer(self) -> None:
         if self.peer:
             self.copy_paths_to(self.operation_paths(), self.peer.current_path())
@@ -4535,11 +4736,14 @@ class FilePane(QWidget):
             fm_log("copy.queued", pane=self.title, count=len(paths), destination=destination)
             return
         targets: list[tuple[Path, Path]] = []
+        collision_state: dict[str, object] = {}
         for path in paths:
-            target = choose_existing_destination(self, path, destination / path.name)
+            target = choose_existing_destination(self, path, destination / path.name, collision_state)
             if target is None:
-                fm_log("copy.cancelled_before_start", pane=self.title, source=path, destination=destination)
-                return
+                if collision_state.get("cancelled"):
+                    fm_log("copy.cancelled_before_start", pane=self.title, source=path, destination=destination)
+                    return
+                continue
             targets.append((path, target))
         fm_log("copy.start_dialog", pane=self.title, targets=[(str(source), str(target)) for source, target in targets])
         self._start_file_operation("copy", targets, "Copying files...", "created")
@@ -4555,11 +4759,14 @@ class FilePane(QWidget):
             fm_log("move.queued", pane=self.title, count=len(paths), destination=destination)
             return
         targets: list[tuple[Path, Path]] = []
+        collision_state: dict[str, object] = {}
         for path in paths:
-            target = choose_existing_destination(self, path, destination / path.name)
+            target = choose_existing_destination(self, path, destination / path.name, collision_state)
             if target is None:
-                fm_log("move.cancelled_before_start", pane=self.title, source=path, destination=destination)
-                return
+                if collision_state.get("cancelled"):
+                    fm_log("move.cancelled_before_start", pane=self.title, source=path, destination=destination)
+                    return
+                continue
             targets.append((path, target))
         fm_log("move.start_dialog", pane=self.title, targets=[(str(source), str(target)) for source, target in targets])
         self._start_file_operation("move", targets, "Moving files...", "move")
@@ -5006,6 +5213,12 @@ class FilePane(QWidget):
         if archive_paths:
             menu.addAction(menu_icon(self, "archive-extract", QStyle.StandardPixmap.SP_DirOpenIcon), "Extract Here", self.extract_archives_here)
             menu.addAction(menu_icon(self, "archive-extract", QStyle.StandardPixmap.SP_DirOpenIcon), "Extract To...", self.extract_archive_to_folder)
+        if len(paths) == 1 and paths[0].is_file() and paths[0].suffix.lower() == ".iso":
+            menu.addAction(
+                menu_icon(self, ("media-optical", "drive-optical"), QStyle.StandardPixmap.SP_DriveCDIcon),
+                "Mount ISO Image",
+                self.mount_iso_image,
+            )
 
         menu.addSeparator()
 
@@ -5094,6 +5307,8 @@ class FilePane(QWidget):
     def _on_directory_loaded(self, path: str) -> None:
         if Path(path) == self.current_path():
             self._sync_hidden_rows()
+            for delay in (0, 100, 300):
+                QTimer.singleShot(delay, lambda pane=self: pane._restore_pending_cursor())
             self._update_status()
 
     def _update_navigation(self) -> None:
@@ -5132,7 +5347,9 @@ class FilePane(QWidget):
             entries = [
                 entry
                 for entry in directory.iterdir()
-                if entry.name not in {".", ".."} and (self.show_hidden or not entry.name.startswith("."))
+                if entry.name not in {".", ".."}
+                and (self.show_hidden or not entry.name.startswith("."))
+                and self._matches_wildcard(entry.name)
             ]
         except OSError:
             entries = []
@@ -6418,6 +6635,10 @@ class FileManager(QMainWindow):
         )
         self.left.restore_state(left_state)
         self.right.restore_state(right_state)
+        left_cursor = str(self.settings.value("left/cursorPath", "")).strip()
+        right_cursor = str(self.settings.value("right/cursorPath", "")).strip()
+        self.left.restore_cursor_path(Path(left_cursor) if left_cursor else None)
+        self.right.restore_cursor_path(Path(right_cursor) if right_cursor else None)
         self.left.set_icon_zoom(int(self.settings.value("left/iconZoom", self.left.icon_zoom)))
         self.right.set_icon_zoom(int(self.settings.value("right/iconZoom", self.right.icon_zoom)))
         try:
@@ -6477,6 +6698,8 @@ class FileManager(QMainWindow):
             self.settings.setValue(f"{prefix}/iconZoom", pane.icon_zoom)
             self.settings.setValue(f"{prefix}/showHidden", pane.show_hidden)
             self.settings.setValue(f"{prefix}/previewSplitter", pane.preview_state())
+            cursor_path = pane.cursor_path()
+            self.settings.setValue(f"{prefix}/cursorPath", str(cursor_path) if cursor_path else "")
         self.settings.sync()
 
     def schedule_side_panel_width_restore(self, width: int) -> None:
@@ -7020,6 +7243,7 @@ def main() -> int:
     app.setApplicationName(APP_NAME)
     app.setDesktopFileName(APP_ID)
     window = FileManager(launch_args.left_state, launch_args.right_state)
+    app.aboutToQuit.connect(window.save_settings)
     window.show()
     return app.exec()
 
