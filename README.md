@@ -24,7 +24,7 @@ This project is developed with AI assistance. Code, UI behavior, documentation, 
 - Wildcard pane filtering with `Ctrl+S`.
 - Recursive search results pane with `Ctrl+Shift+F`; results behave like selectable files for open, copy, archive, properties, and context menu actions.
 - Active pane zoom with `Z` while a file pane or full preview is focused.
-- Text, image, and PDF previews.
+- Text, rendered Markdown, image, and PDF previews.
 - Full dual-pane image slideshow for the active directory, opened with `S` and navigated with Left, Right, or Space.
 - Aspect-correct image thumbnails with optional per-folder `.thumbnails` cache for image-heavy folders.
 - Full-pane preview in the opposite pane, with Escape to close.
@@ -61,6 +61,12 @@ Keep it attached to the launching terminal:
 
 ```bash
 ./fm --no-detach
+```
+
+Set a custom Wayland application ID:
+
+```bash
+./fm --appid=org.example.fm
 ```
 
 Open with optional pane paths and view modes:

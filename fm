@@ -75,7 +75,7 @@ from PySide6.QtWidgets import (
 APP_ID = "org.ai.fm"
 APP_ORG = "org.ai"
 APP_NAME = "fm"
-APP_VERSION = "1.19"
+APP_VERSION = "1.23"
 APP_DIR = Path(__file__).resolve().parent
 APP_LOG_PATH = APP_DIR / "fm.log"
 CONFIG_DIR = Path.home() / ".config" / "fm"
@@ -106,6 +106,7 @@ DETAIL_TYPE_WIDTH = 86
 DETAIL_DATE_WIDTH = 168
 THEMES = ("Light", "Dark", "Very Dark")
 PROGRESS_DIALOG_WIDTH = 533
+PANE_SELECTION_GUTTER_WIDTH = 32
 DEFAULT_TERMINAL_COMMAND = "kitty"
 DEFAULT_TERMINAL_ARGS = "--app-id=org.ai.floater"
 USER_BUTTON_COUNT = 8
@@ -335,6 +336,7 @@ def filesystem_id(path: Path) -> int | None:
         return None
 IMAGE_EXTENSIONS = {".bmp", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"}
 PDF_EXTENSIONS = {".pdf"}
+MARKDOWN_EXTENSIONS = {".md", ".markdown", ".mdown", ".mkd", ".mkdn"}
 TEXT_EXTENSIONS = {
     ".bash",
     ".c",
@@ -351,6 +353,10 @@ TEXT_EXTENSIONS = {
     ".json",
     ".log",
     ".md",
+    ".markdown",
+    ".mdown",
+    ".mkd",
+    ".mkdn",
     ".py",
     ".rs",
     ".sh",
@@ -1643,22 +1649,69 @@ def clipboard_paths_and_operation(mime: QMimeData) -> tuple[list[Path], str]:
     return paths, operation
 
 
+def filesystem_root(path: Path) -> Path:
+    """Return the mount point containing *path* without resolving symlinks."""
+    current = path.absolute()
+    if current.is_symlink() or not current.is_dir():
+        current = current.parent
+    try:
+        device = current.stat().st_dev
+    except OSError:
+        return current.anchor and Path(current.anchor) or Path("/")
+    while current.parent != current:
+        try:
+            if current.parent.stat().st_dev != device:
+                break
+        except OSError:
+            break
+        current = current.parent
+    return current
+
+
+def trash_directories(source: Path) -> tuple[Path, Path, Path, bool]:
+    """Return files/info directories, volume root, and whether trash is local."""
+    home_trash = Path.home() / ".local" / "share" / "Trash"
+    volume_root = filesystem_root(source)
+    try:
+        same_as_home = source.stat().st_dev == Path.home().stat().st_dev
+    except OSError:
+        same_as_home = False
+    if same_as_home:
+        return home_trash / "files", home_trash / "info", volume_root, True
+
+    # Freedesktop per-volume trash.  Keeping the target on the source volume is
+    # especially important for SSHFS: rename is remote-side and near-instant,
+    # whereas moving to the home trash copies every byte over the connection.
+    volume_trash = volume_root / f".Trash-{os.getuid()}"
+    return volume_trash / "files", volume_trash / "info", volume_root, False
+
+
+def trash_info_path(trash_path: Path) -> Path:
+    return trash_path.parent.parent / "info" / f"{trash_path.name}.trashinfo"
+
+
 def move_to_trash(path: Path) -> Path | None:
     source = path.expanduser()
+    # A cross-filesystem shutil.move copies first and removes the source last.
+    # On read-only network mounts that can leave an orphaned trash copy and block
+    # for a long time while the remote removal eventually fails.
     try:
-        source = source.resolve()
+        if os.statvfs(source).f_flag & os.ST_RDONLY:
+            return None
     except OSError:
-        pass
+        return None
+    source = source.absolute()
 
-    trash_root = Path.home() / ".local" / "share" / "Trash"
-    files_dir = trash_root / "files"
-    info_dir = trash_root / "info"
+    files_dir, info_dir, volume_root, is_home_trash = trash_directories(source)
+    info_path: Path | None = None
     try:
-        files_dir.mkdir(parents=True, exist_ok=True)
-        info_dir.mkdir(parents=True, exist_ok=True)
+        files_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+        info_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
         target = unique_destination(files_dir, source.name)
-        shutil.move(str(source), str(target))
-        escaped_path = quote(str(source), safe="/")
+        # Never fall back to shutil's cross-device copy for trash.  If a volume
+        # trash cannot be used, fail promptly and leave the source untouched.
+        trashinfo_source = source if is_home_trash else source.relative_to(volume_root)
+        escaped_path = quote(str(trashinfo_source), safe="/")
         info_path = info_dir / f"{target.name}.trashinfo"
         info_path.write_text(
             "[Trash Info]\n"
@@ -1666,9 +1719,53 @@ def move_to_trash(path: Path) -> Path | None:
             f"DeletionDate={datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}\n",
             encoding="utf-8",
         )
+        source.rename(target)
         return target
-    except OSError:
+    except (OSError, ValueError):
+        if info_path is not None:
+            try:
+                info_path.unlink(missing_ok=True)
+            except OSError:
+                pass
         return None
+
+
+class TrashWorker(QObject):
+    progress = Signal(int, int, str)
+    completed = Signal(object, object)
+
+    def __init__(self, paths: list[Path]) -> None:
+        super().__init__()
+        self.paths = paths
+        self.cancel_requested = False
+
+    def cancel(self) -> None:
+        self.cancel_requested = True
+
+    @Slot()
+    def run(self) -> None:
+        trashed: list[tuple[Path, Path]] = []
+        failed: list[str] = []
+        total = len(self.paths)
+        for row, path in enumerate(self.paths):
+            if self.cancel_requested:
+                break
+            self.progress.emit(row, total, f"Moving to trash: {path.name}")
+            try:
+                if os.statvfs(path).f_flag & os.ST_RDONLY:
+                    failed.append(f"{path} (read-only filesystem)")
+                    continue
+            except OSError as exc:
+                failed.append(f"{path} ({exc})")
+                continue
+            original = path.expanduser().absolute()
+            trash_path = move_to_trash(path)
+            if trash_path:
+                trashed.append((trash_path, original))
+            else:
+                failed.append(str(path))
+        self.progress.emit(len(trashed) + len(failed), total, "Move to trash complete")
+        self.completed.emit(trashed, failed)
 
 
 @dataclass
@@ -1691,6 +1788,7 @@ class LaunchArgs:
     left_state: PaneState | None
     right_state: PaneState | None
     no_detach: bool
+    app_id: str
 
 
 def normalize_view_mode(value: str) -> str:
@@ -1709,12 +1807,21 @@ def parse_args(argv: list[str]) -> LaunchArgs:
         help="Keep fm attached to the launching terminal.",
     )
     parser.add_argument(
+        "--appid",
+        default=APP_ID,
+        metavar="STRING",
+        help=f"Set the Wayland application ID (default: {APP_ID}).",
+    )
+    parser.add_argument(
         "pane_args",
         nargs="*",
         metavar="PATH VIEW",
         help="Optional pane path/view pairs. Views: icon, list, details.",
     )
     args = parser.parse_args(argv)
+    app_id = args.appid.strip()
+    if not app_id:
+        parser.error("--appid must not be empty")
     values = args.pane_args
     if len(values) not in {0, 2, 4}:
         parser.error("use either no arguments, one PATH VIEW pair, or two PATH VIEW pairs")
@@ -1729,7 +1836,7 @@ def parse_args(argv: list[str]) -> LaunchArgs:
 
     left_state = states[0] if len(states) >= 1 else None
     right_state = states[1] if len(states) >= 2 else None
-    return LaunchArgs(left_state, right_state, args.no_detach)
+    return LaunchArgs(left_state, right_state, args.no_detach, app_id)
 
 
 def detach_if_terminal(no_detach: bool) -> None:
@@ -2774,6 +2881,8 @@ class DropListView(QListView):
         return super().selectionCommand(index, event)
 
     def indexAt(self, point: QPoint) -> QModelIndex:
+        if point.x() < PANE_SELECTION_GUTTER_WIDTH:
+            return QModelIndex()
         index = super().indexAt(point)
         if not index.isValid() or self.viewMode() != QListView.ViewMode.IconMode:
             return index
@@ -2901,6 +3010,11 @@ class DropTreeView(QTreeView):
         self._drag_start_pos = None
         self._drag_start_index = QModelIndex()
         self.viewport().installEventFilter(self)
+
+    def indexAt(self, point: QPoint) -> QModelIndex:
+        if point.x() < PANE_SELECTION_GUTTER_WIDTH:
+            return QModelIndex()
+        return super().indexAt(point)
 
     def event(self, event) -> bool:
         if event.type() == QEvent.Type.ShortcutOverride and (self._is_plain_space(event) or self._is_plain_escape(event)):
@@ -3594,7 +3708,10 @@ class FilePane(QWidget):
         self.full_preview_text.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.full_preview_text.setReadOnly(True)
         self.full_preview_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
-        self.full_preview_text.setStyleSheet("background: #f8fafc; color: #111827;")
+        self.full_preview_text.setStyleSheet(
+            "QTextEdit { background: #0d1117; color: #e6edf3; border: 0; "
+            "selection-background-color: #264f78; selection-color: #ffffff; }"
+        )
         self.full_preview_stack = QStackedWidget()
         self.full_preview_stack.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.full_preview_stack.addWidget(self.full_preview_image)
@@ -4939,43 +5056,59 @@ class FilePane(QWidget):
             return
         if hasattr(window, "begin_file_operation"):
             window.begin_file_operation()
-        failed: list[Path] = []
-        trashed: list[tuple[Path, Path]] = []
-        try:
-            progress = QProgressDialog("Moving items to trash...", "Cancel", 0, len(paths), self)
-            widen_progress_dialog(progress)
-            progress.setWindowModality(Qt.WindowModality.WindowModal)
-            progress.setMinimumDuration(0)
-            progress.setAutoClose(False)
-            progress.setAutoReset(False)
-            progress.show()
-            started_at = time.monotonic()
-            QApplication.processEvents()
-            for row, path in enumerate(paths):
-                progress.setValue(row)
-                progress.setLabelText(f"Moving to trash: {path.name}")
-                QApplication.processEvents()
-                if progress.wasCanceled():
-                    break
-                try:
-                    original = path.expanduser().resolve()
-                except OSError:
-                    original = path.expanduser()
-                trash_path = move_to_trash(path)
-                if trash_path:
-                    trashed.append((trash_path, original))
-                else:
-                    failed.append(path)
-            finish_visible_progress(progress, len(paths), started_at)
-            if trashed and self.trash_callback:
-                self.trash_callback(trashed)
-            if trashed:
-                self.record_undo(UndoAction("trash", trashed))
-            if failed:
-                QMessageBox.warning(self, "Trash Failed", "Could not trash:\n" + "\n".join(str(path) for path in failed))
-        finally:
-            if hasattr(window, "end_file_operation"):
-                window.end_file_operation()
+        progress = QProgressDialog("Moving items to trash...", "Cancel", 0, len(paths), self)
+        widen_progress_dialog(progress)
+        progress.setWindowModality(Qt.WindowModality.NonModal)
+        progress.setMinimumDuration(0)
+        progress.setAutoClose(False)
+        progress.setAutoReset(False)
+        progress.show()
+
+        thread = QThread(self)
+        worker = TrashWorker(paths)
+        worker.moveToThread(thread)
+        self._operation_threads.append(thread)
+        self._operation_workers.append(worker)
+        self._operation_contexts[worker] = {"progress": progress, "thread": thread, "window": window}
+        worker.progress.connect(self._trash_operation_progress)
+        worker.completed.connect(self._trash_operation_completed)
+        progress.canceled.connect(lambda w=worker: w.cancel())
+        thread.started.connect(worker.run)
+        thread.finished.connect(worker.deleteLater)
+        thread.finished.connect(thread.deleteLater)
+        thread.finished.connect(lambda t=thread: self._operation_threads.remove(t) if t in self._operation_threads else None)
+        thread.finished.connect(lambda w=worker: self._cleanup_file_worker(w))
+        thread.start()
+
+    @Slot(int, int, str)
+    def _trash_operation_progress(self, value: int, maximum: int, label: str) -> None:
+        context = self._operation_contexts.get(self.sender())
+        if context and isinstance(context.get("progress"), QProgressDialog):
+            progress = context["progress"]
+            progress.setLabelText(label)
+            progress.setValue(min(value, maximum))
+
+    @Slot(object, object)
+    def _trash_operation_completed(self, trashed: list[tuple[Path, Path]], failed: list[str]) -> None:
+        worker = self.sender()
+        context = self._operation_contexts.get(worker)
+        if not context:
+            return
+        progress = context["progress"]
+        thread = context["thread"]
+        window = context["window"]
+        if trashed and self.trash_callback:
+            self.trash_callback(trashed)
+        if trashed:
+            self.record_undo(UndoAction("trash", trashed))
+        if isinstance(progress, QProgressDialog):
+            progress.close()
+        if failed:
+            QMessageBox.warning(self, "Trash Failed", "Could not trash:\n" + "\n".join(str(path) for path in failed))
+        if hasattr(window, "end_file_operation"):
+            window.end_file_operation()
+        if isinstance(thread, QThread):
+            thread.quit()
 
     def delete_permanently_selected(self) -> None:
         paths = self.selected_or_current_paths()
@@ -5124,6 +5257,13 @@ class FilePane(QWidget):
 
         open_with_menu.aboutToShow.connect(populate_open_with_menu)
 
+        if self.peer:
+            menu.addSeparator()
+            open_peer_action = menu.addAction(menu_icon(self, "folder-open", QStyle.StandardPixmap.SP_DirOpenIcon), "Open in Other Pane", self.open_selected_in_peer)
+            open_peer_action.setEnabled(bool(current_path and current_path.is_dir()))
+            preview_peer_action = menu.addAction(menu_icon(self, "view-preview", QStyle.StandardPixmap.SP_FileDialogInfoView), "Preview in Other Pane", self.preview_selected_in_peer)
+            preview_peer_action.setEnabled(bool(current_path and current_path.is_file() and is_previewable_file(current_path)))
+
         menu.addSeparator()
 
         copy_action = menu.addAction(menu_icon(self, "edit-copy", QStyle.StandardPixmap.SP_FileIcon), "Copy", self.copy_to_clipboard)
@@ -5151,6 +5291,8 @@ class FilePane(QWidget):
         copy_path_action.setEnabled(bool(paths or self.current_path()))
         copy_name_action.setEnabled(bool(paths or self.current_path()))
 
+        menu.addSeparator()
+
         share_action = menu.addAction(
             menu_icon(self, ("kdeconnect", "send-to"), QStyle.StandardPixmap.SP_ArrowForward),
             "Share via KDE Connect...",
@@ -5176,15 +5318,14 @@ class FilePane(QWidget):
 
         menu.addAction(menu_icon(self, "edit-rename", QStyle.StandardPixmap.SP_FileDialogDetailedView), "Rename", self.rename_selected)
         menu.addAction(menu_icon(self, "edit-copy", QStyle.StandardPixmap.SP_FileIcon), "Duplicate", self.duplicate_selected)
+
+        menu.addSeparator()
+
         menu.addAction(menu_icon(self, "folder-new", QStyle.StandardPixmap.SP_DirIcon), "New Folder", self.new_folder)
         menu.addAction(menu_icon(self, "document-new", QStyle.StandardPixmap.SP_FileIcon), "New File", self.new_file)
 
         if self.peer:
             menu.addSeparator()
-            open_peer_action = menu.addAction(menu_icon(self, "folder-open", QStyle.StandardPixmap.SP_DirOpenIcon), "Open in Other Pane", self.open_selected_in_peer)
-            open_peer_action.setEnabled(bool(current_path and current_path.is_dir()))
-            preview_peer_action = menu.addAction(menu_icon(self, "view-preview", QStyle.StandardPixmap.SP_FileDialogInfoView), "Preview in Other Pane", self.preview_selected_in_peer)
-            preview_peer_action.setEnabled(bool(current_path and current_path.is_file() and is_previewable_file(current_path)))
             menu.addAction(menu_icon(self, "edit-copy", QStyle.StandardPixmap.SP_ArrowRight), "Copy to Other Pane", self.copy_selected_to_peer)
             menu.addAction(menu_icon(self, "go-jump", QStyle.StandardPixmap.SP_ArrowRight), "Move to Other Pane", self.move_selected_to_peer)
 
@@ -5492,7 +5633,13 @@ class FilePane(QWidget):
             except OSError as exc:
                 text = str(exc)
             target = self.full_preview_text if self.manual_preview_active else self.preview_text
-            target.setPlainText(text)
+            if path.suffix.lower() in MARKDOWN_EXTENSIONS:
+                target.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
+                target.document().setBaseUrl(QUrl.fromLocalFile(str(path.parent) + os.sep))
+                target.setMarkdown(text)
+            else:
+                target.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
+                target.setPlainText(text)
             target.moveCursor(target.textCursor().MoveOperation.Start)
         if self.manual_preview_active:
             self._set_pdf_controls_visible(False)
@@ -5892,9 +6039,14 @@ class FileManager(QMainWindow):
         apply_icon_theme_name(self.icon_theme)
         self.show_hidden = str(self.settings.value("showHidden", "false")).lower() == "true"
         self.preview_enabled = str(self.settings.value("previewEnabled", "true")).lower() != "false"
+        self.side_panel_visible = str(self.settings.value("sidePanel/visible", "true")).lower() != "false"
         self.side_panel_width = int(self.settings.value("sidePanel/width", 180))
         self._restoring_side_panel_width = False
         self._side_panel_restore_pending = True
+        self._settings_restored = False
+        self._side_panel_save_timer = QTimer(self)
+        self._side_panel_save_timer.setSingleShot(True)
+        self._side_panel_save_timer.timeout.connect(self._save_side_panel_state)
         self.icon_layout = str(self.settings.value("iconLayout", "Normal"))
         if self.icon_layout not in ICON_LAYOUTS:
             self.icon_layout = "Normal"
@@ -6051,6 +6203,7 @@ class FileManager(QMainWindow):
         side_action = self.side_dock.toggleViewAction()
         side_action.setText("Side Panel")
         side_action.setIcon(menu_icon(self, "sidebar-show", QStyle.StandardPixmap.SP_FileDialogListView))
+        side_action.triggered.connect(self._side_panel_toggled)
         toolbar.addAction(side_action)
 
         help_action = QAction(menu_icon(self, "help-browser", QStyle.StandardPixmap.SP_MessageBoxQuestion), "Help", self)
@@ -6354,6 +6507,8 @@ class FileManager(QMainWindow):
             if self.side_dock.isVisible() and not self._restoring_side_panel_width and not self._side_panel_restore_pending:
                 self.side_panel_width = max(80, self.side_dock.width())
                 fm_log("side_panel.width.changed", width=self.side_panel_width)
+                if self._settings_restored:
+                    self._side_panel_save_timer.start(250)
         if event.type() in {QEvent.Type.ShortcutOverride, QEvent.Type.KeyPress} and self.slideshow_images:
             if event.modifiers() == Qt.KeyboardModifier.NoModifier:
                 if event.key() in {Qt.Key.Key_Right, Qt.Key.Key_Space, Qt.Key.Key_Left, Qt.Key.Key_Escape}:
@@ -6656,16 +6811,19 @@ class FileManager(QMainWindow):
         self.set_preview_enabled(self.preview_enabled)
         self.left.restore_preview_state(self.settings.value("left/previewSplitter"))
         self.right.restore_preview_state(self.settings.value("right/previewSplitter"))
-        self.side_dock.setVisible(str(self.settings.value("sidePanel/visible", "true")).lower() != "false")
+        self.side_dock.setVisible(self.side_panel_visible)
         self.side_panel.set_mode(str(self.settings.value("sidePanel/mode", "Shortcuts")))
         self.side_panel_width = int(self.settings.value("sidePanel/width", self.side_panel_width or 180))
         self.schedule_side_panel_width_restore(self.side_panel_width)
         self.apply_theme(self.current_theme)
         self.update_filesystem_tints()
+        self._settings_restored = True
 
     def save_settings(self) -> None:
         if self.zoomed_pane:
             self.clear_pane_zoom()
+        if self.side_panel_visible and self.side_dock.width() >= 80:
+            self.side_panel_width = self.side_dock.width()
         self.settings.setValue("geometry", self.saveGeometry())
         self.settings.setValue("windowState", self.saveState())
         self.settings.setValue("splitter", self.splitter.saveState())
@@ -6685,7 +6843,7 @@ class FileManager(QMainWindow):
         self.settings.setValue("folderNotesJson", json.dumps(self.folder_notes))
         self.settings.setValue("confirmQuitOperations", self.confirm_quit_operations)
         self.settings.setValue("fileLoggingEnabled", self.file_logging_enabled)
-        self.settings.setValue("sidePanel/visible", self.side_dock.isVisible())
+        self.settings.setValue("sidePanel/visible", self.side_panel_visible)
         self.settings.setValue("sidePanel/mode", self.side_panel.current_mode())
         self.settings.setValue("sidePanel/width", self.side_panel_width)
         for prefix, pane in (("left", self.left), ("right", self.right)):
@@ -6727,6 +6885,22 @@ class FileManager(QMainWindow):
     def _side_panel_visibility_changed(self, visible: bool) -> None:
         if visible:
             self.schedule_side_panel_width_restore(self.side_panel_width)
+
+    def _side_panel_toggled(self, visible: bool) -> None:
+        self.side_panel_visible = visible
+        if self._settings_restored:
+            self._save_side_panel_state()
+
+    def _save_side_panel_state(self, visible: bool | None = None) -> None:
+        if not self._settings_restored:
+            return
+        if visible is None:
+            visible = self.side_panel_visible
+        self.settings.setValue("sidePanel/visible", visible)
+        self.settings.setValue("sidePanel/mode", self.side_panel.current_mode())
+        self.settings.setValue("sidePanel/width", self.side_panel_width)
+        self.settings.sync()
+        fm_log("side_panel.state.saved", visible=visible, width=self.side_panel_width)
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -7113,7 +7287,7 @@ class FileManager(QMainWindow):
                 if restore_path.exists():
                     restore_path = unique_destination(original_path.parent, original_path.name)
                 shutil.move(str(trash_path), str(restore_path))
-                info_path = Path.home() / ".local" / "share" / "Trash" / "info" / f"{trash_path.name}.trashinfo"
+                info_path = trash_info_path(trash_path)
                 try:
                     info_path.unlink()
                 except OSError:
@@ -7241,7 +7415,7 @@ def main() -> int:
     app = QApplication(sys.argv)
     app.setOrganizationName(APP_ORG)
     app.setApplicationName(APP_NAME)
-    app.setDesktopFileName(APP_ID)
+    app.setDesktopFileName(launch_args.app_id)
     window = FileManager(launch_args.left_state, launch_args.right_state)
     app.aboutToQuit.connect(window.save_settings)
     window.show()
