@@ -15,10 +15,12 @@ This project is developed with AI assistance. Code, UI behavior, documentation, 
 - Per-pane sort menu for name, size, type, modification date, ascending, descending, and reversed order.
 - Breadcrumb navigation and compact `~/...` path display.
 - Sidebar with favorites, places, recent folders, tree view, and Trash shortcut.
+- KDE Connect phone access from the sidebar, mounted on demand as a local filesystem.
 - Copy, move, duplicate, rename, archive, extract, trash, delete, and undo support.
 - ISO images can be mounted from their right-click menu using UDisks.
 - Copy/move collision prompts with Overwrite, Rename, and Cancel.
 - Copy/move progress dialogs show current speed and estimated finish time, and reserve enough height for buttons on tiling/window-managed desktops such as MangoWM.
+- Copy/move progress dialogs include **Shut down computer when complete**, unchecked for every new transfer. Shutdown only follows successful completion, waits for queued operations, and is canceled by a transfer failure or cancellation.
 - Drag and drop copy/move between panes.
 - Drag hover highlights a folder drop target; no highlight means dropping into the pane's current folder.
 - Wildcard pane filtering with `Ctrl+S`.
@@ -123,6 +125,7 @@ The top toolbar contains:
 - Properties: show properties for the selected item or current folder.
 - Hidden: toggle hidden files.
 - Preview: toggle automatic preview panes.
+- Compare Directories: beside Preview, a green two-pane arrow icon compares the current pane 1 and pane 2 directories recursively. Checks file contents byte-for-byte, including hidden files, and reports items present on only one side, different sizes or contents, different types or symlink targets, and read errors. Missing directories are reported as a whole. Timestamps and permissions are ignored; symlinks are not followed. The comparison runs in the background and can be cancelled. Use it after a failed copy to identify what needs copying again.
 - Dual Bookmarks dropdown: open a saved pair of left/right folders. It sits in the top-center toolbar area.
 - Swap Panes: swap left and right pane paths and view modes.
 - Side Panel: show or hide the side panel.
@@ -187,6 +190,7 @@ Shortcut sections include:
 - Favorites
 - Places
 - Recent
+- Devices (mounted filesystems and mountable removable drives)
 
 Default places include:
 
@@ -201,6 +205,14 @@ Default places include:
 - scripts
 - Trash
 - Root
+- Phone (KDE Connect), when `kdeconnect-cli` is installed
+
+Selecting **Phone (KDE Connect)** lists reachable paired devices, mounts the chosen
+device through KDE Connect, and opens its local mount point in the active pane. In
+current KDE Connect Android releases, open **Plugin settings**, tap **Filesystem
+access**, and enable Android's **Allow access to manage all files** permission for
+KDE Connect. Older releases call this plugin **Filesystem expose** and use configured
+storage locations instead.
 
 Favorite/recent context menu actions:
 
@@ -210,6 +222,10 @@ Favorite/recent context menu actions:
 - Remove Favorite
 - Remove Recent
 - Clear Recent
+
+Drives appear at the bottom of Shortcuts. Activate an unmounted removable drive to
+mount and open it through UDisks. Activate a mounted device to open it, or right-click
+it and select **Unmount** to safely unmount it.
 
 Tree context menu actions:
 
@@ -310,6 +326,8 @@ Actions are grouped with separators:
 - Calculate Size: recursively calculate size, file count, and folder count.
 - Properties: show item properties and change the desktop default application for a single file type.
 
+The Compare Directories window has a **Simple mode (name and file size)** checkbox. Enable it for a faster comparison without reading file contents; files with matching names and sizes are treated as equal. Changing the checkbox reruns the comparison. Leave it unchecked for full content verification. Both modes include subdirectories, hidden files, and symlink target checks.
+
 ## Preview
 
 Automatic preview can be toggled with the toolbar Preview action.
@@ -370,8 +388,8 @@ Properties shows metadata for the selected/current item.
 
 For a single file, Properties also shows:
 
-- File MIME type
-- Current matching desktop applications
+- File MIME type from the system MIME database (including `.url` Internet shortcuts)
+- Matching desktop applications first, followed by other installed applications
 - An `Open with` selector
 - A `Set Default` button
 
@@ -382,6 +400,7 @@ xdg-mime default <desktop-file> <mime-type>
 ```
 
 This is the same desktop association system used by most Linux file managers. After changing a default, `O`, Enter, Ctrl+O, and the context menu Open action use the new default handler.
+The saved association is checked before success is reported.
 
 ## Folder Emblems
 

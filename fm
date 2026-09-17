@@ -10,7 +10,6 @@ import configparser
 import fnmatch
 import hashlib
 import json
-import mimetypes
 import re
 import shlex
 import stat
@@ -25,7 +24,7 @@ from pathlib import Path
 from typing import Callable
 from urllib.parse import quote
 
-from PySide6.QtCore import QDir, QEvent, QFile, QFileInfo, QItemSelectionModel, QMimeData, QModelIndex, QObject, QPoint, QRect, QRunnable, QSettings, QSize, Qt, QThread, QThreadPool, QTimer, QUrl, Signal, Slot
+from PySide6.QtCore import QDir, QEvent, QFile, QFileInfo, QItemSelectionModel, QMimeData, QMimeDatabase, QModelIndex, QObject, QPoint, QProcess, QRect, QRunnable, QSettings, QSize, Qt, QThread, QThreadPool, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QAction, QActionGroup, QBrush, QColor, QCursor, QDesktopServices, QDrag, QFont, QIcon, QImage, QImageReader, QKeySequence, QPainter, QPen, QPixmap, QShortcut
 from PySide6.QtPdf import QPdfDocument
 from PySide6.QtWidgets import (
@@ -53,6 +52,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QMessageBox,
     QProgressDialog,
+    QProgressBar,
     QPushButton,
     QScrollArea,
     QSizePolicy,
@@ -75,7 +75,7 @@ from PySide6.QtWidgets import (
 APP_ID = "org.ai.fm"
 APP_ORG = "org.ai"
 APP_NAME = "fm"
-APP_VERSION = "1.23"
+APP_VERSION = "1.26"
 APP_DIR = Path(__file__).resolve().parent
 APP_LOG_PATH = APP_DIR / "fm.log"
 CONFIG_DIR = Path.home() / ".config" / "fm"
@@ -106,6 +106,7 @@ DETAIL_TYPE_WIDTH = 86
 DETAIL_DATE_WIDTH = 168
 THEMES = ("Light", "Dark", "Very Dark")
 PROGRESS_DIALOG_WIDTH = 533
+TRANSFER_DIALOG_MIN_WIDTH = 760
 PANE_SELECTION_GUTTER_WIDTH = 32
 DEFAULT_TERMINAL_COMMAND = "kitty"
 DEFAULT_TERMINAL_ARGS = "--app-id=org.ai.floater"
@@ -130,6 +131,15 @@ FOLDER_EMBLEMS = [
     ("completed", "Completed", "✓", "#22c55e"),
     ("warning", "Warning", "!", "#f97316"),
 ]
+
+
+def identify_process() -> None:
+    """Give Linux process tools a short, unambiguous name for fm."""
+    try:
+        Path("/proc/self/comm").write_text(f"{APP_NAME}\n", encoding="utf-8")
+    except OSError:
+        # /proc is Linux-specific; fm can still run without it.
+        pass
 
 
 def set_fm_logging_enabled(enabled: bool) -> None:
@@ -386,6 +396,9 @@ THEME_STYLES = {
         FilePane[zoomed="true"] { border: 2px solid #00ff00; }
         FilePane[zoomed="false"][active="true"] { border: 2px solid #6600ff; }
         FilePane[zoomed="false"][active="false"] { border: 2px solid transparent; }
+        FilePane[active="false"] QListView, FilePane[active="false"] QTreeView {
+            selection-background-color: transparent; selection-color: #202124;
+        }
         QLineEdit, QComboBox, QListView, QTreeView {
             background: #ffffff; color: #202124; border: 1px solid #c8ccd0;
             selection-background-color: #2f6fbd; selection-color: #ffffff;
@@ -420,6 +433,9 @@ THEME_STYLES = {
         FilePane[zoomed="true"] { border: 2px solid #00ff00; }
         FilePane[zoomed="false"][active="true"] { border: 2px solid #6600ff; }
         FilePane[zoomed="false"][active="false"] { border: 2px solid transparent; }
+        FilePane[active="false"] QListView, FilePane[active="false"] QTreeView {
+            selection-background-color: transparent; selection-color: #e5e7eb;
+        }
         QLineEdit, QComboBox, QListView, QTreeView {
             background: #1f2226; color: #e5e7eb; border: 1px solid #3f454d;
             selection-background-color: #3b78c2; selection-color: #ffffff;
@@ -454,6 +470,9 @@ THEME_STYLES = {
         FilePane[zoomed="true"] { border: 2px solid #00ff00; }
         FilePane[zoomed="false"][active="true"] { border: 2px solid #6600ff; }
         FilePane[zoomed="false"][active="false"] { border: 2px solid transparent; }
+        FilePane[active="false"] QListView, FilePane[active="false"] QTreeView {
+            selection-background-color: transparent; selection-color: #e6edf3;
+        }
         QLineEdit, QComboBox, QListView, QTreeView {
             background: #05070a; color: #e6edf3; border: 1px solid #2a3038;
             selection-background-color: #1f6feb; selection-color: #ffffff;
@@ -855,8 +874,7 @@ def file_mime_type(path: Path) -> str:
     info = QFileInfo(str(path))
     if info.isDir():
         return "inode/directory"
-    mime, _encoding = mimetypes.guess_type(path.name)
-    return mime or "application/octet-stream"
+    return QMimeDatabase().mimeTypeForFile(info).name() or "application/octet-stream"
 
 
 def file_icon(path: Path, fallback: QIcon | None = None) -> QIcon:
@@ -993,6 +1011,12 @@ def set_default_app_for_mime(mime: str, desktop_id: str) -> tuple[bool, str]:
         return False, str(exc)
     if result.returncode != 0:
         return False, (result.stderr or result.stdout or "xdg-mime failed.").strip()
+    actual_default = default_app_for_mime(mime)
+    if actual_default != desktop_id:
+        return False, (
+            f"The default for {mime} could not be confirmed.\n"
+            f"Requested: {desktop_id}\nCurrent: {actual_default or 'unknown'}"
+        )
     return True, ""
 
 
@@ -1311,6 +1335,14 @@ def copy_size(path: Path) -> int:
         return 0
 
 
+def copy_metadata_best_effort(source: Path, target: Path) -> None:
+    """Preserve metadata when supported without failing copies to network filesystems."""
+    try:
+        shutil.copystat(source, target, follow_symlinks=False)
+    except OSError as exc:
+        fm_log("copy.metadata.skipped", source=source, target=target, error=repr(exc))
+
+
 def copy_file_with_progress(src: Path, dst: Path, progress: QProgressDialog, state: dict[str, int]) -> None:
     progress.setLabelText(f"Copying {src.name}")
     QApplication.processEvents()
@@ -1336,7 +1368,7 @@ def copy_file_with_progress(src: Path, dst: Path, progress: QProgressDialog, sta
             QApplication.processEvents()
             if progress.wasCanceled():
                 raise InterruptedError
-    shutil.copystat(src, dst, follow_symlinks=False)
+    copy_metadata_best_effort(src, dst)
 
 
 def copy_path_with_progress(src: Path, dst: Path, progress: QProgressDialog, state: dict[str, int]) -> None:
@@ -1351,10 +1383,7 @@ def copy_path_with_progress(src: Path, dst: Path, progress: QProgressDialog, sta
                 (target_root / dirname).mkdir()
             for filename in filenames:
                 copy_file_with_progress(root_path / filename, target_root / filename, progress, state)
-        try:
-            shutil.copystat(src, dst, follow_symlinks=False)
-        except OSError:
-            pass
+        copy_metadata_best_effort(src, dst)
     else:
         copy_file_with_progress(src, dst, progress, state)
 
@@ -1477,7 +1506,7 @@ class FileOperationWorker(QObject):
                 state["done"] += max(1, len(chunk) // (64 * 1024))
                 state["done_bytes"] += len(chunk)
                 self._emit_progress(state, f"{verb} {source.name}")
-        shutil.copystat(source, target, follow_symlinks=False)
+        copy_metadata_best_effort(source, target)
         fm_log(
             "copy.file.done",
             operation=self.operation,
@@ -1506,10 +1535,7 @@ class FileOperationWorker(QObject):
                     (target_root / dirname).mkdir(exist_ok=True)
                 for filename in filenames:
                     self._copy_file(root_path / filename, target_root / filename, state, verb, done_verb)
-            try:
-                shutil.copystat(source, target, follow_symlinks=False)
-            except OSError:
-                pass
+            copy_metadata_best_effort(source, target)
             fm_log("copy.directory.done", operation=self.operation, source=source, target=target, elapsed_seconds=round(time.monotonic() - directory_started_at, 3))
             return
         self._copy_file(source, target, state, verb, done_verb)
@@ -1595,12 +1621,74 @@ def finish_visible_progress(progress: QProgressDialog, value: int, started_at: f
     progress.close()
 
 
+class TransferProgressLabel(QLabel):
+    """A progress label with an opt-in checkbox included in its size hints."""
+
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.message = QLabel("Preparing...", self)
+        self.message.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.message.setTextFormat(Qt.TextFormat.PlainText)
+        self.message.setWordWrap(True)
+        self.content_width = TRANSFER_DIALOG_MIN_WIDTH - 40
+        self.shutdown_checkbox = QCheckBox("Shut down computer when complete", self)
+        self.shutdown_checkbox.setChecked(False)
+        self.shutdown_checkbox.setToolTip(
+            "Shut down after a successful transfer and any queued operations. "
+            "Canceling or a transfer error cancels the shutdown request."
+        )
+        layout.addWidget(self.message)
+        layout.addWidget(self.shutdown_checkbox)
+
+    def sizeHint(self) -> QSize:
+        message_height = self.message.heightForWidth(self.content_width)
+        height = max(self.message.fontMetrics().height(), message_height)
+        height += self.shutdown_checkbox.sizeHint().height() + max(0, self.layout().spacing())
+        return QSize(self.content_width, height)
+
+    def minimumSizeHint(self) -> QSize:
+        return self.sizeHint()
+
+
+class TransferProgressDialog(QProgressDialog):
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__("", "Cancel", 0, 0, parent)
+        self.transfer_label = TransferProgressLabel(self)
+        self.setLabel(self.transfer_label)
+        self.shutdown_checkbox = self.transfer_label.shutdown_checkbox
+
+    def setLabelText(self, text: str) -> None:
+        self.transfer_label.message.setText(text)
+        self.transfer_label.updateGeometry()
+
+
 def widen_progress_dialog(progress: QProgressDialog) -> None:
-    progress.setMinimumWidth(PROGRESS_DIALOG_WIDTH)
-    progress.setMinimumHeight(max(180, progress.sizeHint().height() + 44))
-    progress.resize(PROGRESS_DIALOG_WIDTH, max(progress.minimumHeight(), progress.sizeHint().height() + 44))
+    progress.ensurePolished()
     for button in progress.findChildren(QPushButton):
         button.setMinimumHeight(max(30, button.sizeHint().height()))
+    width = PROGRESS_DIALOG_WIDTH
+    if isinstance(progress, TransferProgressDialog):
+        label = progress.transfer_label
+        metrics = label.message.fontMetrics()
+        text_width = max((metrics.horizontalAdvance(line) for line in label.message.text().splitlines()), default=0)
+        # Allow space for the checkbox indicator, dialog margins and window title.
+        width = max(TRANSFER_DIALOG_MIN_WIDTH, text_width + 64,
+                    label.shutdown_checkbox.sizeHint().width() + 64,
+                    progress.fontMetrics().horizontalAdvance(progress.windowTitle()) + 100,
+                    progress.width(), progress.minimumWidth())
+        screen = progress.screen()
+        if screen is not None:
+            width = min(width, max(1, screen.availableGeometry().width() - 48))
+        # Wrap unusually long filenames at the screen limit; keep the full text visible.
+        label.content_width = max(1, width - 40)
+        label.layout().invalidate()
+        label.updateGeometry()
+    progress.setMinimumWidth(width)
+    height = max(180, progress.sizeHint().height() + 44)
+    progress.setMinimumHeight(height)
+    progress.resize(width, max(progress.height(), height))
 
 
 def make_file_drag(source: QWidget, paths: list[Path]) -> QDrag:
@@ -2406,6 +2494,7 @@ class HelpDialog(QDialog):
               <li><b>Properties</b>: open Properties for the selected/current item.</li>
               <li><b>Hidden</b>: show or hide dotfiles in both file panes.</li>
               <li><b>Preview</b>: enable or disable automatic preview.</li>
+              <li><b>Compare Directories</b>: recursively compare pane 1 and pane 2, including hidden files and file contents. Lists missing items, differences, and read errors in a cancellable results window.</li>
               <li><b>Dual Bookmarks</b>: open a saved pair of left and right folders from the top-center dropdown.</li>
               <li><b>Pane Sort</b>: each pane has a Sort button beside Icon/List/Details for field, direction, and reversed order.</li>
               <li><b>Pane status controls</b>: each pane has a clickable eye button for that pane's hidden files and a zoom slider for that pane's icon size.</li>
@@ -2515,6 +2604,7 @@ class HelpDialog(QDialog):
             <ul>
               <li>Open Properties on a single file to see its MIME type.</li>
               <li>Use <b>Open with</b> and <b>Set Default</b> to change the desktop default application for that MIME type.</li>
+              <li>Matching applications appear first, followed by other installed applications.</li>
               <li>This uses <code>xdg-mime default</code>, so it follows the same desktop associations used by most Linux file managers.</li>
               <li>Press <b>O</b>, Enter, or Ctrl+O to open a file with the current desktop default application.</li>
             </ul>
@@ -2675,6 +2765,7 @@ class PropertiesDialog(QDialog):
         root.addLayout(header)
 
         general = QFormLayout()
+        general.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         general.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
         if len(paths) == 1:
             path = paths[0]
@@ -2717,6 +2808,7 @@ class PropertiesDialog(QDialog):
                 row.addStretch(1)
                 permissions.addRow(label, row)
             apply_permissions = QPushButton("Apply Permissions")
+            apply_permissions.setStyleSheet("background-color: #15803d; color: white;")
             apply_permissions.clicked.connect(lambda _checked=False, dialog=self: dialog.apply_permissions())
             permissions.addRow("", apply_permissions)
             root.addLayout(permissions)
@@ -2727,9 +2819,21 @@ class PropertiesDialog(QDialog):
             self.default_app_combo = QComboBox()
             current_default = default_app_for_mime(self.default_app_mime)
             current_index = -1
-            for name, _exec_line, icon_name, desktop_id in mime_apps_for(paths[0], limit=100):
-                if not desktop_id:
+            recommended = mime_apps_for(paths[0], limit=100)
+            recommended_ids = {app[3] for app in recommended}
+            other_apps = sorted(
+                (
+                    (entry["Name"], entry["Exec"], entry.get("Icon", ""), entry["_DesktopId"])
+                    for entry in desktop_app_entries()
+                    if entry["_DesktopId"] not in recommended_ids
+                ),
+                key=lambda app: (app[0].casefold(), app[3]),
+            )
+            seen_ids: set[str] = set()
+            for name, _exec_line, icon_name, desktop_id in recommended + other_apps:
+                if not desktop_id or desktop_id in seen_ids:
                     continue
+                seen_ids.add(desktop_id)
                 label = f"{name} ({desktop_id})" if desktop_id == current_default else name
                 self.default_app_combo.addItem(cached_desktop_icon(self, icon_name), label, desktop_id)
                 if desktop_id == current_default:
@@ -2743,6 +2847,7 @@ class PropertiesDialog(QDialog):
                 self.default_app_combo.addItem("No matching applications", "")
                 self.default_app_combo.setEnabled(False)
             set_default = QPushButton("Set Default")
+            set_default.setStyleSheet("background-color: #15803d; color: white;")
             set_default.setEnabled(self.default_app_combo.isEnabled())
             set_default.clicked.connect(lambda _checked=False, dialog=self: dialog.apply_default_app())
             default_row = QHBoxLayout()
@@ -2752,6 +2857,7 @@ class PropertiesDialog(QDialog):
             root.addLayout(default_app)
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        buttons.button(QDialogButtonBox.StandardButton.Close).setStyleSheet("background-color: #b91c1c; color: white;")
         buttons.rejected.connect(lambda dialog=self: dialog.reject())
         root.addWidget(buttons)
 
@@ -3487,7 +3593,7 @@ class IconViewDelegate(QStyledItemDelegate):
 
 
 class FilePane(QWidget):
-    def __init__(self, title: str, add_favorite_callback=None, trash_callback=None, parent: QWidget | None = None) -> None:
+    def __init__(self, title: str, add_favorite_callback=None, trash_callback=None, parent: QWidget | None = None, *, initial_path: Path | None = None) -> None:
         super().__init__(parent)
         # Folder-dependent controls (most notably the breadcrumbs) must not
         # change the pane's minimum width and push the main splitter around.
@@ -3528,7 +3634,6 @@ class FilePane(QWidget):
         self.model = FileSystemNoDropModel(self)
         self.model.setNameFilterDisables(False)
         self._apply_model_filter()
-        self.model.setRootPath(str(Path.home()))
         self.model.directoryLoaded.connect(lambda path, pane=self: pane._on_directory_loaded(path))
 
         self.path_edit = QLineEdit()
@@ -3746,7 +3851,10 @@ class FilePane(QWidget):
         layout.addWidget(self.preview_splitter, 1)
         layout.addLayout(status_row)
 
-        self.set_path(Path.home())
+        # Start directly in the requested folder. A preliminary Home scan
+        # can block Qt's gatherer on a disconnected network symlink, leaving
+        # subsequent directory requests queued and their views empty.
+        self.set_path(initial_path if initial_path is not None else Path.home())
         self._operation_threads: list[QThread] = []
         self._operation_workers: list[FileOperationWorker] = []
         self._operation_contexts: dict[FileOperationWorker, dict[str, object]] = {}
@@ -4858,6 +4966,8 @@ class FilePane(QWidget):
             target = choose_existing_destination(self, path, destination / path.name, collision_state)
             if target is None:
                 if collision_state.get("cancelled"):
+                    if hasattr(window, "shutdown_after_operations"):
+                        window.shutdown_after_operations = False
                     fm_log("copy.cancelled_before_start", pane=self.title, source=path, destination=destination)
                     return
                 continue
@@ -4881,6 +4991,8 @@ class FilePane(QWidget):
             target = choose_existing_destination(self, path, destination / path.name, collision_state)
             if target is None:
                 if collision_state.get("cancelled"):
+                    if hasattr(window, "shutdown_after_operations"):
+                        window.shutdown_after_operations = False
                     fm_log("move.cancelled_before_start", pane=self.title, source=path, destination=destination)
                     return
                 continue
@@ -4896,7 +5008,7 @@ class FilePane(QWidget):
         if hasattr(window, "begin_file_operation"):
             window.begin_file_operation()
 
-        progress = QProgressDialog("Preparing...", "Cancel", 0, 0, self)
+        progress = TransferProgressDialog(self)
         widen_progress_dialog(progress)
         progress.setWindowModality(Qt.WindowModality.NonModal)
         progress.setMinimumDuration(0)
@@ -4959,7 +5071,7 @@ class FilePane(QWidget):
     @Slot(str, object)
     def _file_operation_completed(self, _operation: str, completed: list[tuple[Path, Path]]) -> None:
         fm_log("operation.completed.signal", pane=self.title, operation=_operation, completed=len(completed))
-        self._finish_file_operation(completed)
+        self._finish_file_operation(completed, succeeded=True)
 
     @Slot(str, object)
     def _file_operation_canceled(self, _operation: str, completed: list[tuple[Path, Path]]) -> None:
@@ -4971,7 +5083,7 @@ class FilePane(QWidget):
         fm_log("operation.failed.signal", pane=self.title, message=message, completed=len(completed))
         self._finish_file_operation(completed, message)
 
-    def _finish_file_operation(self, completed: list[tuple[Path, Path]], warning: str | None = None) -> None:
+    def _finish_file_operation(self, completed: list[tuple[Path, Path]], warning: str | None = None, *, succeeded: bool = False) -> None:
         worker = self.sender()
         context = self._operation_contexts.get(worker)
         if not context:
@@ -4991,6 +5103,12 @@ class FilePane(QWidget):
             except (TypeError, RuntimeError):
                 pass
             progress.close()
+        if hasattr(window, "shutdown_after_operations"):
+            # A late Cancel click must also suppress shutdown after worker completion.
+            if not succeeded or warning or worker.cancel_requested:
+                window.shutdown_after_operations = False
+            elif isinstance(progress, TransferProgressDialog) and progress.shutdown_checkbox.isChecked():
+                window.shutdown_after_operations = True
         if hasattr(window, "end_file_operation"):
             window.end_file_operation()
         if isinstance(thread, QThread):
@@ -5230,6 +5348,12 @@ class FilePane(QWidget):
         self._show_context_menu_for_view(self.current_view(), position)
 
     def _show_context_menu_for_view(self, view: QAbstractItemView, position) -> None:
+        # An empty-area context click targets the folder being displayed, not
+        # whichever item happened to retain the keyboard cursor.  In
+        # particular, this lets "Add to Favorites" add the current directory.
+        if not view.indexAt(position).isValid():
+            view.clearSelection()
+            view.setCurrentIndex(QModelIndex())
         menu = QMenu(self)
         paths = self.selected_or_current_paths()
         current_path = self.current_item_path()
@@ -5375,9 +5499,14 @@ class FilePane(QWidget):
         menu.exec(view.viewport().mapToGlobal(position))
 
     def add_selected_to_favorites(self) -> None:
-        path = self.current_item_path() or self.current_path()
-        if self.add_favorite_callback:
-            self.add_favorite_callback(path)
+        if not self.add_favorite_callback:
+            return
+        paths = self.selected_paths()
+        if not paths:
+            paths = [self.current_path()]
+        for path in paths:
+            if path.is_dir():
+                self.add_favorite_callback(path)
 
     def folder_emblem_for(self, path: Path) -> str:
         window = self.window()
@@ -5472,29 +5601,21 @@ class FilePane(QWidget):
         if selected:
             total = 0
             for path in selected:
-                try:
-                    if path.is_file() or path.is_symlink():
-                        total += path.stat().st_size
-                except OSError:
-                    pass
+                index = self.model.index(str(path))
+                if index.isValid() and not self.model.isDir(index):
+                    total += self.model.size(index)
             if len(selected) == 1:
                 self.status_label.setText(f"{selected[0].name} - 1 selected, {readable_size(total)}")
             else:
                 self.status_label.setText(f"{len(selected)} selected, {readable_size(total)}")
             return
 
-        directory = self.current_path()
-        try:
-            entries = [
-                entry
-                for entry in directory.iterdir()
-                if entry.name not in {".", ".."}
-                and (self.show_hidden or not entry.name.startswith("."))
-                and self._matches_wildcard(entry.name)
-            ]
-        except OSError:
-            entries = []
-        dirs = sum(1 for entry in entries if entry.is_dir())
+        # QFileSystemModel gathers metadata in its own worker. Reuse its
+        # cache instead of stat-ing entries (and following network symlinks)
+        # on the GUI thread every time the selection or directory changes.
+        root = self.icon_view.rootIndex()
+        entries = [self.model.index(row, 0, root) for row in range(self.model.rowCount(root))]
+        dirs = sum(1 for index in entries if self.model.isDir(index))
         files = len(entries) - dirs
         suffix = ""
         if self.wildcard_filter_text.strip():
@@ -5721,6 +5842,304 @@ class FilePane(QWidget):
         self.full_preview_text.clear()
 
 
+def compare_directories(left: Path, right: Path, cancelled=None, progress=None, *, simple: bool = False) -> tuple[list[str], int]:
+    """Compare trees without following symlinks or trusting file timestamps."""
+    differences: list[str] = []
+    checked = 0
+    last_update = 0.0
+    scanned = 0
+    bytes_read = 0
+    file_done = 0
+    file_size = None
+    phase = "Scanning"
+
+    def check(relative: Path, force: bool = False) -> None:
+        nonlocal last_update
+        if cancelled and cancelled():
+            raise InterruptedError("Comparison cancelled")
+        now = time.monotonic()
+        if progress and (force or now - last_update >= 0.1):
+            progress({"path": str(relative), "phase": phase, "files": checked,
+                      "scanned": scanned, "bytes": bytes_read,
+                      "file_done": file_done, "file_size": file_size})
+            last_update = now
+
+    def scan(root: Path, relative: Path, pane: int):
+        nonlocal scanned, phase, file_size
+        phase = f"Scanning pane {pane}"
+        file_size = None
+        check(relative)
+        try:
+            with os.scandir(root / relative) as entries:
+                result = {}
+                for entry in entries:
+                    scanned += 1
+                    check(relative / entry.name)
+                    result[entry.name] = entry
+                return result
+        except OSError as exc:
+            differences.append(f"Read error in pane {pane}: {str(relative)!r}: {exc}")
+            return None
+
+    pending = [Path(".")]
+    while pending:
+        relative = pending.pop()
+        check(relative)
+        a_entries = scan(left, relative, 1)
+        b_entries = scan(right, relative, 2)
+        if a_entries is None or b_entries is None:
+            continue
+        for name in sorted(a_entries.keys() | b_entries.keys()):
+            rel = relative / name
+            phase = "Comparing"
+            file_size = None
+            file_done = 0
+            check(rel)
+            label = repr(str(rel))
+            if name not in a_entries or name not in b_entries:
+                pane = 1 if name in a_entries else 2
+                entry = a_entries.get(name) or b_entries[name]
+                try:
+                    suffix = " (entire directory)" if entry.is_dir(follow_symlinks=False) else ""
+                    differences.append(f"Only in pane {pane}: {label}{suffix}")
+                except OSError as exc:
+                    differences.append(f"Read error in pane {pane}: {label}: {exc}")
+                continue
+            a, b = left / rel, right / rel
+            try:
+                sa, sb = a.lstat(), b.lstat()
+                kind = stat.S_IFMT(sa.st_mode)
+                if kind != stat.S_IFMT(sb.st_mode):
+                    differences.append(f"Different types: {label}")
+                elif stat.S_ISLNK(sa.st_mode):
+                    if os.readlink(a) != os.readlink(b):
+                        differences.append(f"Different symlink targets: {label}")
+                elif stat.S_ISDIR(sa.st_mode):
+                    pending.append(rel)
+                elif stat.S_ISREG(sa.st_mode):
+                    checked += 1
+                    if sa.st_size != sb.st_size:
+                        differences.append(f"Different sizes: {label} (pane 1: {sa.st_size:,} bytes; pane 2: {sb.st_size:,} bytes)")
+                        continue
+                    if simple:
+                        continue
+                    phase = "Reading file contents"
+                    file_size = sa.st_size
+                    equal = True
+                    with a.open("rb") as fa, b.open("rb") as fb:
+                        while True:
+                            check(rel)
+                            ca, cb = fa.read(1024 * 1024), fb.read(1024 * 1024)
+                            bytes_read += len(ca) + len(cb)
+                            file_done += len(ca)
+                            check(rel)
+                            if ca != cb:
+                                equal = False
+                                break
+                            if not ca:
+                                break
+                    signature = lambda s: (s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns)
+                    if signature(sa) != signature(a.lstat()) or signature(sb) != signature(b.lstat()):
+                        differences.append(f"Changed during comparison; compare again: {label}")
+                    elif not equal:
+                        differences.append(f"Different contents: {label}")
+                else:
+                    differences.append(f"Unsupported special file: {label}")
+            except OSError as exc:
+                differences.append(f"Read error: {label}: {exc}")
+    phase = "Finished"
+    file_size = None
+    check(Path("."), force=True)
+    return differences, checked
+
+
+class DirectoryCompareThread(QThread):
+    progress = Signal(object)
+
+    def __init__(self, left: Path, right: Path, parent=None, *, simple: bool = False) -> None:
+        super().__init__(parent)
+        self.left, self.right = left, right
+        self.simple = simple
+        self.report = ""
+        self.outcome = "Comparison finished"
+
+    def run(self) -> None:
+        try:
+            differences, checked = compare_directories(
+                self.left, self.right, self.isInterruptionRequested, self.progress.emit,
+                simple=self.simple,
+            )
+            mode = "Simple mode: names and file sizes only; file contents were not checked." if self.simple else "Full mode: file contents and structure."
+            summary = (f"{len(differences):,} differences / issues found."
+                       if differences else "Directories match under the selected comparison mode.")
+            self.report = f"{summary}\n{mode}\n{checked:,} paired files checked.\n\n" + "\n".join(differences)
+        except InterruptedError:
+            self.outcome = "Comparison cancelled"
+            self.report = "Comparison cancelled. The directories have not been fully verified."
+        except Exception as exc:
+            self.outcome = "Comparison failed"
+            self.report = f"Comparison failed: {exc}\nThe directories have not been fully verified."
+
+
+class DirectoryCompareDialog(QDialog):
+    def __init__(self, left: Path, right: Path, parent=None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("Compare Directories")
+        self.resize(900, 600)
+        self.close_pending = False
+        self.restart_pending = False
+        self.left, self.right = left, right
+        self.worker = None
+        layout = QVBoxLayout(self)
+        paths = QLabel(f"Pane 1: {left}\nPane 2: {right}")
+        paths.setTextFormat(Qt.TextFormat.PlainText)
+        paths.setWordWrap(True)
+        paths.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(paths)
+        explanation = QLabel("Includes subdirectories and hidden files. Checks symlink targets; ignores timestamps and permissions. Full mode also compares file contents.")
+        explanation.setWordWrap(True)
+        layout.addWidget(explanation)
+        self.simple_checkbox = QCheckBox("Simple mode (name and file size)")
+        self.simple_checkbox.setToolTip("Skip reading file contents. Changing this option restarts the comparison.")
+        self.simple_checkbox.toggled.connect(self.change_mode)
+        layout.addWidget(self.simple_checkbox)
+        self.status = QLabel("Comparing…")
+        self.status.setTextFormat(Qt.TextFormat.PlainText)
+        self.status.setWordWrap(True)
+        layout.addWidget(self.status)
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 0)
+        layout.addWidget(self.progress_bar)
+        self.progress_details = QLabel()
+        layout.addWidget(self.progress_details)
+        self.progress_timer = QTimer(self)
+        self.progress_timer.setInterval(250)
+        self.progress_timer.timeout.connect(self.refresh_progress_details)
+        self.results = QTextEdit()
+        self.results.setReadOnly(True)
+        self.results.setPlainText("Reading both directories… Large files can take some time to verify.")
+        layout.addWidget(self.results, 1)
+        buttons = QHBoxLayout()
+        self.stop_button = QPushButton("Cancel comparison")
+        self.stop_button.setStyleSheet("background: #15803d; color: white;")
+        self.stop_button.clicked.connect(self.cancel_comparison)
+        buttons.addWidget(self.stop_button)
+        buttons.addStretch()
+        quit_button = QPushButton("Quit")
+        quit_button.setStyleSheet("background: #b91c1c; color: white;")
+        quit_button.clicked.connect(self.reject)
+        buttons.addWidget(quit_button)
+        layout.addLayout(buttons)
+        self.start_comparison()
+
+    def start_comparison(self) -> None:
+        self.restart_pending = False
+        self.stop_button.setEnabled(True)
+        self.stop_button.show()
+        self.status.setText("Comparing…")
+        self.started_at = time.monotonic()
+        self.progress_data = {"files": 0, "scanned": 0, "bytes": 0}
+        self.progress_bar.setRange(0, 0)
+        self.progress_bar.setFormat("%p%")
+        self.refresh_progress_details()
+        self.progress_timer.start()
+        self.results.setPlainText("Comparing names and file sizes…" if self.simple_checkbox.isChecked()
+                                  else "Reading both directories… Large files can take some time to verify.")
+        self.worker = DirectoryCompareThread(self.left, self.right, self, simple=self.simple_checkbox.isChecked())
+        self.worker.progress.connect(self.show_progress)
+        self.worker.finished.connect(self.comparison_finished)
+        self.worker.start()
+
+    def change_mode(self, _checked: bool) -> None:
+        if self.worker is not None:
+            self.cancel_comparison()
+            self.restart_pending = True
+            self.results.setPlainText("Switching comparison mode…")
+        else:
+            self.start_comparison()
+
+    def show_progress(self, data: dict) -> None:
+        if self.worker is not None and self.sender() is self.worker and not self.worker.isInterruptionRequested():
+            self.progress_data = data
+            self.status.setText(f"{data['phase']}: {data['path']}")
+            size = data["file_size"]
+            if size is not None and size > 0:
+                self.progress_bar.setRange(0, 1000)
+                self.progress_bar.setValue(min(1000, data["file_done"] * 1000 // size))
+                self.progress_bar.setFormat("Current file: %p%")
+            else:
+                self.progress_bar.setRange(0, 0)
+            self.refresh_progress_details()
+
+    def refresh_progress_details(self) -> None:
+        data = self.progress_data
+        elapsed = int(time.monotonic() - self.started_at)
+        self.progress_details.setText(
+            f"{data['scanned']:,} entries scanned · {data['files']:,} paired files examined · "
+            f"{data['bytes'] / (1024 * 1024):,.1f} MiB read (both panes) · "
+            f"Elapsed {elapsed // 60}:{elapsed % 60:02d}"
+        )
+
+    def cancel_comparison(self) -> None:
+        self.restart_pending = False
+        if self.worker is not None:
+            self.worker.requestInterruption()
+        self.stop_button.setEnabled(False)
+        self.status.setText("Cancelling… waiting for the current read to finish.")
+
+    def comparison_finished(self) -> None:
+        self.progress_timer.stop()
+        self.refresh_progress_details()
+        self.status.setText(self.worker.outcome)
+        self.progress_bar.setRange(0, 1)
+        self.progress_bar.setValue(1 if self.worker.outcome == "Comparison finished" else 0)
+        self.progress_bar.setFormat(self.worker.outcome)
+        self.results.setPlainText(self.worker.report)
+        self.worker.deleteLater()
+        self.worker = None
+        self.stop_button.setEnabled(False)
+        self.stop_button.hide()
+        if self.close_pending:
+            super().reject()
+        elif self.restart_pending:
+            self.start_comparison()
+
+    def reject(self) -> None:
+        if self.worker is not None:
+            self.close_pending = True
+            self.cancel_comparison()
+        else:
+            super().reject()
+
+    def closeEvent(self, event) -> None:
+        if self.worker is not None:
+            event.ignore()
+            self.reject()
+        else:
+            super().closeEvent(event)
+
+
+def directory_compare_icon() -> QIcon:
+    """Two green directory panes with opposing arrows, independent of icon theme."""
+    pixmap = QPixmap(32, 32)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setPen(QPen(QColor("#4ade80"), 2))
+    painter.drawRoundedRect(2, 4, 10, 24, 2, 2)
+    painter.drawRoundedRect(20, 4, 10, 24, 2, 2)
+    painter.fillRect(8, 10, 16, 12, QColor("#15803d"))
+    painter.setPen(QPen(QColor("#ffffff"), 2))
+    painter.drawLine(10, 13, 22, 13)
+    painter.drawLine(19, 10, 22, 13)
+    painter.drawLine(19, 16, 22, 13)
+    painter.drawLine(10, 19, 22, 19)
+    painter.drawLine(10, 19, 13, 16)
+    painter.drawLine(10, 19, 13, 22)
+    painter.end()
+    return QIcon(pixmap)
+
+
 class SidePanel(QWidget):
     def __init__(self, open_path_callback, favorites_changed_callback=None, recent_changed_callback=None, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -5731,6 +6150,7 @@ class SidePanel(QWidget):
         self.favorites: list[Path] = []
         self.favorite_names: dict[Path, str] = {}
         self.recent_paths: list[Path] = []
+        self.mounted_devices: list[dict[str, str]] = []
 
         self.tabs = QTabWidget()
         self.shortcuts = QListWidget()
@@ -5739,7 +6159,12 @@ class SidePanel(QWidget):
         self.shortcuts.itemDoubleClicked.connect(lambda item, panel=self: panel._open_shortcut(item))
         self.shortcuts.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.shortcuts.customContextMenuRequested.connect(lambda position, panel=self: panel._show_shortcut_menu(position))
+        self._refresh_mounted_devices()
         self._populate_shortcuts()
+        self.device_refresh_timer = QTimer(self)
+        self.device_refresh_timer.setInterval(3000)
+        self.device_refresh_timer.timeout.connect(self._refresh_mounted_devices)
+        self.device_refresh_timer.start()
 
         self.tree_model = QFileSystemModel(self)
         self.show_hidden = False
@@ -5767,7 +6192,7 @@ class SidePanel(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.tabs)
-        self.version_label = QLabel(f"fm {APP_VERSION}")
+        self.version_label = QLabel(f"fm {APP_VERSION} · PID {os.getpid()}")
         self.version_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.version_label.setStyleSheet("padding: 4px 6px; color: #8f98a3; font-size: 11px;")
         layout.addWidget(self.version_label)
@@ -5818,11 +6243,10 @@ class SidePanel(QWidget):
         self.favorites = []
         self.favorite_names = {}
         for path in favorites:
-            try:
-                resolved = path.expanduser().resolve()
-            except OSError:
-                resolved = path.expanduser()
-            if resolved.exists() and resolved not in seen:
+            # Bookmarks may point at disconnected mounts. Rendering the
+            # sidebar must not resolve symlinks or stat their targets.
+            resolved = Path(os.path.abspath(path.expanduser()))
+            if resolved not in seen:
                 seen.add(resolved)
                 self.favorites.append(resolved)
                 if names and str(resolved) in names:
@@ -5830,18 +6254,30 @@ class SidePanel(QWidget):
         self._populate_shortcuts()
 
     def set_recent_paths(self, paths: list[Path]) -> None:
-        self.recent_paths = [path for path in paths if path.exists() and path.is_dir()]
+        self.recent_paths = list(dict.fromkeys(Path(os.path.abspath(path.expanduser())) for path in paths))
         self._populate_shortcuts()
 
     def add_favorite(self, path: Path) -> None:
-        try:
-            favorite = path.expanduser().resolve()
-        except OSError:
-            favorite = path.expanduser()
+        favorite = Path(os.path.abspath(path.expanduser()))
         if favorite not in self.favorites:
             self.favorites.append(favorite)
             self._populate_shortcuts()
             self._favorites_changed()
+        self.reveal_favorite(favorite)
+
+    def reveal_favorite(self, path: Path) -> None:
+        """Show and select a favorite, including one that already existed."""
+        self.set_mode("Shortcuts")
+        target = str(path)
+        for row in range(self.shortcuts.count()):
+            item = self.shortcuts.item(row)
+            if (
+                item.data(Qt.ItemDataRole.UserRole + 2) == "favorite"
+                and str(item.data(Qt.ItemDataRole.UserRole)) == target
+            ):
+                self.shortcuts.setCurrentItem(item)
+                self.shortcuts.scrollToItem(item)
+                return
 
     def remove_favorite(self, path: Path) -> None:
         self.favorites = [favorite for favorite in self.favorites if favorite != path]
@@ -5886,6 +6322,62 @@ class SidePanel(QWidget):
         if self.recent_changed_callback:
             self.recent_changed_callback(self.recent_paths)
 
+    def _refresh_mounted_devices(self) -> None:
+        """Refresh user-facing block-device mounts without disturbing the list unnecessarily."""
+        lsblk = shutil.which("lsblk")
+        devices: list[dict[str, str]] = []
+        if lsblk:
+            try:
+                result = subprocess.run(
+                    [lsblk, "--json", "--paths", "--output", "NAME,LABEL,TYPE,FSTYPE,MOUNTPOINTS,RM,TRAN,HOTPLUG,MODEL"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    check=False,
+                )
+                if result.returncode == 0:
+                    ignored_mounts = {"/", "/boot", "/boot/efi", "/efi", "/home", "/usr", "/var"}
+
+                    def visit(entries: list[dict], parent: dict | None = None) -> None:
+                        for entry in entries:
+                            inherited = parent or {}
+                            mountpoints = [
+                                str(point)
+                                for point in (entry.get("mountpoints") or [])
+                                if point and str(point).startswith("/") and str(point) not in ignored_mounts
+                            ]
+                            filesystem = entry.get("fstype") not in {None, "", "swap"}
+                            transport = str(entry.get("tran") or inherited.get("tran") or "")
+                            removable = bool(entry.get("rm") or entry.get("hotplug") or inherited.get("rm") or inherited.get("hotplug"))
+                            # Keep mounted filesystems and mountable removable
+                            # volumes. Previously, an unplugged/replugged drive
+                            # disappeared because only already-mounted volumes
+                            # survived this filter.
+                            mountable = filesystem and removable and not entry.get("children")
+                            if filesystem and (mountpoints or mountable):
+                                # A bind-mounted source can be listed more than once.
+                                # The shortest path is normally the useful volume root.
+                                mountpoint = min(mountpoints, key=lambda value: (value.count("/"), len(value))) if mountpoints else ""
+                                label = str(entry.get("label") or "").strip()
+                                model = str(entry.get("model") or inherited.get("model") or "").strip()
+                                name = label or model or Path(str(entry.get("name") or "Device")).name
+                                devices.append({
+                                    "name": name,
+                                    "path": mountpoint,
+                                    "device": str(entry.get("name") or ""),
+                                    "kind": "usb" if transport == "usb" or removable else "drive",
+                                })
+                            visit(entry.get("children") or [], entry)
+
+                    visit(json.loads(result.stdout).get("blockdevices") or [])
+            except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError, TypeError):
+                devices = []
+        devices.sort(key=lambda device: (device["kind"] != "usb", device["name"].casefold(), device["path"]))
+        if devices != self.mounted_devices:
+            self.mounted_devices = devices
+            if hasattr(self, "shortcuts"):
+                self._populate_shortcuts()
+
     def _populate_shortcuts(self) -> None:
         places = [
             ("Home", Path.home(), QStyle.StandardPixmap.SP_DirHomeIcon),
@@ -5902,27 +6394,31 @@ class SidePanel(QWidget):
         ]
         self.shortcuts.clear()
         for path in self.favorites:
-            if path.exists():
-                item = QListWidgetItem(self.favorite_names.get(path, path.name or str(path)))
-                item.setIcon(self._shortcut_icon("Favorite", path, QStyle.StandardPixmap.SP_DirIcon))
-                item.setData(Qt.ItemDataRole.UserRole, str(path))
-                item.setData(Qt.ItemDataRole.UserRole + 1, True)
-                item.setData(Qt.ItemDataRole.UserRole + 2, "favorite")
-                item.setToolTip(str(path))
-                self.shortcuts.addItem(item)
+            item = QListWidgetItem(self.favorite_names.get(path, path.name or str(path)))
+            item.setIcon(self._shortcut_icon("Favorite", path, QStyle.StandardPixmap.SP_DirIcon))
+            item.setData(Qt.ItemDataRole.UserRole, str(path))
+            item.setData(Qt.ItemDataRole.UserRole + 1, True)
+            item.setData(Qt.ItemDataRole.UserRole + 2, "favorite")
+            item.setToolTip(str(path))
+            self.shortcuts.addItem(item)
         if self.favorites:
             separator = QListWidgetItem("Places")
             separator.setFlags(Qt.ItemFlag.NoItemFlags)
             self.shortcuts.addItem(separator)
         for label, path, fallback_icon in places:
-            if path.exists() and path.is_dir():
-                item = QListWidgetItem(label)
-                item.setIcon(self._shortcut_icon(label, path, fallback_icon))
-                item.setData(Qt.ItemDataRole.UserRole, str(path))
-                item.setData(Qt.ItemDataRole.UserRole + 1, False)
-                item.setData(Qt.ItemDataRole.UserRole + 2, "place")
-                item.setToolTip(str(path))
-                self.shortcuts.addItem(item)
+            item = QListWidgetItem(label)
+            item.setIcon(self._shortcut_icon(label, path, fallback_icon))
+            item.setData(Qt.ItemDataRole.UserRole, str(path))
+            item.setData(Qt.ItemDataRole.UserRole + 1, False)
+            item.setData(Qt.ItemDataRole.UserRole + 2, "place")
+            item.setToolTip(str(path))
+            self.shortcuts.addItem(item)
+        if shutil.which("kdeconnect-cli"):
+            item = QListWidgetItem("Phone (KDE Connect)")
+            item.setIcon(menu_icon(self, ("smartphone", "phone", "kdeconnect"), QStyle.StandardPixmap.SP_DriveNetIcon))
+            item.setData(Qt.ItemDataRole.UserRole + 2, "kdeconnect")
+            item.setToolTip("Mount and open a reachable KDE Connect device")
+            self.shortcuts.addItem(item)
         if self.recent_paths:
             separator = QListWidgetItem("Recent")
             separator.setFlags(Qt.ItemFlag.NoItemFlags)
@@ -5934,6 +6430,21 @@ class SidePanel(QWidget):
                 item.setData(Qt.ItemDataRole.UserRole + 1, False)
                 item.setData(Qt.ItemDataRole.UserRole + 2, "recent")
                 item.setToolTip(str(path))
+                self.shortcuts.addItem(item)
+        if self.mounted_devices:
+            separator = QListWidgetItem("Devices")
+            separator.setFlags(Qt.ItemFlag.NoItemFlags)
+            self.shortcuts.addItem(separator)
+            for device in self.mounted_devices:
+                item = QListWidgetItem(device["name"])
+                icon_names = ("drive-removable-media-usb", "drive-removable-media") if device["kind"] == "usb" else ("drive-harddisk",)
+                item.setIcon(menu_icon(self, icon_names, QStyle.StandardPixmap.SP_DriveHDIcon))
+                item.setData(Qt.ItemDataRole.UserRole, device["path"])
+                item.setData(Qt.ItemDataRole.UserRole + 1, False)
+                item.setData(Qt.ItemDataRole.UserRole + 2, "mounted-device" if device["path"] else "available-device")
+                item.setData(Qt.ItemDataRole.UserRole + 3, device["device"])
+                status = device["path"] or "Not mounted — activate to mount"
+                item.setToolTip(f"{status}\n{device['device']}")
                 self.shortcuts.addItem(item)
 
     def _shortcut_icon(self, label: str, path: Path, fallback_icon: QStyle.StandardPixmap):
@@ -5950,15 +6461,160 @@ class SidePanel(QWidget):
         theme_icon = QIcon.fromTheme(theme_names.get(label, "folder"))
         if not theme_icon.isNull():
             return theme_icon
-        file_icon = self.icon_provider.icon(QFileInfo(str(path)))
-        if not file_icon.isNull():
-            return file_icon
+        # QFileIconProvider can stat the target and stall on offline shares.
         return self.style().standardIcon(fallback_icon)
 
     def _open_shortcut(self, item: QListWidgetItem) -> None:
         if not item.flags() & Qt.ItemFlag.ItemIsEnabled:
             return
+        if item.data(Qt.ItemDataRole.UserRole + 2) == "kdeconnect":
+            self._open_kdeconnect_device()
+            return
+        if item.data(Qt.ItemDataRole.UserRole + 2) == "available-device":
+            self._mount_device(str(item.data(Qt.ItemDataRole.UserRole + 3) or ""))
+            return
         path = Path(str(item.data(Qt.ItemDataRole.UserRole)))
+        self.open_path_callback(path)
+
+    def _mount_device(self, device: str) -> None:
+        udisksctl = shutil.which("udisksctl")
+        if not udisksctl:
+            QMessageBox.warning(self, "Mount Device", "udisksctl is not installed. Install the udisks2 package to mount devices.")
+            return
+        if not device:
+            QMessageBox.warning(self, "Mount Device", "Could not determine the block device to mount.")
+            return
+        try:
+            result = subprocess.run(
+                [udisksctl, "mount", "--block-device", device],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            QMessageBox.warning(self, "Mount Device", f"Could not mount {device}:\n{error}")
+            return
+        if result.returncode != 0:
+            detail = (result.stderr or result.stdout or "Unknown error").strip()
+            QMessageBox.warning(self, "Mount Device", f"Could not mount {device}:\n{detail}")
+            return
+        self._refresh_mounted_devices()
+        mounted = next((entry for entry in self.mounted_devices if entry["device"] == device and entry["path"]), None)
+        if mounted:
+            self.open_path_callback(Path(mounted["path"]))
+
+    def _open_kdeconnect_device(self) -> None:
+        kdeconnect_cli = shutil.which("kdeconnect-cli")
+        if not kdeconnect_cli:
+            QMessageBox.warning(self, "KDE Connect", "kdeconnect-cli is not installed.")
+            return
+        try:
+            available = subprocess.run(
+                [kdeconnect_cli, "--list-available", "--id-name-only"],
+                capture_output=True,
+                text=True,
+                timeout=15,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            QMessageBox.warning(self, "KDE Connect", f"Could not query KDE Connect:\n{error}")
+            return
+        devices: list[tuple[str, str]] = []
+        for line in available.stdout.splitlines():
+            parts = line.strip().split(maxsplit=1)
+            if parts:
+                devices.append((parts[0], parts[1] if len(parts) > 1 else parts[0]))
+        if not devices:
+            detail = (available.stderr or available.stdout).strip()
+            message = "No paired KDE Connect device is currently reachable."
+            if detail:
+                message += f"\n\n{detail}"
+            QMessageBox.information(self, "KDE Connect", message)
+            return
+        device_id, device_name = devices[0]
+        if len(devices) > 1:
+            labels = [name for _identifier, name in devices]
+            selected, ok = QInputDialog.getItem(self, "KDE Connect", "Device", labels, 0, False)
+            if not ok:
+                return
+            device_id, device_name = devices[labels.index(selected)]
+        try:
+            mounted = subprocess.run(
+                [kdeconnect_cli, "--device", device_id, "--mount"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            mount_point = subprocess.run(
+                [kdeconnect_cli, "--device", device_id, "--get-mount-point"],
+                capture_output=True,
+                text=True,
+                timeout=15,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            QMessageBox.warning(self, "KDE Connect", f"Could not mount {device_name}:\n{error}")
+            return
+        path_text = mount_point.stdout.strip()
+        path = Path(path_text) if path_text else None
+        # KDE Connect may deliberately deny listing the SFTP root and advertise
+        # one or more usable directories below it (for example
+        # storage/emulated/0 on current Android). Prefer the first advertised
+        # directory instead of presenting the inaccessible mount root.
+        busctl = shutil.which("busctl")
+        if path and busctl:
+            object_path = f"/modules/kdeconnect/devices/{device_id}/sftp"
+            try:
+                directories = subprocess.run(
+                    [
+                        busctl,
+                        "--user",
+                        "call",
+                        "org.kde.kdeconnect",
+                        object_path,
+                        "org.kde.kdeconnect.device.sftp",
+                        "getDirectories",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
+                    check=False,
+                )
+                directory_fields = shlex.split(directories.stdout)
+                if directories.returncode == 0 and len(directory_fields) >= 3:
+                    advertised_path = Path(directory_fields[2])
+                    if advertised_path.is_dir():
+                        path = advertised_path
+            except (OSError, ValueError, subprocess.TimeoutExpired):
+                pass
+        if path:
+            android_storage = path / "storage" / "emulated" / "0"
+            if android_storage.is_dir():
+                path = android_storage
+        mount_error = ""
+        if path and path.is_dir():
+            try:
+                # QFileSystemModel presents an unreadable FUSE mount as an empty
+                # directory, so probe it here and show the actual failure.
+                with os.scandir(path) as entries:
+                    next(entries, None)
+            except OSError as error:
+                mount_error = str(error)
+        if mounted.returncode != 0 or mount_point.returncode != 0 or not path or not path.is_dir() or mount_error:
+            detail = (mounted.stderr or mount_point.stderr or mounted.stdout or mount_point.stdout).strip()
+            message = (
+                f"Could not read files from {device_name}. Unlock the phone, then open "
+                "KDE Connect's Plugin settings and tap Filesystem access. In Android's "
+                "special-access screen, enable Allow access to manage all files for KDE Connect."
+            )
+            if mount_error:
+                detail = mount_error
+            if detail:
+                message += f"\n\n{detail}"
+            QMessageBox.warning(self, "KDE Connect", message)
+            return
         self.open_path_callback(path)
 
     def _show_shortcut_menu(self, position) -> None:
@@ -5966,7 +6622,7 @@ class SidePanel(QWidget):
         if not item:
             return
         item_type = str(item.data(Qt.ItemDataRole.UserRole + 2) or "")
-        if item_type not in {"favorite", "recent"}:
+        if item_type not in {"favorite", "recent", "mounted-device", "available-device"}:
             return
         path = Path(str(item.data(Qt.ItemDataRole.UserRole)))
         menu = QMenu(self)
@@ -5975,10 +6631,43 @@ class SidePanel(QWidget):
             menu.addAction(menu_icon(self, "go-up", QStyle.StandardPixmap.SP_ArrowUp), "Move Up", lambda: self.move_favorite(path, -1))
             menu.addAction(menu_icon(self, "go-down", QStyle.StandardPixmap.SP_ArrowDown), "Move Down", lambda: self.move_favorite(path, 1))
             menu.addAction(menu_icon(self, "list-remove", QStyle.StandardPixmap.SP_DialogCancelButton), "Remove Favorite", lambda: self.remove_favorite(path))
-        else:
+        elif item_type == "recent":
             menu.addAction(menu_icon(self, "list-remove", QStyle.StandardPixmap.SP_DialogCancelButton), "Remove Recent", lambda: self.remove_recent(path))
             menu.addAction(menu_icon(self, "edit-clear", QStyle.StandardPixmap.SP_DialogResetButton), "Clear Recent", self.clear_recent)
+        elif item_type == "mounted-device":
+            device = str(item.data(Qt.ItemDataRole.UserRole + 3) or "")
+            menu.addAction(menu_icon(self, ("media-eject", "drive-removable-media-eject"), QStyle.StandardPixmap.SP_DialogCancelButton), "Unmount", lambda: self._unmount_device(device, path))
+        else:
+            device = str(item.data(Qt.ItemDataRole.UserRole + 3) or "")
+            menu.addAction(menu_icon(self, ("media-mount", "drive-removable-media"), QStyle.StandardPixmap.SP_DialogOpenButton), "Mount", lambda: self._mount_device(device))
         menu.exec(self.shortcuts.viewport().mapToGlobal(position))
+
+    def _unmount_device(self, device: str, mountpoint: Path) -> None:
+        udisksctl = shutil.which("udisksctl")
+        if not udisksctl:
+            QMessageBox.warning(self, "Unmount Device", "udisksctl is not installed. Install the udisks2 package to unmount devices.")
+            return
+        if QMessageBox.question(self, "Unmount Device", f"Unmount {mountpoint}?") != QMessageBox.StandardButton.Yes:
+            return
+        window = self.window()
+        if hasattr(window, "prepare_for_unmount"):
+            window.prepare_for_unmount(mountpoint)
+        try:
+            result = subprocess.run(
+                [udisksctl, "unmount", "--block-device", device, "--no-user-interaction"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            QMessageBox.warning(self, "Unmount Device", f"Could not unmount {mountpoint}:\n{error}")
+            return
+        if result.returncode != 0:
+            detail = (result.stderr or result.stdout or "Unknown error").strip()
+            QMessageBox.warning(self, "Unmount Device", f"Could not unmount {mountpoint}:\n{detail}")
+            return
+        self._refresh_mounted_devices()
 
     def _show_tree_menu(self, position) -> None:
         index = self.tree.indexAt(position)
@@ -6023,6 +6712,7 @@ class FileManager(QMainWindow):
         self.clipboard_operation = "copy"
         self.undo_stack: list[UndoAction] = []
         self.active_file_operations = 0
+        self.shutdown_after_operations = False
         self.operation_queue: list[tuple[str, Callable[[], None]]] = []
         self.running_queued_operation = False
         self.zoomed_pane: FilePane | None = None
@@ -6066,8 +6756,10 @@ class FileManager(QMainWindow):
             self.current_theme = "Dark"
         self.apply_theme(self.current_theme)
 
-        self.left = FilePane("Left", self.add_favorite, self.record_trashed)
-        self.right = FilePane("Right", self.add_favorite, self.record_trashed)
+        left_path = self.cli_left_state.path if self.cli_left_state else Path(str(self.settings.value("left/path", str(Path.home()))))
+        right_path = self.cli_right_state.path if self.cli_right_state else Path(str(self.settings.value("right/path", str(Path.home()))))
+        self.left = FilePane("Left", self.add_favorite, self.record_trashed, initial_path=left_path)
+        self.right = FilePane("Right", self.add_favorite, self.record_trashed, initial_path=right_path)
         self.left.set_peer(self.right)
         self.right.set_peer(self.left)
         self.left.set_icon_layout(self.icon_layout)
@@ -6124,6 +6816,15 @@ class FileManager(QMainWindow):
         self.side_dock.visibilityChanged.connect(lambda visible, window=self: window._side_panel_visibility_changed(visible))
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.side_dock)
 
+    def prepare_for_unmount(self, mountpoint: Path) -> None:
+        """Move panes out of a volume so fm itself does not keep it busy."""
+        for pane in (self.left, self.right):
+            try:
+                pane.current_path().relative_to(mountpoint)
+            except (OSError, ValueError):
+                continue
+            pane.set_path(Path.home())
+
     def _build_toolbar(self) -> None:
         toolbar = QToolBar("Main")
         toolbar.setMovable(False)
@@ -6177,6 +6878,13 @@ class FileManager(QMainWindow):
         self.preview_action.setChecked(self.preview_enabled)
         self.preview_action.toggled.connect(lambda checked, window=self: window.set_preview_enabled(checked))
         toolbar.addAction(self.preview_action)
+
+        self.compare_action = QAction(directory_compare_icon(), "Compare Directories", self)
+        self.compare_action.setToolTip("Compare pane 1 and pane 2 recursively, including file contents")
+        self.compare_action.triggered.connect(
+            lambda _checked=False: DirectoryCompareDialog(self.left.current_path(), self.right.current_path(), self).exec()
+        )
+        toolbar.addAction(self.compare_action)
 
         left_spacer = QWidget()
         left_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -6757,7 +7465,7 @@ class FileManager(QMainWindow):
         self._refresh_pane_style(self.right)
 
     def _refresh_pane_style(self, pane: FilePane) -> None:
-        widgets = [pane, pane.icon_view, pane.list_view, pane.detail_view]
+        widgets = [pane, pane.icon_view, pane.list_view, pane.detail_view, pane.search_results_view]
         for widget in widgets:
             widget.style().unpolish(widget)
             widget.style().polish(widget)
@@ -6936,6 +7644,35 @@ class FileManager(QMainWindow):
             fm_log("operation.queue.run", name=name, remaining=len(self.operation_queue))
             self.running_queued_operation = True
             QTimer.singleShot(0, lambda cb=callback: self._run_queued_operation(cb))
+        elif self.active_file_operations == 0 and self.shutdown_after_operations:
+            QTimer.singleShot(0, self._shutdown_after_file_operations)
+
+    def _shutdown_after_file_operations(self) -> None:
+        if not self.shutdown_after_operations or self.active_file_operations or self.operation_queue:
+            return
+        self.shutdown_after_operations = False
+        # Normal systemd shutdown flushes writes and respects system inhibitors.
+        process = QProcess(self)
+
+        def failed(message: str) -> None:
+            fm_log("operation.shutdown.failed", error=message)
+            QMessageBox.warning(self, "Shutdown Failed", "The transfer completed, but the computer could not shut down.\n\n" + message)
+
+        def finished(code: int, status: QProcess.ExitStatus) -> None:
+            if code != 0 or status != QProcess.ExitStatus.NormalExit:
+                error = bytes(process.readAllStandardError()).decode(errors="replace").strip()
+                failed(error or f"systemctl exited with status {code}.")
+            process.deleteLater()
+
+        def process_error(error: QProcess.ProcessError) -> None:
+            if error == QProcess.ProcessError.FailedToStart:
+                failed(process.errorString())
+                process.deleteLater()
+
+        process.finished.connect(finished)
+        process.errorOccurred.connect(process_error)
+        fm_log("operation.shutdown.requested")
+        process.start("systemctl", ["poweroff"])
 
     def queue_file_operation(self, name: str, callback) -> bool:
         if self.active_file_operations > 0 and not self.running_queued_operation:
@@ -6948,8 +7685,13 @@ class FileManager(QMainWindow):
     def _run_queued_operation(self, callback) -> None:
         try:
             callback()
+        except Exception:
+            self.shutdown_after_operations = False
+            raise
         finally:
             self.running_queued_operation = False
+            if self.active_file_operations == 0:
+                self.end_file_operation()
 
     def apply_theme(self, theme: str) -> None:
         self.current_theme = theme if theme in THEMES else "Dark"
@@ -7412,6 +8154,7 @@ class FileManager(QMainWindow):
 def main() -> int:
     launch_args = parse_args(sys.argv[1:])
     detach_if_terminal(launch_args.no_detach)
+    identify_process()
     app = QApplication(sys.argv)
     app.setOrganizationName(APP_ORG)
     app.setApplicationName(APP_NAME)
